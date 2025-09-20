@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; background: #f4f6f8; }
+  h2, h3 { color: #333; }
+  #menuTopo { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px; }
+  #menuTopo button { padding: 6px 12px; border:none; border-radius:5px; cursor:pointer; background:#1976d2; color:white; transition:0.2s; }
+  #menuTopo button:hover { opacity:0.9; }
+  #menuTopo button.active { background:#1565c0; }
+  .toolbar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:10px; }
+  input[type="text"] { padding: 6px 10px; width:260px; border-radius:5px; border:1px solid #ccc; }
+  button { padding: 6px 12px; border: none; border-radius: 5px; cursor: pointer; transition: 0.2s; }
+  #btnBuscar { background-color: #1976d2; color: white; }
+  #btnLimpar { background-color: #f57c00; color: white; }
+  #btnSalvar { background-color: #388e3c; color: white; margin-top: 10px; }
+  #btnImprimir { background-color: #6a1b9a; color:white; margin-left:10px; }
+  #resultado { margin-top: 10px; display:grid; gap:6px; }
+  .grupo-funcao { background:#fff; border-radius:8px; box-shadow:0 0 5px rgba(0,0,0,0.08); padding:10px; }
+  .grupo-funcao h4 { margin:0 0 8px; color:#1976d2; }
+  .item-res { display:flex; justify-content:space-between; align-items:center; padding:6px 8px; border:1px solid #eee; border-radius:6px; }
+  table { border-collapse: collapse; width: 100%; margin-top: 14px; background: white; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
+  th, td { padding: 8px; text-align: left; border-bottom: 1px solid #eee; }
+  th { background-color: #1976d2; color: white; }
+  select { padding: 4px 6px; border-radius: 4px; }
+  .statusPresente { background-color: #c8e6c9; }
+  .statusAusente  { background-color: #ffcdd2; }
+  .statusFerias   { background-color: #ffe082; }
+  .statusFolga    { background-color: #b3e5fc; }
+  .statusAbandono { background-color: #e1bee7; }
+  .statusVazio    { background-color: #eeeeee; }
+  .loading { opacity: 0.6; pointer-events: none; }
+  .error { color: #d32f2f; font-weight: bold; }
+  @media (max-width: 720px) {
+    input[type="text"] { width: 100%; }
+    .item-res { flex-direction: column; align-items: flex-start; gap:6px; }
+    table { font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<h2>Painel de Presença</h2>
+
+<div id="menuTopo" style="display:none;"></div>
+
+<div class="toolbar">
+  <input type="text" id="filtro" placeholder="Buscar por nome ou matrícula">
+  <button id="btnBuscar" onclick="buscar()">Buscar</button>
+  <button id="btnLimpar" onclick="limparBusca()">Limpar Busca</button>
+  <button onclick="voltarMenu()">⬅️ Voltar ao Menu</button>
+</div>
+
+<div id="resultado"></div>
+
+<h3>Selecionados</h3>
+<table id="tabelaBuffer">
+  <thead>
+    <tr><th>Matrícula</th><th>Nome</th><th>Status</th><th>Ações</th></tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<div style="margin-top:10px;">
+  <button id="btnSalvar" onclick="salvarBuffer()">Salvar Buffer</button>
+  <button id="btnImprimir" onclick="window.print()">Imprimir Nomes</button>
+  <span id="statusSalvar" style="margin-left:10px;"></span>
+</div>
+
+<script>
+  // Variáveis globais
+  let supervisor = sessionStorage.getItem('usuario') || '';
+  let aba = sessionStorage.getItem('abaSelecionada') || '';
+  let adicionando = {};
+  let salvando = false;
+
+  // Função para fazer requisições à API
+  async function apiCall(endpoint, method = 'GET', data = null) {
+    try {
+      const options = {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      };
+      
+      if (data) {
+        options.body = JSON.stringify(data);
+      }
+      
+      const response = await fetch(`/api/${endpoint}`, options);
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.message || 'Erro na requisição');
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Erro na API:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  function criarMenuLocal(itens) {
+    const menu = document.getElementById('menuTopo');
+    if (!itens || itens.length === 0) { 
+      menu.style.display = 'none'; 
+      return; 
+    }
+    
+    menu.style.display = 'flex';
+    menu.innerHTML = "";
+    
+    itens.forEach(a => {
+      const btn = document.createElement('button');
+      btn.innerText = a;
+      btn.className = (a === aba) ? "active" : "";
+      btn.onclick = () => {
+        aba = a; 
+        sessionStorage.setItem('abaSelecionada', aba);
+        atualizarTabela();
+        document.querySelectorAll('#menuTopo button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      };
+      menu.appendChild(btn);
+    });
+  }
+
+  async function buscar() {
+    const filtro = document.getElementById("filtro").value.trim();
+    if (!filtro) {
+      alert('Digite algo para buscar');
+      return;
+    }
+
+    const btnBuscar = document.getElementById('btnBuscar');
+    btnBuscar.textContent = 'Buscando...';
+    btnBuscar.disabled = true;
+
+    try {
+      // Usando GET conforme sua API atual
+      const response = await fetch(`/api/colaboradores?filtro=${encodeURIComponent(filtro)}`);
+      const data = await response.json();
+
+      if (response.ok) {
+        exibirBusca(data || []);
+      } else {
+        alert(data.error || 'Erro ao buscar');
+      }
+    } catch (error) {
+      alert('Erro ao buscar colaboradores');
+      console.error(error);
+    } finally {
+      btnBuscar.textContent = 'Buscar';
+      btnBuscar.disabled = false;
+    }
+  }
+
+  function limparBusca() {
+    document.getElementById("filtro").value = "";
+    document.getElementById("resultado").innerHTML = "";
+  }
+
+  function exibirBusca(lista) {
+    const grupos = {};
+    lista.forEach(c => {
+      const f = c.funcao || "Sem Função";
+      if (!grupos[f]) grupos[f] = [];
+      grupos[f].push(c);
+    });
+
+    Object.keys(grupos).forEach(f => 
+      grupos[f].sort((a,b) => a.nome.localeCompare(b.nome, 'pt-BR'))
+    );
+
+    const funcoesOrdenadas = Object.keys(grupos).sort((a,b) => 
+      a.localeCompare(b, 'pt-BR')
+    );
+    
+    const div = document.getElementById("resultado");
+    div.innerHTML = "";
+
+    if (funcoesOrdenadas.length === 0) {
+      div.innerHTML = "<p>Nenhum colaborador encontrado.</p>";
+      return;
+    }
+
+    funcoesOrdenadas.forEach(funcao => {
+      const box = document.createElement('div');
+      box.className = 'grupo-funcao';
+      box.innerHTML = `<h4>${funcao}</h4>`;
+
+      grupos[funcao].forEach(c => {
+        const item = document.createElement('div');
+        item.className = 'item-res';
+        item.innerHTML = `
+          <span>${c.matricula} - ${c.nome}</span>
+          <button onclick='add("${c.matricula}","${c.nome.replace(/"/g, '&quot;')}","${(c.funcao||"").replace(/"/g, '&quot;')}")'>Adicionar</button>
+        `;
+        box.appendChild(item);
+      });
+
+      div.appendChild(box);
+    });
+  }
+
+  async function add(matricula, nome, funcao) {
+    if (adicionando[matricula]) return;
+    adicionando[matricula] = true;
+
+    try {
+      const response = await fetch('/api/colaboradores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'addBuffer',
+          supervisor: supervisor,
+          aba: aba,
+          colaborador: { matricula, nome, funcao }
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.ok) {
+        atualizarTabela();
+      } else {
+        alert(result.msg || "Erro ao adicionar colaborador");
+      }
+    } catch (error) {
+      alert('Erro ao adicionar colaborador');
+      console.error(error);
+    } finally {
+      adicionando[matricula] = false;
+    }
+  }
+
+  async function atualizarTabela() {
+    try {
+      const response = await fetch('/api/colaboradores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'getBuffer',
+          supervisor: supervisor,
+          aba: aba
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        renderTabela(data || []);
+      } else {
+        console.error('Erro ao carregar buffer:', data.error);
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar tabela:', error);
+    }
+  }
+
+  function statusToClass(status) {
+    switch (status) {
+      case "Presente": return "statusPresente";
+      case "Ausente": return "statusAusente";
+      case "Férias": return "statusFerias";
+      case "Folga": return "statusFolga";
+      case "Abandono": return "statusAbandono";
+      default: return "statusVazio";
+    }
+  }
+
+  function renderTabela(lista) {
+    const tbody = document.querySelector("#tabelaBuffer tbody");
+    tbody.innerHTML = "";
+
+    if (!lista || lista.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">Nenhum colaborador selecionado</td></tr>';
+      return;
+    }
+
+    const grupos = {};
+    lista.forEach(c => {
+      const f = c.funcao || "Sem Função";
+      if (!grupos[f]) grupos[f] = [];
+      grupos[f].push(c);
+    });
+
+    const funcoesOrdenadas = Object.keys(grupos).sort((a,b) => 
+      a.localeCompare(b, 'pt-BR')
+    );
+
+    funcoesOrdenadas.forEach(funcao => {
+      const trFuncao = document.createElement("tr");
+      trFuncao.innerHTML = `<td colspan="4" style="font-weight:bold; background:#f0f0f0; color:#1976d2;">${funcao}</td>`;
+      tbody.appendChild(trFuncao);
+
+      grupos[funcao].sort((a,b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+
+      grupos[funcao].forEach(c => {
+        const tr = document.createElement("tr");
+        tr.id = `linha_${c.matricula}`;
+        tr.className = statusToClass(c.status || "");
+        tr.dataset.funcao = c.funcao || "";
+
+        tr.innerHTML = `
+          <td>${c.matricula}</td>
+          <td>${c.nome}</td>
+          <td>
+            <select onchange="atualizarStatus('${c.matricula}', this)">
+              <option value="" ${!c.status ? "selected" : ""}></option>
+              <option value="Presente" ${c.status === "Presente" ? "selected" : ""}>Presente</option>
+              <option value="Ausente" ${c.status === "Ausente" ? "selected" : ""}>Ausente</option>
+              <option value="Férias" ${c.status === "Férias" ? "selected" : ""}>Férias</option>
+              <option value="Folga" ${c.status === "Folga" ? "selected" : ""}>Folga</option>
+              <option value="Abandono" ${c.status === "Abandono" ? "selected" : ""}>Abandono</option>
+            </select>
+          </td>
+          <td><button onclick="remover('${c.matricula}')">Remover</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    });
+  }
+
+  async function atualizarStatus(matricula, selectEl) {
+    const novoStatus = selectEl.value;
+    const tr = document.getElementById(`linha_${matricula}`);
+    if (tr) tr.className = statusToClass(novoStatus);
+
+    try {
+      await fetch('/api/colaboradores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'updateStatus',
+          supervisor: supervisor,
+          matricula: matricula,
+          status: novoStatus
+        })
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar status:', error);
+      alert('Erro ao atualizar status');
+    }
+  }
+
+  async function remover(matricula) {
+    try {
+      const response = await fetch('/api/colaboradores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'removeBuffer',
+          supervisor: supervisor,
+          matricula: matricula
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.ok) {
+        const tr = document.getElementById(`linha_${matricula}`);
+        if (tr) tr.remove();
+      } else {
+        alert(result.msg || "Erro ao remover colaborador");
+      }
+    } catch (error) {
+      alert('Erro ao remover colaborador');
+      console.error(error);
+    }
+  }
+
+  async function salvarBuffer() {
+    if (salvando) return;
+    salvando = true;
+    
+    const statusEl = document.getElementById("statusSalvar");
+    const btnSalvar = document.getElementById("btnSalvar");
+    
+    statusEl.innerText = "Salvando...";
+    btnSalvar.disabled = true;
+
+    try {
+      const linhas = document.querySelectorAll("#tabelaBuffer tbody tr[id^='linha_']");
+      const dados = [];
+      
+      linhas.forEach(l => {
+        const matricula = l.children[0].innerText;
+        const nome = l.children[1].innerText;
+        const funcao = l.dataset.funcao || "";
+        const select = l.querySelector("select");
+        const status = select ? select.value : "";
+        dados.push([supervisor, aba, matricula, nome, funcao, status]);
+      });
+
+      const response = await fetch('/api/colaboradores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'saveToBase',
+          dados: dados
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.ok) {
+        statusEl.innerText = "Salvo com sucesso!";
+        setTimeout(() => statusEl.innerText = "", 3000);
+      } else {
+        statusEl.innerText = result.msg || "Erro ao salvar";
+      }
+    } catch (error) {
+      statusEl.innerText = "Erro ao salvar";
+      console.error(error);
+    } finally {
+      salvando = false;
+      btnSalvar.disabled = false;
+    }
+  }
+
+  function voltarMenu() {
+    sessionStorage.removeItem("abaSelecionada");
+    window.location.href = "/menu";
+  }
+
+  // Inicialização
+  window.onload = function() {
+    // Verificar se tem supervisor e aba
+    if (!supervisor) {
+      alert('Supervisor não definido. Redirecionando...');
+      window.location.href = '/';
+      return;
+    }
+
+    if (!aba) {
+      console.warn("Aba selecionada não definida");
+      // Você pode redirecionar para menu ou definir uma aba padrão
+      window.location.href = '/menu';
+      return;
+    }
+
+    // Carregar dados iniciais
+    atualizarTabela();
+    
+    // Se você tiver uma lista de abas disponíveis, pode criar o menu
+    // criarMenuLocal([aba]); // Por enquanto, apenas a aba atual
+  };
+
+  // Event listeners
+  document.getElementById('filtro').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      buscar();
+    }
+  });
+</script>
+
+</body>
+</html>
