@@ -141,20 +141,18 @@
     btnBuscar.disabled = true;
 
     try {
-      const response = await apiCall('colaboradores', 'POST', { 
-        action: 'buscar',
-        filtro: filtro,
-        supervisor: supervisor,
-        aba: aba
-      });
+      // Usando GET conforme sua API atual
+      const response = await fetch(`/api/colaboradores?filtro=${encodeURIComponent(filtro)}`);
+      const data = await response.json();
 
-      if (response.success) {
-        exibirBusca(response.data || []);
+      if (response.ok) {
+        exibirBusca(data || []);
       } else {
-        alert(response.error || 'Erro ao buscar');
+        alert(data.error || 'Erro ao buscar');
       }
     } catch (error) {
       alert('Erro ao buscar colaboradores');
+      console.error(error);
     } finally {
       btnBuscar.textContent = 'Buscar';
       btnBuscar.disabled = false;
@@ -214,20 +212,27 @@
     adicionando[matricula] = true;
 
     try {
-      const response = await apiCall('colaboradores', 'POST', {
-        action: 'adicionar',
-        supervisor: supervisor,
-        aba: aba,
-        colaborador: { matricula, nome, funcao }
+      const response = await fetch('/api/colaboradores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'addBuffer',
+          supervisor: supervisor,
+          aba: aba,
+          colaborador: { matricula, nome, funcao }
+        })
       });
 
-      if (response.success) {
+      const result = await response.json();
+
+      if (result.ok) {
         atualizarTabela();
       } else {
-        alert(response.error || "Erro ao adicionar colaborador");
+        alert(result.msg || "Erro ao adicionar colaborador");
       }
     } catch (error) {
       alert('Erro ao adicionar colaborador');
+      console.error(error);
     } finally {
       adicionando[matricula] = false;
     }
@@ -235,16 +240,22 @@
 
   async function atualizarTabela() {
     try {
-      const response = await apiCall('colaboradores', 'POST', {
-        action: 'getBuffer',
-        supervisor: supervisor,
-        aba: aba
+      const response = await fetch('/api/colaboradores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'getBuffer',
+          supervisor: supervisor,
+          aba: aba
+        })
       });
 
-      if (response.success) {
-        renderTabela(response.data || []);
+      const data = await response.json();
+
+      if (response.ok) {
+        renderTabela(data || []);
       } else {
-        console.error('Erro ao carregar buffer:', response.error);
+        console.error('Erro ao carregar buffer:', data.error);
       }
     } catch (error) {
       console.error('Erro ao atualizar tabela:', error);
@@ -321,11 +332,15 @@
     if (tr) tr.className = statusToClass(novoStatus);
 
     try {
-      await apiCall('colaboradores', 'POST', {
-        action: 'atualizarStatus',
-        supervisor: supervisor,
-        matricula: matricula,
-        status: novoStatus
+      await fetch('/api/colaboradores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'updateStatus',
+          supervisor: supervisor,
+          matricula: matricula,
+          status: novoStatus
+        })
       });
     } catch (error) {
       console.error('Erro ao atualizar status:', error);
@@ -335,20 +350,27 @@
 
   async function remover(matricula) {
     try {
-      const response = await apiCall('colaboradores', 'POST', {
-        action: 'remover',
-        supervisor: supervisor,
-        matricula: matricula
+      const response = await fetch('/api/colaboradores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'removeBuffer',
+          supervisor: supervisor,
+          matricula: matricula
+        })
       });
 
-      if (response.success) {
+      const result = await response.json();
+
+      if (result.ok) {
         const tr = document.getElementById(`linha_${matricula}`);
         if (tr) tr.remove();
       } else {
-        alert(response.error || "Erro ao remover colaborador");
+        alert(result.msg || "Erro ao remover colaborador");
       }
     } catch (error) {
       alert('Erro ao remover colaborador');
+      console.error(error);
     }
   }
 
@@ -372,29 +394,29 @@
         const funcao = l.dataset.funcao || "";
         const select = l.querySelector("select");
         const status = select ? select.value : "";
-        dados.push({
-          supervisor: supervisor,
-          aba: aba,
-          matricula: matricula,
-          nome: nome,
-          funcao: funcao,
-          status: status
-        });
+        dados.push([supervisor, aba, matricula, nome, funcao, status]);
       });
 
-      const response = await apiCall('colaboradores', 'POST', {
-        action: 'salvar',
-        dados: dados
+      const response = await fetch('/api/colaboradores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'saveToBase',
+          dados: dados
+        })
       });
 
-      if (response.success) {
+      const result = await response.json();
+
+      if (result.ok) {
         statusEl.innerText = "Salvo com sucesso!";
         setTimeout(() => statusEl.innerText = "", 3000);
       } else {
-        statusEl.innerText = response.error || "Erro ao salvar";
+        statusEl.innerText = result.msg || "Erro ao salvar";
       }
     } catch (error) {
       statusEl.innerText = "Erro ao salvar";
+      console.error(error);
     } finally {
       salvando = false;
       btnSalvar.disabled = false;
