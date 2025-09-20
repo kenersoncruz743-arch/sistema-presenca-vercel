@@ -1,7 +1,7 @@
 {
   "functions": {
     "api/*.js": {
-      "runtime": "nodejs18.x"
+      "runtime": "nodejs20.x"
     }
   },
   "rewrites": [
@@ -14,7 +14,7 @@
       "destination": "/public/menu.html"
     },
     {
-      "source": "/painel",
+      "source": "/painel", 
       "destination": "/public/painel.html"
     }
   ],
@@ -27,7 +27,7 @@
           "value": "*"
         },
         {
-          "key": "Access-Control-Allow-Methods", 
+          "key": "Access-Control-Allow-Methods",
           "value": "GET, POST, PUT, DELETE, OPTIONS"
         },
         {
