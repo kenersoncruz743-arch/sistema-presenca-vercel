@@ -1,0 +1,20 @@
+{
+  "name": "sistema-presenca-vercel",
+  "version": "1.0.0",
+  "description": "Sistema de Controle de Presença integrado com Google Sheets",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'Build completed successfully'",
+    "start": "vercel dev --listen 3000",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "google-spreadsheet": "^4.1.2",
+    "google-auth-library": "^9.4.1",
+    "cors": "^2.8.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
