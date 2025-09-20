@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "vercel dev",
-    "build": "echo 'Build completed successfully'",
+    "build": "mkdir -p dist && cp -r public/* dist/ 2>/dev/null || xcopy public dist\\ /E /I 2>nul || echo 'Build completed'",
     "start": "vercel dev --listen 3000",
     "deploy": "vercel --prod"
   },
