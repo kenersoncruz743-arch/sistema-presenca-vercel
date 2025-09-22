@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Presença - Login</title>
+    <title>Gestão a vista - Login</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -166,7 +166,7 @@
         <div class="logo">
             <i class="fas fa-users"></i>
         </div>
-        <h1>Sistema de Presença</h1>
+        <h1>Gestão perlog</h1>
         
         <form id="loginForm">
             <div class="form-group">
@@ -190,24 +190,6 @@
         
         <div id="loginStatus"></div>
         
-        <div class="test-section">
-            <h3><i class="fas fa-flask"></i> Configuração e Teste</h3>
-            
-            <div class="credentials">
-                <strong>Credenciais de teste:</strong><br>
-                Usuário: <code>admin</code><br>
-                Senha: <code>123</code>
-            </div>
-            
-            <button type="button" class="btn btn-secondary" onclick="testarConexao()">
-                <i class="fas fa-plug"></i> Testar Conexão
-            </button>
-            
-            <button type="button" class="btn btn-secondary" onclick="criarDadosTeste()">
-                <i class="fas fa-database"></i> Criar Dados de Teste
-            </button>
-        </div>
-    </div>
 
     <script>
         const API_BASE = window.location.origin;
@@ -284,73 +266,7 @@
             }
         });
 
-        // Função para testar conexão
-        async function testarConexao() {
-            showStatus('<i class="fas fa-cog loading"></i> Testando conexão com Google Sheets...', 'info');
-            
-            try {
-                const response = await fetch(`${API_BASE}/api/auth`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'test'
-                    })
-                });
-                
-                const result = await response.json();
-                
-                if (result.ok) {
-                    showStatus(`<i class="fas fa-check-circle"></i> ${result.msg}`, 'success');
-                    console.log('Planilhas disponíveis:', result.sheets);
-                } else {
-                    showStatus(`<i class="fas fa-times-circle"></i> Erro: ${result.msg || result.error}`, 'error');
-                }
-                
-            } catch (error) {
-                console.error('Erro no teste:', error);
-                showStatus('<i class="fas fa-exclamation-triangle"></i> Erro de conexão com a API', 'error');
-            }
-        }
-
-        // Função para criar dados de teste
-        async function criarDadosTeste() {
-            if (!confirm('Isso criará dados de exemplo na sua planilha Google. Continuar?')) {
-                return;
-            }
-            
-            showStatus('<i class="fas fa-cog loading"></i> Criando dados de teste...', 'info');
-            
-            try {
-                const response = await fetch(`${API_BASE}/api/auth`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'createTestData'
-                    })
-                });
-                
-                const result = await response.json();
-                
-                if (result.ok) {
-                    showStatus(`<i class="fas fa-check-circle"></i> ${result.msg}`, 'success');
-                    
-                    // Preenche credenciais automaticamente
-                    document.getElementById('usuario').value = 'admin';
-                    document.getElementById('senha').value = '123';
-                } else {
-                    showStatus(`<i class="fas fa-times-circle"></i> Erro: ${result.msg || result.error}`, 'error');
-                }
-                
-            } catch (error) {
-                console.error('Erro ao criar dados:', error);
-                showStatus('<i class="fas fa-exclamation-triangle"></i> Erro de conexão com a API', 'error');
-            }
-        }
-
+     
         // Limpa sessionStorage ao carregar a página de login
         window.onload = function() {
             console.log('Página de login carregada');
