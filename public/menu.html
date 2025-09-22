@@ -164,6 +164,7 @@
         
         .status.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
         .status.warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .status.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         
         @media (max-width: 600px) {
             .menu-container {
@@ -235,8 +236,10 @@
             usuarioLogado = sessionStorage.getItem('usuario');
             const abasString = sessionStorage.getItem('abas');
             
+            console.log('Dados carregados:', { usuarioLogado, abasString });
+            
             if (!usuarioLogado || !abasString) {
-                showStatus('<i class="fas fa-exclamation-triangle"></i> Sessão expirada. Redirecionando...', 'error');
+                showStatus('<i class="fas fa-exclamation-triangle"></i> Sessão expirada. Redirecionando para login...', 'error');
                 setTimeout(() => {
                     window.location.href = '/';
                 }, 2000);
@@ -246,6 +249,7 @@
             try {
                 areasSelecionadas = JSON.parse(abasString);
                 document.getElementById('userName').textContent = usuarioLogado;
+                console.log('Áreas disponíveis:', areasSelecionadas);
                 return true;
             } catch (error) {
                 console.error('Erro ao carregar dados do usuário:', error);
@@ -260,7 +264,7 @@
             grid.innerHTML = '';
             
             if (!areasSelecionadas || areasSelecionadas.length === 0) {
-                grid.innerHTML = '<p style="color: #666; font-style: italic;">Nenhuma área disponível</p>';
+                grid.innerHTML = '<p style="color: #666; font-style: italic;">Nenhuma área disponível para este usuário</p>';
                 return;
             }
             
@@ -308,9 +312,14 @@
             cardElement.classList.add('selected');
             areaSelecionada = area;
             
+            // Salva no sessionStorage
+            sessionStorage.setItem('abaSelecionada', area);
+            
             // Habilita botão
             const abrirBtn = document.getElementById('abrirBtn');
             abrirBtn.disabled = false;
+            
+            console.log('Área selecionada:', area);
             
             // Feedback visual
             showStatus(`<i class="fas fa-check"></i> Área "${area}" selecionada`, 'success');
@@ -328,13 +337,20 @@
             
             const abrirBtn = document.getElementById('abrirBtn');
             abrirBtn.disabled = true;
-            abrirBtn.innerHTML = '<i class="fas fa-spinner loading"></i> Abrindo...';
+            abrirBtn.innerHTML = '<i class="fas fa-spinner loading"></i> Abrindo painel...';
             
-            // Salva dados e redireciona
-            sessionStorage.setItem('areaSelecionada', areaSelecionada);
+            console.log('Redirecionando para painel com:', {
+                usuario: usuarioLogado,
+                area: areaSelecionada
+            });
             
+            // Garante que os dados estão salvos no sessionStorage
+            sessionStorage.setItem('usuario', usuarioLogado);
+            sessionStorage.setItem('abaSelecionada', areaSelecionada);
+            
+            // Redireciona para a página do painel
             setTimeout(() => {
-                window.location.href = `/painel?usuario=${encodeURIComponent(usuarioLogado)}&area=${encodeURIComponent(areaSelecionada)}`;
+                window.location.href = '/painel';
             }, 500);
         }
 
@@ -348,34 +364,24 @@
 
         // Inicialização
         window.onload = function() {
+            console.log('Menu carregando...');
+            
             if (carregarDadosUsuario()) {
                 criarCardsAreas();
+                showStatus('<i class="fas fa-check"></i> Menu carregado com sucesso', 'success');
+                setTimeout(() => {
+                    document.getElementById('menuStatus').innerHTML = '';
+                }, 2000);
             }
         };
 
-        // Adiciona classe success para status
-        const originalShowStatus = showStatus;
-        showStatus = function(message, type = 'info') {
-            const statusEl = document.getElementById('menuStatus');
-            statusEl.innerHTML = message;
-            
-            // Mapeia tipos de status
-            const statusClass = {
-                'success': 'success',
-                'error': 'error',
-                'warning': 'warning',
-                'info': 'info'
-            };
-            
-            statusEl.className = `status ${statusClass[type] || 'info'}`;
-            
-            // Adiciona estilos CSS para success se não existir
-            if (type === 'success' && !document.querySelector('.status.success')) {
-                const style = document.createElement('style');
-                style.textContent = '.status.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }';
-                document.head.appendChild(style);
-            }
-        };
+        // Debug: mostra dados no console
+        console.log('Menu.html carregado');
+        console.log('SessionStorage atual:', {
+            usuario: sessionStorage.getItem('usuario'),
+            abas: sessionStorage.getItem('abas'),
+            abaSelecionada: sessionStorage.getItem('abaSelecionada')
+        });
     </script>
 </body>
 </html>
