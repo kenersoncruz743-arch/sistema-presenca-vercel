@@ -23,7 +23,7 @@
             padding: 40px;
             border-radius: 20px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-            max-width: 500px;
+            max-width: 600px;
             width: 100%;
             text-align: center;
         }
@@ -61,6 +61,7 @@
             display: grid;
             gap: 15px;
             margin-bottom: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
         }
         
         .area-card {
@@ -96,6 +97,14 @@
             color: white;
         }
         
+        .area-card.coletor-card i {
+            color: #ff9800;
+        }
+        
+        .area-card.selected.coletor-card i {
+            color: white;
+        }
+        
         .area-card h4 {
             margin: 0 0 5px;
             font-size: 18px;
@@ -111,6 +120,7 @@
             display: flex;
             gap: 15px;
             justify-content: center;
+            flex-wrap: wrap;
         }
         
         .btn {
@@ -172,6 +182,10 @@
                 margin: 10px;
             }
             
+            .areas-grid {
+                grid-template-columns: 1fr;
+            }
+            
             .actions {
                 flex-direction: column;
             }
@@ -209,179 +223,4 @@
         </div>
         
         <div class="actions">
-            <button class="btn btn-primary" id="abrirBtn" disabled onclick="abrirPainel()">
-                <i class="fas fa-clipboard-list"></i> Abrir Painel
-            </button>
-            <button class="btn btn-secondary" onclick="sair()">
-                <i class="fas fa-sign-out-alt"></i> Sair
-            </button>
-        </div>
-        
-        <div id="menuStatus"></div>
-    </div>
-
-    <script>
-        let usuarioLogado = '';
-        let areasSelecionadas = [];
-        let areaSelecionada = '';
-
-        function showStatus(message, type = 'info') {
-            const statusEl = document.getElementById('menuStatus');
-            statusEl.innerHTML = message;
-            statusEl.className = `status ${type}`;
-        }
-
-        // Carrega dados do usuário do sessionStorage
-        function carregarDadosUsuario() {
-            usuarioLogado = sessionStorage.getItem('usuario');
-            const abasString = sessionStorage.getItem('abas');
-            
-            console.log('Dados carregados:', { usuarioLogado, abasString });
-            
-            if (!usuarioLogado || !abasString) {
-                showStatus('<i class="fas fa-exclamation-triangle"></i> Sessão expirada. Redirecionando para login...', 'error');
-                setTimeout(() => {
-                    window.location.href = '/';
-                }, 2000);
-                return false;
-            }
-            
-            try {
-                areasSelecionadas = JSON.parse(abasString);
-                document.getElementById('userName').textContent = usuarioLogado;
-                console.log('Áreas disponíveis:', areasSelecionadas);
-                return true;
-            } catch (error) {
-                console.error('Erro ao carregar dados do usuário:', error);
-                showStatus('<i class="fas fa-exclamation-triangle"></i> Erro nos dados da sessão', 'error');
-                return false;
-            }
-        }
-
-        // Cria cards das áreas
-        function criarCardsAreas() {
-            const grid = document.getElementById('areasGrid');
-            grid.innerHTML = '';
-            
-            if (!areasSelecionadas || areasSelecionadas.length === 0) {
-                grid.innerHTML = '<p style="color: #666; font-style: italic;">Nenhuma área disponível para este usuário</p>';
-                return;
-            }
-            
-            // Ícones para diferentes áreas
-            const icones = {
-                'PCP': 'fas fa-chart-line',
-                'WMS': 'fas fa-warehouse',
-                'Separação': 'fas fa-boxes',
-                'Gestão': 'fas fa-users-cog',
-                'default': 'fas fa-building'
-            };
-            
-            areasSelecionadas.forEach(area => {
-                const card = document.createElement('div');
-                card.className = 'area-card';
-                card.onclick = () => selecionarArea(area, card);
-                
-                // Determina o ícone baseado no nome da área
-                let icone = icones.default;
-                for (const key in icones) {
-                    if (area.toLowerCase().includes(key.toLowerCase())) {
-                        icone = icones[key];
-                        break;
-                    }
-                }
-                
-                card.innerHTML = `
-                    <i class="${icone}"></i>
-                    <h4>${area}</h4>
-                    <p>Clique para selecionar esta área</p>
-                `;
-                
-                grid.appendChild(card);
-            });
-        }
-
-        // Seleciona uma área
-        function selecionarArea(area, cardElement) {
-            // Remove seleção anterior
-            document.querySelectorAll('.area-card').forEach(card => {
-                card.classList.remove('selected');
-            });
-            
-            // Seleciona nova área
-            cardElement.classList.add('selected');
-            areaSelecionada = area;
-            
-            // Salva no sessionStorage
-            sessionStorage.setItem('abaSelecionada', area);
-            
-            // Habilita botão
-            const abrirBtn = document.getElementById('abrirBtn');
-            abrirBtn.disabled = false;
-            
-            console.log('Área selecionada:', area);
-            
-            // Feedback visual
-            showStatus(`<i class="fas fa-check"></i> Área "${area}" selecionada`, 'success');
-            setTimeout(() => {
-                document.getElementById('menuStatus').innerHTML = '';
-            }, 2000);
-        }
-
-        // Abre o painel
-        function abrirPainel() {
-            if (!areaSelecionada) {
-                showStatus('<i class="fas fa-exclamation-triangle"></i> Selecione uma área primeiro', 'warning');
-                return;
-            }
-            
-            const abrirBtn = document.getElementById('abrirBtn');
-            abrirBtn.disabled = true;
-            abrirBtn.innerHTML = '<i class="fas fa-spinner loading"></i> Abrindo painel...';
-            
-            console.log('Redirecionando para painel com:', {
-                usuario: usuarioLogado,
-                area: areaSelecionada
-            });
-            
-            // Garante que os dados estão salvos no sessionStorage
-            sessionStorage.setItem('usuario', usuarioLogado);
-            sessionStorage.setItem('abaSelecionada', areaSelecionada);
-            
-            // Redireciona para a página do painel
-            setTimeout(() => {
-                window.location.href = '/painel';
-            }, 500);
-        }
-
-        // Sair do sistema
-        function sair() {
-            if (confirm('Tem certeza que deseja sair do sistema?')) {
-                sessionStorage.clear();
-                window.location.href = '/';
-            }
-        }
-
-        // Inicialização
-        window.onload = function() {
-            console.log('Menu carregando...');
-            
-            if (carregarDadosUsuario()) {
-                criarCardsAreas();
-                showStatus('<i class="fas fa-check"></i> Menu carregado com sucesso', 'success');
-                setTimeout(() => {
-                    document.getElementById('menuStatus').innerHTML = '';
-                }, 2000);
-            }
-        };
-
-        // Debug: mostra dados no console
-        console.log('Menu.html carregado');
-        console.log('SessionStorage atual:', {
-            usuario: sessionStorage.getItem('usuario'),
-            abas: sessionStorage.getItem('abas'),
-            abaSelecionada: sessionStorage.getItem('abaSelecionada')
-        });
-    </script>
-</body>
-</html>
+            <button
