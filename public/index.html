@@ -251,15 +251,23 @@
                 
                 const result = await response.json();
                 
+                console.log('Resposta do login:', result);
+                
                 if (result.ok) {
                     showStatus('<i class="fas fa-check-circle"></i> Login realizado com sucesso!', 'success');
                     
-                    // Salva dados do usuário
+                    // CORREÇÃO: Salva dados corretamente no sessionStorage
                     sessionStorage.setItem('usuario', result.usuario);
                     sessionStorage.setItem('abas', JSON.stringify(result.abas));
                     
-                    // Redireciona para o menu
+                    console.log('Dados salvos no sessionStorage:', {
+                        usuario: result.usuario,
+                        abas: result.abas
+                    });
+                    
+                    // Redireciona para o menu após um breve delay
                     setTimeout(() => {
+                        console.log('Redirecionando para menu...');
                         window.location.href = '/menu';
                     }, 1000);
                     
@@ -295,8 +303,9 @@
                 
                 if (result.ok) {
                     showStatus(`<i class="fas fa-check-circle"></i> ${result.msg}`, 'success');
+                    console.log('Planilhas disponíveis:', result.sheets);
                 } else {
-                    showStatus(`<i class="fas fa-times-circle"></i> Erro: ${result.msg}`, 'error');
+                    showStatus(`<i class="fas fa-times-circle"></i> Erro: ${result.msg || result.error}`, 'error');
                 }
                 
             } catch (error) {
@@ -333,7 +342,7 @@
                     document.getElementById('usuario').value = 'admin';
                     document.getElementById('senha').value = '123';
                 } else {
-                    showStatus(`<i class="fas fa-times-circle"></i> Erro: ${result.msg}`, 'error');
+                    showStatus(`<i class="fas fa-times-circle"></i> Erro: ${result.msg || result.error}`, 'error');
                 }
                 
             } catch (error) {
@@ -342,11 +351,17 @@
             }
         }
 
-        // Auto-preenche credenciais para desenvolvimento
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            document.getElementById('usuario').value = 'admin';
-            document.getElementById('senha').value = '123';
-        }
+        // Limpa sessionStorage ao carregar a página de login
+        window.onload = function() {
+            console.log('Página de login carregada');
+            sessionStorage.clear();
+            
+            // Auto-preenche credenciais para desenvolvimento local
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                document.getElementById('usuario').value = 'admin';
+                document.getElementById('senha').value = '123';
+            }
+        };
 
         // Permite login com Enter
         document.addEventListener('keypress', (e) => {
@@ -354,6 +369,9 @@
                 document.getElementById('loginForm').dispatchEvent(new Event('submit'));
             }
         });
+
+        // Debug
+        console.log('Login page loaded');
     </script>
 </body>
 </html>
