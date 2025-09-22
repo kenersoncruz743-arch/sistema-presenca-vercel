@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel de Presença</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<style>
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background: #f4f6f8; }
+  
+  .header { 
+    background: white; 
+    padding: 20px; 
+    border-radius: 12px; 
+    margin-bottom: 25px; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+  
+  .header-info h2 { margin: 0; color: #1976d2; font-size: 28px; }
+  .header-info .info { color: #666; margin-top: 5px; }
+  
+  .toolbar { 
+    display: flex; 
+    gap: 12px; 
+    flex-wrap: wrap; 
+    align-items: center; 
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  
+  input[type="text"] { 
+    padding: 10px 15px; 
+    min-width: 300px; 
+    border-radius: 8px; 
+    border: 2px solid #e0e0e0; 
+    font-size: 14px;
+    transition: border-color 0.2s;
+  }
+  
+  input[type="text"]:focus {
+    outline: none;
+    border-color: #1976d2;
+  }
+  
+  button { 
+    padding: 10px 20px; 
+    border: none; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    font-weight: 600;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .btn-primary { background: #1976d2; color: white; }
+  .btn-primary:hover { background: #1565c0; transform: translateY(-1px); }
+  .btn-secondary { background: #f57c00; color: white; }
+  .btn-secondary:hover { background: #ef6c00; transform: translateY(-1px); }
+  .btn-success { background: #388e3c; color: white; }
+  .btn-success:hover { background: #2e7d32; transform: translateY(-1px); }
+  .btn-info { background: #6a1b9a; color: white; }
+  .btn-info:hover { background: #4a148c; transform: translateY(-1px); }
+  .btn-danger { background: #d32f2f; color: white; }
+  .btn-danger:hover { background: #c62828; transform: translateY(-1px); }
+  .btn-back { background: #757575; color: white; }
+  .btn-back:hover { background: #616161; transform: translateY(-1px); }
+  
+  button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+  
+  .section { 
+    background: white; 
+    padding: 25px; 
+    border-radius: 12px; 
+    margin-bottom: 25px; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+  }
+  
+  .section h3 { 
+    margin: 0 0 20px 0; 
+    color: #1976d2; 
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  #resultado { display: grid; gap: 15px; }
+  
+  .grupo-funcao { 
+    background: #f8f9fa; 
+    border-radius: 10px; 
+    padding: 20px;
+    border-left: 4px solid #1976d2;
+  }
+  
+  .grupo-funcao h4 { 
+    margin: 0 0 15px; 
+    color: #1976d2; 
+    font-size: 16px;
+  }
+  
+  .item-res { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 12px; 
+    background: white;
+    border-radius: 8px; 
+    margin-bottom: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+  
+  .item-res:last-child { margin-bottom: 0; }
+  
+  .item-info { font-weight: 500; }
+  
+  table { 
+    border-collapse: collapse; 
+    width: 100%; 
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  
+  th, td { 
+    padding: 15px 12px; 
+    text-align: left; 
+    border-bottom: 1px solid #eee; 
+  }
+  
+  th { 
+    background: #1976d2; 
+    color: white; 
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+  }
+  
+  tr:hover:not(.funcao-header) { background: #f5f5f5; }
+  
+  .funcao-header {
+    background: #e3f2fd !important;
+    color: #1976d2 !important;
+    font-weight: 700;
+  }
+  
+  .funcao-header:hover { background: #e3f2fd !important; }
+  
+  select { 
+    padding: 8px 10px; 
+    border-radius: 6px; 
+    border: 1px solid #ccc;
+    min-width: 120px;
+  }
+  
+  .statusPresente { background-color: #c8e6c9; }
+  .statusAusente { background-color: #ffcdd2; }
+  .statusFerias { background-color: #ffe082; }
+  .statusFolga { background-color: #b3e5fc; }
+  .statusAbandono { background-color: #e1bee7; }
+  .statusVazio { background-color: #eeeeee; }
+  
+  .actions-panel {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  
+  .status-message {
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-weight: 600;
+    margin-left: 10px;
+  }
+  
+  .status-success { background: #d4edda; color: #155724; }
+  .status-error { background: #f8d7da; color: #721c24; }
+  .status-loading { background: #d1ecf1; color: #0c5460; }
+  
+  .empty-state {
+    text-align: center;
+    color: #666;
+    font-style: italic;
+    padding: 40px 20px;
+  }
+  
+  .loading-spinner {
+    display: inline-block;
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  @media (max-width: 768px) {
+    body { margin: 10px; }
+    .header { flex-direction: column; text-align: center; }
+    input[type="text"] { min-width: 100%; margin-bottom: 10px; }
+    .toolbar { flex-direction: column; align-items: stretch; }
+    .toolbar button { margin-bottom: 8px; }
+    .item-res { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .actions-panel { flex-direction: column; width: 100%; }
+    table { font-size: 14px; }
+    th, td { padding: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-info">
+    <h2><i class="fas fa-users"></i> Painel de Presença</h2>
+    <div class="info">
+      <strong>Supervisor:</strong> <span id="supervisorName">Carregando...</span> | 
+      <strong>Área:</strong> <span id="areaSelecionada">Carregando...</span>
+    </div>
+  </div>
+</div>
+
+<div class="toolbar">
+  <input type="text" id="filtro" placeholder="🔍 Buscar por nome ou matrícula">
+  <button class="btn-primary" id="btnBuscar" onclick="buscar()">
+    <i class="fas fa-search"></i> Buscar
+  </button>
+  <button class="btn-secondary" id="btnLimpar" onclick="limparBusca()">
+    <i class="fas fa-eraser"></i> Limpar
+  </button>
+  <button class="btn-back" onclick="voltarMenu()">
+    <i class="fas fa-arrow-left"></i> Voltar ao Menu
+  </button>
+</div>
+
+<div id="resultado"></div>
+
+<div class="section">
+  <h3><i class="fas fa-clipboard-list"></i> Colaboradores Selecionados</h3>
+  
+  <table id="tabelaBuffer">
+    <thead>
+      <tr>
+        <th><i class="fas fa-id-badge"></i> Matrícula</th>
+        <th><i class="fas fa-user"></i> Nome</th>
+        <th><i class="fas fa-check-circle"></i> Status</th>
+        <th><i class="fas fa-cogs"></i> Ações</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <div class="actions-panel">
+    <button class="btn-success" id="btnSalvar" onclick="salvarBuffer()">
+      <i class="fas fa-save"></i> Salvar Buffer
+    </button>
+    <button class="btn-info" onclick="window.print()">
+      <i class="fas fa-print"></i> Imprimir Lista
+    </button>
+    <span id="statusSalvar" class="status-message"></span>
+  </div>
+</div>
+
+<script>
+  // Variáveis globais
+  let supervisor = '';
+  let aba = '';
+  let adicionando = {};
+  let salvando = false;
+
+  // Inicializa as variáveis com dados do sessionStorage
+  function initializeData() {
+    supervisor = sessionStorage.getItem('usuario') || '';
+    aba = sessionStorage.getItem('abaSelecionada') || '';
+    
+    console.log('Dados inicializados:', { supervisor, aba });
+    
+    if (supervisor) {
+      document.getElementById('supervisorName').textContent = supervisor;
+    }
+    
+    if (aba) {
+      document.getElementById('areaSelecionada').textContent = aba;
+    }
+    
+    return supervisor && aba;
+  }
+
+  // Função para fazer requisições à API
+  async function apiCall(endpoint, method = 'GET', data = null) {
+    try {
+      const options = {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      };
+      
+      if (data) {
+        options.body = JSON.stringify(data);
+      }
+      
+      const response = await fetch(`/api/${endpoint}`, options);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Erro na API:', error);
+      throw error;
+    }
+  }
+
+  // Função de busca
+  async function buscar() {
+    const filtro = document.getElementById("filtro").value.trim();
+    
+    if (!filtro) {
+      showStatus('Digite algo para buscar', 'error');
+      return;
+    }
+
+    const btnBuscar = document.getElementById('btnBuscar');
+    const originalText = btnBuscar.innerHTML;
+    
+    btnBuscar.innerHTML = '<i class="fas fa-spinner loading-spinner"></i> Buscando...';
+    btnBuscar.disabled = true;
+
+    try {
+      const response = await fetch(`/api/colaboradores?filtro=${encodeURIComponent(filtro)}`);
+      const data = await response.json();
+
+      if (response.ok) {
+        exibirBusca(data || []);
+        if (data.length === 0) {
+          showStatus('Nenhum colaborador encontrado', 'error');
+        }
+      } else {
+        throw new Error(data.error || 'Erro ao buscar');
+      }
+    } catch (error) {
+      console.error('Erro na busca:', error);
+      showStatus('Erro ao buscar colaboradores', 'error');
+      alert('Erro ao buscar colaboradores. Verifique sua conexão.');
+    } finally {
+      btnBuscar.innerHTML = originalText;
+      btnBuscar.disabled = false;
+    }
+  }
+
+  function limparBusca() {
+    document.getElementById("filtro").value = "";
+    document.getElementById("resultado").innerHTML = "";
+    clearStatus();
+  }
+
+  function exibirBusca(lista) {
+    const div = document.getElementById("resultado");
+    
+    if (!lista || lista.length === 0) {
+      div.innerHTML = '<div class="section empty-state">Nenhum colaborador encontrado</div>';
+      return;
+    }
+
+    // Agrupa por função
+    const grupos = {};
+    lista.forEach(c => {
+      const f = c.funcao || "Sem Função";
+      if (!grupos[f]) grupos[f] = [];
+      grupos[f].push(c);
+    });
+
+    // Ordena colaboradores dentro de cada grupo
+    Object.keys(grupos).forEach(f => 
+      grupos[f].sort((a,b) => a.nome.localeCompare(b.nome, 'pt-BR'))
+    );
+
+    const funcoesOrdenadas = Object.keys(grupos).sort((a,b) => 
+      a.localeCompare(b, 'pt-BR')
+    );
+    
+    div.innerHTML = "";
+
+    funcoesOrdenadas.forEach(funcao => {
+      const section = document.createElement('div');
+      section.className = 'section';
+      section.innerHTML = `
+        <h3><i class="fas fa-users"></i> ${funcao} (${grupos[funcao].length})</h3>
+        <div class="grupo-funcao" id="grupo-${funcao.replace(/\s+/g, '-')}"></div>
+      `;
+      
+      const grupoDiv = section.querySelector('.grupo-funcao');
+
+      grupos[funcao].forEach(c => {
+        const item = document.createElement('div');
+        item.className = 'item-res';
+        item.innerHTML = `
+          <div class="item-info">
+            <strong>${c.matricula}</strong> - ${c.nome}
+          </div>
+          <button class="btn-primary" onclick='add("${c.matricula}","${c.nome.replace(/"/g, '&quot;')}","${(c.funcao||"").replace(/"/g, '&quot;')}");'>
+            <i class="fas fa-plus"></i> Adicionar
+          </button>
+        `;
+        grupoDiv.appendChild(item);
+      });
+
+      div.appendChild(section);
+    });
+  }
+
+  async function add(matricula, nome, funcao) {
+    if (adicionando[matricula]) return;
+    adicionando[matricula] = true;
+
+    // Feedback visual no botão
+    const buttons = document.querySelectorAll(`button[onclick*="${matricula}"]`);
+    buttons.forEach(btn => {
+      btn.innerHTML = '<i class="fas fa-spinner loading-spinner"></i> Adicionando...';
+      btn.disabled = true;
+    });
+
+    try {
+      const response = await fetch('/api/colaboradores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'addBuffer',
+          supervisor: supervisor,
+          aba: aba,
+          colaborador: { matricula, nome, funcao }
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.ok) {
+        // Feedback de sucesso
+        buttons.forEach(btn => {
+          btn.innerHTML = '<i class="fas fa-check"></i> Adicionado!';
+          btn.style.background = '#4caf50';
+          setTimeout(() => {
+            btn.innerHTML = '<i class="fas fa-plus"></i> Adicionar';
+            btn.style.background = '';
+            btn.disabled = false;
+          }, 2000);
+        });
+        
+        atualizarTabela();
+        showStatus(`Colaborador ${nome} adicionado com sucesso!`, 'success');
+      } else {
+        throw new Error(result.msg || "Erro ao adicionar colaborador");
+      }
+    } catch (error) {
+      console.error('Erro ao adicionar:', error);
+      showStatus('Erro ao adicionar colaborador', 'error');
+      
+      // Restaura botões em caso de erro
+      buttons.forEach(btn => {
+        btn.innerHTML = '<i class="fas fa-plus"></i> Adicionar';
+        btn.disabled = false;
+      });
+    } finally {
+      adicionando[matricula] = false;
+    }
+  }
+
+  async function atualizarTabela() {
+    try {
+      const response = await fetch('/api/colaboradores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'getBuffer',
+          supervisor: supervisor,
+          aba: aba
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        renderTabela(data || []);
+      } else {
+        console.error('Erro ao carregar buffer:', data.error);
+        showStatus('Erro ao carregar lista de colaboradores', 'error');
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar tabela:', error);
+      showStatus('Erro de conexão ao carregar dados', 'error');
+    }
+  }
+
+  function statusToClass(status) {
+    const classes = {
+      "Presente": "statusPresente",
+      "Ausente": "statusAusente", 
+      "Férias": "statusFerias",
+      "Folga": "statusFolga",
+      "Abandono": "statusAbandono"
+    };
+    return classes[status] || "statusVazio";
+  }
+
+  function renderTabela(lista) {
+    const tbody = document.querySelector("#tabelaBuffer tbody");
+    tbody.innerHTML = "";
+
+    if (!lista || lista.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="4" class="empty-state">
+            <i class="fas fa-info-circle"></i> Nenhum colaborador selecionado
+          </td>
+        </tr>`;
+      return;
+    }
+
+    // Agrupa por função
+    const grupos = {};
+    lista.forEach(c => {
+      const f = c.funcao || "Sem Função";
+      if (!grupos[f]) grupos[f] = [];
+      grupos[f].push(c);
+    });
+
+    const funcoesOrdenadas = Object.keys(grupos).sort((a,b) => 
+      a.localeCompare(b, 'pt-BR')
+    );
+
+    funcoesOrdenadas.forEach(funcao => {
+      // Header da função
+      const trFuncao = document.createElement("tr");
+      trFuncao.className = "funcao-header";
+      trFuncao.innerHTML = `
+        <td colspan="4">
+          <i class="fas fa-users"></i> ${funcao} (${grupos[funcao].length} colaboradores)
+        </td>`;
+      tbody.appendChild(trFuncao);
+
+      // Ordena colaboradores por nome
+      grupos[funcao].sort((a,b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+
+      grupos[funcao].forEach(c => {
+        const tr = document.createElement("tr");
+        tr.id = `linha_${c.matricula}`;
+        tr.className = statusToClass(c.status || "");
+        tr.dataset.funcao = c.funcao || "";
+
+        tr.innerHTML = `
+          <td><strong>${c.matricula}</strong></td>
+          <td>${c.nome}</td>
+          <td>
+            <select onchange="atualizarStatus('${c.matricula}', this)" style="width: 100%;">
+              <option value="" ${!c.status ? "selected" : ""}>-- Selecione --</option>
+              <option value="Presente" ${c.status === "Presente" ? "selected" : ""}>✅ Presente</option>
+              <option value="Ausente" ${c.status === "Ausente" ? "selected" : ""}>❌ Ausente</option>
+              <option value="Férias" ${c.status === "Férias" ? "selected" : ""}>🏖️ Férias</option>
+              <option value="Folga" ${c.status === "Folga" ? "selected" : ""}>😴 Folga</option>
+              <option value="Abandono" ${c.status === "Abandono" ? "selected" : ""}>🚫 Abandono</option>
+            </select>
+          </td>
+          <td>
+            <button class="btn-danger" onclick="remover('${c.matricula}')" title="Remover colaborador">
+              <i class="fas fa-trash"></i> Remover
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    });
+  }
+
+  async function atualizarStatus(matricula, selectEl) {
+    const novoStatus = selectEl.value;
+    const tr = document.getElementById(`linha_${matricula}`);
+    
+    // Atualiza classe visual imediatamente
+    if (tr) tr.className = statusToClass(novoStatus);
+
+    try {
+      await fetch('/api/colaboradores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'updateStatus',
+          supervisor: supervisor,
+          matricula: matricula,
+          status: novoStatus
+        })
+      });
+      
+      showStatus(`Status atualizado: ${novoStatus || 'Vazio'}`, 'success');
+    } catch (error) {
+      console.error('Erro ao atualizar status:', error);
+      showStatus('Erro ao atualizar status', 'error');
+    }
+  }
+
+  async function remover(matricula) {
+    if (!confirm("Tem certeza que deseja remover este colaborador da lista?")) return;
+
+    try {
+      const response = await fetch('/api/colaboradores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'removeBuffer',
+          supervisor: supervisor,
+          matricula: matricula
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.ok) {
+        const tr = document.getElementById(`linha_${matricula}`);
+        if (tr) {
+          tr.style.transition = 'opacity 0.3s';
+          tr.style.opacity = '0';
+          setTimeout(() => tr.remove(), 300);
+        }
+        
+        showStatus('Colaborador removido com sucesso', 'success');
+        
+        // Verifica se ainda tem itens
+        setTimeout(() => {
+          const tbody = document.querySelector("#tabelaBuffer tbody");
+          const dataRows = tbody.querySelectorAll('tr[id^="linha_"]');
+          if (dataRows.length === 0) {
+            tbody.innerHTML = `
+              <tr>
+                <td colspan="4" class="empty-state">
+                  <i class="fas fa-info-circle"></i> Nenhum colaborador selecionado
+                </td>
+              </tr>`;
+          }
+        }, 350);
+      } else {
+        throw new Error(result.msg || "Erro ao remover colaborador");
+      }
+    } catch (error) {
+      console.error('Erro ao remover:', error);
+      showStatus('Erro ao remover colaborador', 'error');
+    }
+  }
+
+  async function salvarBuffer() {
+    if (salvando) return;
+    
+    const linhas = document.querySelectorAll("#tabelaBuffer tbody tr[id^='linha_']");
+    
+    if (linhas.length === 0) {
+      showStatus('Nenhum colaborador para salvar', 'error');
+      return;
+    }
+
+    salvando = true;
+    
+    const statusEl = document.getElementById("statusSalvar");
+    const btnSalvar = document.getElementById("btnSalvar");
+    const originalText = btnSalvar.innerHTML;
+    
+    statusEl.innerHTML = '<i class="fas fa-spinner loading-spinner"></i> Salvando...';
+    statusEl.className = 'status-message status-loading';
+    btnSalvar.innerHTML = '<i class="fas fa-spinner loading-spinner"></i> Salvando...';
+    btnSalvar.disabled = true;
+
+    try {
+      const dados = [];
+      
+      linhas.forEach(l => {
+        const matricula = l.children[0].innerText;
+        const nome = l.children[1].innerText;
+        const funcao = l.dataset.funcao || "";
+        const select = l.querySelector("select");
+        const status = select ? select.value : "";
+        dados.push([supervisor, aba, matricula, nome, funcao, status]);
+      });
+
+      const response = await fetch('/api/colaboradores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'saveToBase',
+          dados: dados
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.ok) {
+        statusEl.innerHTML = `<i class="fas fa-check"></i> ${result.msg}`;
+        statusEl.className = 'status-message status-success';
+        showStatus('Dados salvos com sucesso na planilha!', 'success');
+      } else {
+        throw new Error(result.msg || "Erro ao salvar");
+      }
+    } catch (error) {
+      console.error('Erro ao salvar:', error);
+      statusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Erro ao salvar';
+      statusEl.className = 'status-message status-error';
+      showStatus('Erro ao salvar dados', 'error');
+    } finally {
+      salvando = false;
+      btnSalvar.innerHTML = originalText;
+      btnSalvar.disabled = false;
+      
+      // Limpa mensagem após 5 segundos
+      setTimeout(() => {
+        statusEl.innerHTML = '';
+        statusEl.className = 'status-message';
+      }, 5000);
+    }
+  }
+
+  function voltarMenu() {
+    if (confirm("Tem certeza que deseja voltar ao menu? Dados não salvos serão perdidos.")) {
+      window.location.href = "/menu";
+    }
+  }
+
+  // Funções auxiliares para status
+  function showStatus(message, type) {
+    console.log(`Status [${type}]: ${message}`);
+    // Você pode implementar uma notificação toast aqui se quiser
+  }
+
+  function clearStatus() {
+    // Limpa qualquer status ativo
+  }
+
+  // Event listeners
+  document.addEventListener('DOMContentLoaded', function() {
+    // Permite buscar com Enter
+    document.getElementById('filtro').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        buscar();
+      }
+    });
+  });
+
+  // Inicialização
+  window.onload = function() {
+    console.log('Painel carregando...');
+    
+    if (!initializeData()) {
+      alert('Dados da sessão não encontrados. Redirecionando para login...');
+      window.location.href = '/';
+      return;
+    }
+    
+    console.log('Dados inicializados. Carregando tabela...');
+    atualizarTabela();
+    
+    console.log('Painel carregado com sucesso!');
+  };
+
+  // Debug
+  console.log('Painel.html carregado');
+  console.log('SessionStorage atual:', {
+    usuario: sessionStorage.getItem('usuario'),
+    abaSelecionada: sessionStorage.getItem('abaSelecionada')
+  });
+</script>
+
+</body>
+</html>
