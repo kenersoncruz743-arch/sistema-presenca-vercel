@@ -1,4 +1,4 @@
-// pages/api/coletores.js - API corrigida para a estrutura atual
+// pages/api/coletores.js - API usando service separado
 export default async function handler(req, res) {
   // Headers obrigatórios
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -13,28 +13,18 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Verifica variável de ambiente
-    if (!process.env.GOOGLE_SHEETS_COLETORES_ID) {
-      console.error('[API Coletores] GOOGLE_SHEETS_COLETORES_ID não configurado');
-      return res.status(500).json({
-        error: 'Configuração inválida',
-        message: 'GOOGLE_SHEETS_COLETORES_ID não configurado',
-        suggestion: 'Adicione GOOGLE_SHEETS_COLETORES_ID no arquivo .env.local'
-      });
-    }
-
-    // Importa sheetsService
-    let sheetsService;
+    // Importa o service específico de coletores
+    let sheetsColetoresService;
     try {
-      sheetsService = require('../../lib/sheets');
-      console.log('[API Coletores] SheetsService importado com sucesso');
+      sheetsColetoresService = require('../../lib/sheets-coletores');
+      console.log('[API Coletores] Service de coletores importado com sucesso');
     } catch (importError) {
-      console.error('[API Coletores] Erro ao importar sheets service:', importError.message);
+      console.error('[API Coletores] Erro ao importar sheets-coletores service:', importError);
       return res.status(500).json({
         error: 'Erro de importação',
-        message: 'Não foi possível importar o serviço de planilhas',
+        message: 'Não foi possível importar o serviço de coletores',
         details: importError.message,
-        stack: importError.stack
+        suggestion: 'Verifique se o arquivo lib/sheets-coletores.js existe'
       });
     }
 
@@ -46,27 +36,26 @@ export default async function handler(req, res) {
         case 'obterDados':
           try {
             console.log('[API Coletores] Iniciando obtenção de dados...');
-            const dados = await sheetsService.obterDadosColetores();
+            const dados = await sheetsColetoresService.obterDadosColaboradores();
             console.log(`[API Coletores] Dados obtidos com sucesso: ${dados.length} registros`);
             return res.status(200).json(dados);
           } catch (error) {
-            console.error('[API Coletores] Erro ao obter dados:', error.message);
-            console.error('[API Coletores] Stack trace:', error.stack);
+            console.error('[API Coletores] Erro ao obter dados:', error);
             return res.status(500).json({ 
-              error: 'Erro ao obter dados de coletores',
+              error: 'Erro ao obter dados de colaboradores',
               message: error.message,
-              suggestion: 'Verifique se a planilha de coletores existe e tem a aba "Quadro.1" com colunas Chapa, Nome, Funcao'
+              suggestion: 'Verifique se a planilha de coletores tem a aba "Quadro.1" com colunas Chapa, Nome, Funcao'
             });
           }
           
         case 'obterStatus':
           try {
             console.log('[API Coletores] Iniciando obtenção de status...');
-            const status = await sheetsService.obterColetorStatus();
+            const status = await sheetsColetoresService.obterStatus();
             console.log(`[API Coletores] Status obtido: ${Object.keys(status).length} coletores`);
             return res.status(200).json(status);
           } catch (error) {
-            console.error('[API Coletores] Erro ao obter status:', error.message);
+            console.error('[API Coletores] Erro ao obter status:', error);
             return res.status(500).json({ 
               error: 'Erro ao obter status de coletores',
               message: error.message,
@@ -77,14 +66,29 @@ export default async function handler(req, res) {
         case 'obterResumo':
           try {
             console.log('[API Coletores] Iniciando geração de resumo...');
-            const resumo = await sheetsService.gerarResumoColetores();
+            const resumo = await sheetsColetoresService.gerarResumo();
             console.log('[API Coletores] Resumo gerado:', resumo);
             return res.status(200).json(resumo);
           } catch (error) {
-            console.error('[API Coletores] Erro ao gerar resumo:', error.message);
+            console.error('[API Coletores] Erro ao gerar resumo:', error);
             return res.status(500).json({ 
               error: 'Erro ao gerar resumo',
               message: error.message
+            });
+          }
+          
+        case 'obterPresenca':
+          try {
+            console.log('[API Coletores] Iniciando obtenção de dados de presença...');
+            const presenca = await sheetsColetoresService.obterDadosPresenca();
+            console.log(`[API Coletores] Dados de presença obtidos: ${presenca.length} registros`);
+            return res.status(200).json(presenca);
+          } catch (error) {
+            console.error('[API Coletores] Erro ao obter dados de presença:', error);
+            return res.status(500).json({ 
+              error: 'Erro ao obter dados de presença',
+              message: error.message,
+              suggestion: 'Verifique se a planilha de coletores tem a aba "Presenca"'
             });
           }
           
@@ -92,7 +96,7 @@ export default async function handler(req, res) {
           return res.status(400).json({ 
             error: 'Ação inválida',
             action: action,
-            availableActions: ['obterDados', 'obterStatus', 'obterResumo']
+            availableActions: ['obterDados', 'obterStatus', 'obterResumo', 'obterPresenca']
           });
       }
     }
@@ -122,17 +126,17 @@ export default async function handler(req, res) {
           }
           
           try {
-            const resultado = await sheetsService.salvarRegistroColetor({
+            const resultado = await sheetsColetoresService.salvarRegistro({
               chapa, nome, funcao, numeroColetor, tipoOperacao, situacoes, supervisor
             });
             
             console.log('[API Coletores] Resultado do salvamento:', resultado);
             return res.status(200).json(resultado);
           } catch (error) {
-            console.error('[API Coletores] Erro ao salvar registro:', error.message);
+            console.error('[API Coletores] Erro ao salvar registro:', error);
             return res.status(500).json({
               ok: false,
-              msg: 'Erro ao salvar registro',
+              msg: 'Erro interno ao salvar registro',
               details: error.message
             });
           }
@@ -141,14 +145,14 @@ export default async function handler(req, res) {
           try {
             console.log('[API Coletores] Iniciando obtenção de status completo...');
             const [status, resumo] = await Promise.all([
-              sheetsService.obterColetorStatus(),
-              sheetsService.gerarResumoColetores()
+              sheetsColetoresService.obterStatus(),
+              sheetsColetoresService.gerarResumo()
             ]);
             
             console.log(`[API Coletores] Status completo obtido: ${Object.keys(status).length} coletores`);
             return res.status(200).json({ status, resumo });
           } catch (error) {
-            console.error('[API Coletores] Erro ao obter status completo:', error.message);
+            console.error('[API Coletores] Erro ao obter status completo:', error);
             return res.status(500).json({ 
               error: 'Erro ao obter status completo',
               message: error.message
