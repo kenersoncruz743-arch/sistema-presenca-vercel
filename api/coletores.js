@@ -11,20 +11,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Importa o service específico de coletores
-    let sheetsColetoresService;
-    try {
-      sheetsColetoresService = require('../../lib/sheets');
-      console.log('[API Coletores] Service de coletores importado com sucesso');
-    } catch (importError) {
-      console.error('[API Coletores] Erro ao importar sheets-coletores service:', importError);
-      return res.status(500).json({
-        error: 'Erro de importação',
-        message: 'Não foi possível importar o serviço de coletores',
-        details: importError.message,
-        suggestion: 'Verifique se o arquivo lib/sheets.js existe'
-      });
-    }
 
     if (req.method === 'GET') {
       const { action } = req.query;
