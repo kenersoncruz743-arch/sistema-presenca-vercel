@@ -68,16 +68,14 @@
           sheets: sheets,
           totalSheets: sheets.length
         });
-      } catch (testError) {
-        console.error('[AUTH] Erro no teste de conexão:', testError);
-        return res.status(500).json({
-          ok: false,
-          msg: 'Erro ao conectar com Google Sheets',
-          details: testError.message
-        });
+      } catch (error) {
+          console.error('[AUTH] Erro geral na API:', error);
+          return res.status(500).json({ 
+            error: 'Erro interno do servidor: ' + error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+          });
+        }
       }
-    }
-
     // CRIAR DADOS DE TESTE
     if (action === 'createTestData') {
       console.log('[AUTH] Iniciando criação de dados de teste...');
