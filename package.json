@@ -5,15 +5,18 @@
   "description": "Sistema de Controle de Presença integrado com Google Sheets",
   "main": "index.js",
   "scripts": {
-    "dev": "vercel dev",
-    "build": "echo 'Build completed successfully'",
-    "start": "vercel dev --listen 3000",
+    "dev": "next dev", // Corrigi para usar o comando Next.js padrão para desenvolvimento
+    "build": "next build", // Mudei para o comando de build real do Next.js
+    "start": "next start", // Corrigi para usar o comando Next.js padrão
     "deploy": "vercel --prod"
   },
   "dependencies": {
     "google-spreadsheet": "^4.1.2",
     "google-auth-library": "^9.4.1",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "next": "14.1.0",         <--- ADICIONAR
+    "react": "18.2.0",        <--- ADICIONAR
+    "react-dom": "18.2.0"     <--- ADICIONAR
   },
   "engines": {
     "node": "22.x"
