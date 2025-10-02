@@ -18,3 +18,15 @@
     "node": ">=18.0.0"
   }
 }
+
+{
+  "name": "gestao-perlog",
+  "version": "1.0.0",
+  "engines": {
+    "node": "18.x"
+  },
+  "dependencies": {
+    "google-spreadsheet": "^4.1.2",
+    "google-auth-library": "^9.4.1"
+  }
+}
