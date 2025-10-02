@@ -1,12 +1,10 @@
-// pages/api/coletores.js - API usando service separado
+// api/coletores.js - Versão CORRIGIDA para ES Module
+import sheetsColetoresService from '../../lib/sheets'; // <-- CORRIGIDO
+
 export default async function handler(req, res) {
   // Headers obrigatórios
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Content-Type', 'application/json');
-  
-  console.log(`[API Coletores] ${req.method} ${req.url}`);
   
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -102,7 +100,7 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-      const { action } = req.body;
+      const { action, registro } = req.body;
       console.log(`[API Coletores] POST action: ${action}`);
       
       switch (action) {
@@ -168,18 +166,18 @@ export default async function handler(req, res) {
       }
     }
 
-    return res.status(405).json({ 
-      error: 'Método não permitido', 
-      method: req.method,
-      allowedMethods: ['GET', 'POST', 'OPTIONS']
-    });
-
-  } catch (error) {
-    console.error('[API Coletores] Erro geral:', error);
-    return res.status(500).json({ 
-      error: 'Erro interno do servidor',
-      message: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-    });
-  }
-}
+        return res.status(405).json({ 
+          error: 'Método não permitido', 
+          method: req.method,
+          allowedMethods: ['GET', 'POST', 'OPTIONS']
+        });
+    
+      } catch (error) {
+        console.error('[API Coletores] Erro geral:', error);
+        return res.status(500).json({ 
+          error: 'Erro interno do servidor',
+          message: error.message,
+          stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
+      }
+ }
