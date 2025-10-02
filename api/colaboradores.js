@@ -76,11 +76,11 @@ export default async function handler(req, res) {
 
     return res.status(405).json({ error: 'Método não permitido' });
 
-  } catch (error) {
+    } catch (error) {
     console.error('Erro na API de colaboradores:', error);
     return res.status(500).json({ 
       error: 'Erro interno do servidor',
-      details: error.message 
+      message: error.message
     });
   }
 }
