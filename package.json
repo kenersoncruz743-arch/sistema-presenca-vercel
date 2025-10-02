@@ -1,6 +1,7 @@
 {
   "name": "sistema-presenca-vercel",
   "version": "1.0.0",
+  "type": "module",
   "description": "Sistema de Controle de Presença integrado com Google Sheets",
   "main": "index.js",
   "scripts": {
