@@ -1,4 +1,4 @@
-import sheetsService from '../lib/sheets'; // <-- CORRIGIDO
+import sheetsService from '../lib/sheets.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
