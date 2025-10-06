@@ -1,7 +1,14 @@
-// api/auth.js
-const sheetsService = require('../lib/sheets');
+import sheetsService from '../lib/sheets.js';
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ ok: false, msg: 'Método não permitido' });
   }
@@ -13,14 +20,12 @@ module.exports = async (req, res) => {
       return res.status(400).json({ ok: false, msg: 'Informe usuário e senha' });
     }
 
-    // chama o validador que já existe no sheets.js
     const result = await sheetsService.validarLogin(usuario, senha);
 
     if (!result.ok) {
-      return res.status(401).json(result); // credenciais inválidas
+      return res.status(401).json(result);
     }
 
-    // 🔑 gera token simples (se não for usar JWT de verdade)
     const token = Buffer.from(`${usuario}:${Date.now()}`).toString('base64');
 
     return res.status(200).json({
@@ -33,4 +38,4 @@ module.exports = async (req, res) => {
     console.error('Erro no login:', error);
     return res.status(500).json({ ok: false, msg: 'Erro interno do servidor' });
   }
-};
+}
