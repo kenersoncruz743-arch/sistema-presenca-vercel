@@ -1,8 +1,40 @@
 {
   "functions": {
-    "api/**/*.js": {
-      "memory": 1024,
-      "maxDuration": 10
+    "api/*.js": {
+      "runtime": "@vercel/node@20.x"
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/public/index.html"
+    },
+    {
+      "source": "/menu",
+      "destination": "/public/menu.html"
+    },
+    {
+      "source": "/painel",
+      "destination": "/public/painel.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods", 
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization"
+        }
+      ]
+    }
+  ]
 }
