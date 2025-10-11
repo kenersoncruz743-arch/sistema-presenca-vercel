@@ -355,7 +355,21 @@
             const supervisores = new Set();
             supervisores.add('Todos');
 
+            // Verifica se dados é válido
+            if (!dados || typeof dados !== 'object') {
+                console.error('❌ Dados inválidos recebidos:', dados);
+                throw new Error('Estrutura de dados inválida');
+            }
+
+            console.log('📊 Montando tabela com dados:', Object.keys(dados).length, 'funções');
+
             Object.entries(dados).forEach(([funcao, dadosFuncao], iFunc) => {
+                // Validação de dados
+                if (!dadosFuncao || !dadosFuncao.supervisores || !dadosFuncao.totalContadores) {
+                    console.warn('⚠️ Dados inválidos para função:', funcao);
+                    return;
+                }
+
                 const funcaoId = `funcao-${iFunc}`;
                 const tAF = dadosFuncao.totalContadores["Turno A"] || 0;
                 const tBF = dadosFuncao.totalContadores["Turno B"] || 0;
@@ -380,21 +394,23 @@
                     trSup.classList.add('expanded');
                     tbody.appendChild(trSup);
 
-                    dadosSup.colaboradores.forEach((colab, iCol) => {
-                        const colId = `${supId}-col-${iCol}`;
-                        const tA = colab.turno === 'Turno A' ? 1 : 0;
-                        const tB = colab.turno === 'Turno B' ? 1 : 0;
-                        const tC = colab.turno === 'Turno C' ? 1 : 0;
-                        const nd = (!['Turno A', 'Turno B', 'Turno C'].includes(colab.turno)) ? 1 : 0;
-                        const total = somaTotal(tA, tB, tC, nd);
+                    if (dadosSup.colaboradores && Array.isArray(dadosSup.colaboradores)) {
+                        dadosSup.colaboradores.forEach((colab, iCol) => {
+                            const colId = `${supId}-col-${iCol}`;
+                            const tA = colab.turno === 'Turno A' ? 1 : 0;
+                            const tB = colab.turno === 'Turno B' ? 1 : 0;
+                            const tC = colab.turno === 'Turno C' ? 1 : 0;
+                            const nd = (!['Turno A', 'Turno B', 'Turno C'].includes(colab.turno)) ? 1 : 0;
+                            const total = somaTotal(tA, tB, tC, nd);
 
-                        const trCol = criarLinha(colId, supId, "colaborador", colab.nome, tA, tB, tC, nd, total);
-                        trCol.dataset.secao = colab.tipoOperacional || 'Não operacional';
-                        trCol.dataset.supervisor = supervisor;
-                        trCol.dataset.turno = colab.turno || 'Não definido';
-                        trCol.dataset.funcao = funcaoId;
-                        tbody.appendChild(trCol);
-                    });
+                            const trCol = criarLinha(colId, supId, "colaborador", colab.nome, tA, tB, tC, nd, total);
+                            trCol.dataset.secao = colab.tipoOperacional || 'Não operacional';
+                            trCol.dataset.supervisor = supervisor;
+                            trCol.dataset.turno = colab.turno || 'Não definido';
+                            trCol.dataset.funcao = funcaoId;
+                            tbody.appendChild(trCol);
+                        });
+                    }
 
                     const trTotal = criarLinha(`${supId}-total`, funcaoId, "total", `${supervisor} - Total`, tAS, tBS, tCS, tNS, totalS);
                     tbody.appendChild(trTotal);
@@ -412,6 +428,7 @@
                 filtroSupervisor.appendChild(opt);
             });
 
+            console.log('✅ Tabela montada com sucesso');
             aplicarFiltros();
         }
 
@@ -524,10 +541,32 @@
 
         async function carregarDados() {
             try {
+                console.log('🔄 Iniciando carregamento de dados...');
                 const response = await fetch('/api/qlp/dados');
-                const result = await response.json();
+                
+                console.log('📡 Resposta recebida:', response.status, response.statusText);
+                
+                // Verifica se a resposta está OK antes de tentar fazer parse
+                if (!response.ok) {
+                    const text = await response.text();
+                    console.error('❌ Resposta não-OK:', response.status, text.substring(0, 200));
+                    throw new Error(`Erro HTTP ${response.status}: ${text.substring(0, 100)}`);
+                }
+
+                // Tenta fazer parse do JSON
+                let result;
+                try {
+                    const text = await response.text();
+                    console.log('📄 Resposta em texto (primeiros 300 chars):', text.substring(0, 300));
+                    result = JSON.parse(text);
+                    console.log('✅ JSON parseado com sucesso');
+                } catch (parseError) {
+                    console.error('❌ Erro ao fazer parse do JSON:', parseError);
+                    throw new Error('A resposta da API não é um JSON válido. Verifique o console para mais detalhes.');
+                }
 
                 if (result.ok) {
+                    console.log('✅ Resultado OK, processando dados...');
                     dadosOriginais = result.dados;
                     montarTabela(result.dados);
                     document.getElementById('loadingDiv').style.display = 'none';
@@ -540,7 +579,7 @@
                     throw new Error(result.msg || 'Erro ao carregar dados');
                 }
             } catch (error) {
-                console.error('Erro ao carregar dados:', error);
+                console.error('❌ Erro ao carregar dados:', error);
                 document.getElementById('loadingDiv').innerHTML = `
                     <i class="fas fa-exclamation-triangle" style="color: #dc3545;"></i>
                     <p style="color: #dc3545;">Erro ao carregar dados do QLP</p>
@@ -553,15 +592,26 @@
         async function exportarDados(formato) {
             try {
                 showStatus('<i class="fas fa-spinner fa-spin"></i> Preparando exportação...', 'info');
+                console.log(`📥 Exportando formato: ${formato}`);
                 
                 const response = await fetch(`/api/qlp/exportar?formato=${formato}`);
+                
+                if (!response.ok) {
+                    const text = await response.text();
+                    console.error('❌ Erro na exportação:', response.status, text);
+                    throw new Error(`Erro HTTP ${response.status} ao exportar`);
+                }
+
                 const result = await response.json();
+                console.log('📦 Resultado da exportação:', result.ok ? 'OK' : 'ERRO');
 
                 if (result.ok) {
                     if (formato === 'csv') {
+                        if (!result.csv) throw new Error('CSV não foi gerado pelo servidor');
                         downloadCSV(result.csv);
                         showStatus('<i class="fas fa-check"></i> CSV exportado com sucesso!', 'success');
                     } else {
+                        if (!result.dados) throw new Error('Dados JSON não foram retornados pelo servidor');
                         downloadJSON(result.dados);
                         showStatus('<i class="fas fa-check"></i> JSON exportado com sucesso!', 'success');
                     }
@@ -572,7 +622,7 @@
                     throw new Error(result.msg || 'Erro ao exportar dados');
                 }
             } catch (error) {
-                console.error('Erro ao exportar:', error);
+                console.error('❌ Erro ao exportar:', error);
                 showStatus(`<i class="fas fa-exclamation-triangle"></i> ${error.message}`, 'error');
             }
         }
@@ -610,8 +660,10 @@
         }
 
         window.onload = function() {
+            console.log('🚀 Página carregada, verificando sessão...');
             const usuario = sessionStorage.getItem('usuario');
             if (!usuario) {
+                console.warn('⚠️ Usuário não encontrado na sessão');
                 showStatus('<i class="fas fa-exclamation-triangle"></i> Sessão expirada. Redirecionando...', 'error');
                 setTimeout(() => {
                     window.location.href = '/';
@@ -619,6 +671,7 @@
                 return;
             }
             
+            console.log('✅ Usuário autenticado:', usuario);
             carregarDados();
         };
     </script>
