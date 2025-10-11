@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard QLP - Gestão Perlog</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 28px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .filters {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .filter-group select {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+            min-width: 200px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid #e9ecef;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            background: white;
+        }
+
+        th, td {
+            border: 1px solid #dee2e6;
+            padding: 12px;
+            text-align: center;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .funcao-row > td:first-child {
+            text-align: left;
+            font-weight: bold;
+            cursor: pointer;
+            padding-left: 10px;
+            background-color: #e3f2fd;
+            user-select: none;
+            color: #1976d2;
+        }
+
+        .funcao-row:hover > td:first-child {
+            background-color: #bbdefb;
+        }
+
+        .supervisor-row > td:first-child {
+            text-align: left;
+            padding-left: 35px;
+            font-weight: bold;
+            cursor: pointer;
+            background-color: #f3e5f5;
+            user-select: none;
+            color: #7b1fa2;
+        }
+
+        .supervisor-row:hover > td:first-child {
+            background-color: #e1bee7;
+        }
+
+        .colaborador-row > td:first-child {
+            text-align: left;
+            padding-left: 60px;
+            background-color: #fafafa;
+        }
+
+        .colaborador-row:hover {
+            background-color: #f5f5f5;
+        }
+
+        .total-row {
+            font-weight: bold;
+            background-color: #fff3e0;
+        }
+
+        .funcao-row.expanded > td:first-child::before,
+        .supervisor-row.expanded > td:first-child::before {
+            content: "▼ ";
+            display: inline-block;
+            width: 1.2em;
+            color: #667eea;
+        }
+
+        .funcao-row.collapsed > td:first-child::before,
+        .supervisor-row.collapsed > td:first-child::before {
+            content: "▶ ";
+            display: inline-block;
+            width: 1.2em;
+            color: #667eea;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .loading i {
+            font-size: 48px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .status.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .status.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status.info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .filters {
+                flex-direction: column;
+            }
+
+            .filter-group select {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-chart-bar"></i> Dashboard QLP</h1>
+            <div class="header-actions">
+                <button class="btn btn-success" onclick="exportarDados('csv')">
+                    <i class="fas fa-file-csv"></i> Exportar CSV
+                </button>
+                <button class="btn btn-success" onclick="exportarDados('json')">
+                    <i class="fas fa-file-code"></i> Exportar JSON
+                </button>
+                <button class="btn btn-secondary" onclick="voltarMenu()">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </button>
+            </div>
+        </div>
+
+        <div class="filters">
+            <div class="filter-group">
+                <label for="filtroOperacional"><i class="fas fa-filter"></i> Seção:</label>
+                <select id="filtroOperacional">
+                    <option value="Todos">Todos</option>
+                    <option value="Operacional">Operacional</option>
+                    <option value="Não operacional">Não operacional</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="filtroSupervisor"><i class="fas fa-user-tie"></i> Supervisor:</label>
+                <select id="filtroSupervisor">
+                    <option value="Todos">Todos</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="filtroTurno"><i class="fas fa-clock"></i> Turno:</label>
+                <select id="filtroTurno">
+                    <option value="Todos">Todos</option>
+                    <option value="Turno A">Turno A</option>
+                    <option value="Turno B">Turno B</option>
+                    <option value="Turno C">Turno C</option>
+                    <option value="Não definido">Não definido</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="loadingDiv" class="loading">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Carregando dados do QLP...</p>
+        </div>
+
+        <div class="table-wrapper" id="tableWrapper" style="display: none;">
+            <table id="dashboardTable">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Turno A</th>
+                        <th>Turno B</th>
+                        <th>Turno C</th>
+                        <th>Não definido</th>
+                        <th>Total geral</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div id="statusDiv"></div>
+    </div>
+
+    <script>
+        const tbody = document.querySelector("#dashboardTable tbody");
+        const filtroOperacional = document.getElementById("filtroOperacional");
+        const filtroSupervisor = document.getElementById("filtroSupervisor");
+        const filtroTurno = document.getElementById("filtroTurno");
+        let dadosOriginais = null;
+
+        function showStatus(message, type = 'info') {
+            const statusEl = document.getElementById('statusDiv');
+            statusEl.innerHTML = message;
+            statusEl.className = `status ${type}`;
+        }
+
+        function criarLinha(id, parentId, tipo, textoNome, turnoA=0, turnoB=0, turnoC=0, naoDef=0, total=0) {
+            const tr = document.createElement('tr');
+            tr.dataset.id = id;
+            if (parentId) tr.dataset.parent = parentId;
+            tr.dataset.tipo = tipo;
+            tr.classList.add(tipo + '-row');
+            if (tipo !== 'funcao') tr.style.display = 'none';
+
+            tr.innerHTML = `
+                <td>${textoNome}</td>
+                <td>${turnoA || ''}</td>
+                <td>${turnoB || ''}</td>
+                <td>${turnoC || ''}</td>
+                <td>${naoDef || ''}</td>
+                <td>${total || ''}</td>
+            `;
+            return tr;
+        }
+
+        function somaTotal(a, b, c, nd) {
+            return (a || 0) + (b || 0) + (c || 0) + (nd || 0);
+        }
+
+        function montarTabela(dados) {
+            tbody.innerHTML = '';
+            const supervisores = new Set();
+            supervisores.add('Todos');
+
+            Object.entries(dados).forEach(([funcao, dadosFuncao], iFunc) => {
+                const funcaoId = `funcao-${iFunc}`;
+                const tAF = dadosFuncao.totalContadores["Turno A"] || 0;
+                const tBF = dadosFuncao.totalContadores["Turno B"] || 0;
+                const tCF = dadosFuncao.totalContadores["Turno C"] || 0;
+                const tND = dadosFuncao.totalContadores["Situacao"] || 0;
+                const totalF = somaTotal(tAF, tBF, tCF, tND);
+
+                const trFunc = criarLinha(funcaoId, null, "funcao", `FUNÇÃO: ${funcao}`, tAF, tBF, tCF, tND, totalF);
+                trFunc.classList.add('expanded');
+                tbody.appendChild(trFunc);
+
+                Object.entries(dadosFuncao.supervisores).forEach(([supervisor, dadosSup], iSup) => {
+                    supervisores.add(supervisor);
+                    const supId = `${funcaoId}-sup-${iSup}`;
+                    const tAS = dadosSup.totalContadores["Turno A"] || 0;
+                    const tBS = dadosSup.totalContadores["Turno B"] || 0;
+                    const tCS = dadosSup.totalContadores["Turno C"] || 0;
+                    const tNS = dadosSup.totalContadores["Situacao"] || 0;
+                    const totalS = somaTotal(tAS, tBS, tCS, tNS);
+
+                    const trSup = criarLinha(supId, funcaoId, "supervisor", `Supervisor: ${supervisor}`, tAS, tBS, tCS, tNS, totalS);
+                    trSup.classList.add('expanded');
+                    tbody.appendChild(trSup);
+
+                    dadosSup.colaboradores.forEach((colab, iCol) => {
+                        const colId = `${supId}-col-${iCol}`;
+                        const tA = colab.turno === 'Turno A' ? 1 : 0;
+                        const tB = colab.turno === 'Turno B' ? 1 : 0;
+                        const tC = colab.turno === 'Turno C' ? 1 : 0;
+                        const nd = (!['Turno A', 'Turno B', 'Turno C'].includes(colab.turno)) ? 1 : 0;
+                        const total = somaTotal(tA, tB, tC, nd);
+
+                        const trCol = criarLinha(colId, supId, "colaborador", colab.nome, tA, tB, tC, nd, total);
+                        trCol.dataset.secao = colab.tipoOperacional || 'Não operacional';
+                        trCol.dataset.supervisor = supervisor;
+                        trCol.dataset.turno = colab.turno || 'Não definido';
+                        trCol.dataset.funcao = funcaoId;
+                        tbody.appendChild(trCol);
+                    });
+
+                    const trTotal = criarLinha(`${supId}-total`, funcaoId, "total", `${supervisor} - Total`, tAS, tBS, tCS, tNS, totalS);
+                    tbody.appendChild(trTotal);
+                });
+
+                const trFuncTotal = criarLinha(`${funcaoId}-total`, null, "total", `${funcao} - Total`, tAF, tBF, tCF, tND, totalF);
+                tbody.appendChild(trFuncTotal);
+            });
+
+            filtroSupervisor.innerHTML = '';
+            Array.from(supervisores).sort().forEach(sup => {
+                const opt = document.createElement('option');
+                opt.value = sup;
+                opt.textContent = sup;
+                filtroSupervisor.appendChild(opt);
+            });
+
+            aplicarFiltros();
+        }
+
+        function aplicarFiltros() {
+            const tipo = filtroOperacional.value;
+            const supervisor = filtroSupervisor.value;
+            const turno = filtroTurno.value;
+
+            const colabs = Array.from(document.querySelectorAll('tr.colaborador-row'));
+            const mostrarIds = new Set();
+            const contagem = {};
+
+            colabs.forEach(row => {
+                const rowTipo = row.dataset.secao || 'Não operacional';
+                const rowSup = row.dataset.supervisor || 'Sem Supervisor';
+                const rowTurno = row.dataset.turno || 'Não definido';
+                const funcaoId = row.dataset.funcao;
+                const supId = row.dataset.parent;
+                const turnoA = +row.children[1].textContent || 0;
+                const turnoB = +row.children[2].textContent || 0;
+                const turnoC = +row.children[3].textContent || 0;
+                const naoDef = +row.children[4].textContent || 0;
+
+                const matchTipo = (tipo === 'Todos' || tipo === rowTipo);
+                const matchSup = (supervisor === 'Todos' || supervisor === rowSup);
+                const matchTurno = (turno === 'Todos' || turno === rowTurno);
+
+                if (matchTipo && matchSup && matchTurno) {
+                    row.style.display = '';
+                    mostrarIds.add(row.dataset.id);
+                    mostrarIds.add(supId);
+                    mostrarIds.add(funcaoId);
+
+                    if (!contagem[funcaoId]) contagem[funcaoId] = { A: 0, B: 0, C: 0, ND: 0 };
+                    if (!contagem[supId]) contagem[supId] = { A: 0, B: 0, C: 0, ND: 0 };
+
+                    contagem[funcaoId].A += turnoA;
+                    contagem[funcaoId].B += turnoB;
+                    contagem[funcaoId].C += turnoC;
+                    contagem[funcaoId].ND += naoDef;
+
+                    contagem[supId].A += turnoA;
+                    contagem[supId].B += turnoB;
+                    contagem[supId].C += turnoC;
+                    contagem[supId].ND += naoDef;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            document.querySelectorAll('tbody tr').forEach(row => {
+                const id = row.dataset.id;
+                if (row.classList.contains('colaborador-row')) return;
+                row.style.display = mostrarIds.has(id) ? '' : 'none';
+
+                if (row.classList.contains('total-row')) {
+                    const idRef = id.replace('-total', '');
+                    const soma = contagem[idRef] || { A: 0, B: 0, C: 0, ND: 0 };
+                    const totalGeral = soma.A + soma.B + soma.C + soma.ND;
+                    row.children[1].textContent = soma.A || '';
+                    row.children[2].textContent = soma.B || '';
+                    row.children[3].textContent = soma.C || '';
+                    row.children[4].textContent = soma.ND || '';
+                    row.children[5].textContent = totalGeral || '';
+                }
+            });
+        }
+
+        function toggleExpand(row) {
+            const id = row.dataset.id;
+            const isExpanded = row.classList.contains('expanded');
+            row.classList.toggle('expanded', !isExpanded);
+            row.classList.toggle('collapsed', isExpanded);
+            if (isExpanded) {
+                hideChildren(id);
+            } else {
+                showChildren(id);
+            }
+        }
+
+        function showChildren(parentId) {
+            const children = tbody.querySelectorAll(`tr[data-parent="${parentId}"]`);
+            children.forEach(child => {
+                child.style.display = '';
+                if (child.classList.contains('expanded')) {
+                    showChildren(child.dataset.id);
+                }
+            });
+        }
+
+        function hideChildren(parentId) {
+            const children = tbody.querySelectorAll(`tr[data-parent="${parentId}"]`);
+            children.forEach(child => {
+                child.style.display = 'none';
+                hideChildren(child.dataset.id);
+            });
+        }
+
+        tbody.addEventListener('click', e => {
+            const tr = e.target.closest('tr');
+            if (!tr) return;
+            if (tr.classList.contains('funcao-row') || tr.classList.contains('supervisor-row')) {
+                toggleExpand(tr);
+            }
+        });
+
+        filtroOperacional.addEventListener('change', aplicarFiltros);
+        filtroSupervisor.addEventListener('change', aplicarFiltros);
+        filtroTurno.addEventListener('change', aplicarFiltros);
+
+        async function carregarDados() {
+            try {
+                const response = await fetch('/api/qlp/dados');
+                const result = await response.json();
+
+                if (result.ok) {
+                    dadosOriginais = result.dados;
+                    montarTabela(result.dados);
+                    document.getElementById('loadingDiv').style.display = 'none';
+                    document.getElementById('tableWrapper').style.display = 'block';
+                    showStatus('<i class="fas fa-check"></i> Dados carregados com sucesso!', 'success');
+                    setTimeout(() => {
+                        document.getElementById('statusDiv').innerHTML = '';
+                    }, 3000);
+                } else {
+                    throw new Error(result.msg || 'Erro ao carregar dados');
+                }
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                document.getElementById('loadingDiv').innerHTML = `
+                    <i class="fas fa-exclamation-triangle" style="color: #dc3545;"></i>
+                    <p style="color: #dc3545;">Erro ao carregar dados do QLP</p>
+                    <p style="font-size: 14px; color: #6c757d;">${error.message}</p>
+                `;
+                showStatus(`<i class="fas fa-exclamation-triangle"></i> ${error.message}`, 'error');
+            }
+        }
+
+        async function exportarDados(formato) {
+            try {
+                showStatus('<i class="fas fa-spinner fa-spin"></i> Preparando exportação...', 'info');
+                
+                const response = await fetch(`/api/qlp/exportar?formato=${formato}`);
+                const result = await response.json();
+
+                if (result.ok) {
+                    if (formato === 'csv') {
+                        downloadCSV(result.csv);
+                        showStatus('<i class="fas fa-check"></i> CSV exportado com sucesso!', 'success');
+                    } else {
+                        downloadJSON(result.dados);
+                        showStatus('<i class="fas fa-check"></i> JSON exportado com sucesso!', 'success');
+                    }
+                    setTimeout(() => {
+                        document.getElementById('statusDiv').innerHTML = '';
+                    }, 3000);
+                } else {
+                    throw new Error(result.msg || 'Erro ao exportar dados');
+                }
+            } catch (error) {
+                console.error('Erro ao exportar:', error);
+                showStatus(`<i class="fas fa-exclamation-triangle"></i> ${error.message}`, 'error');
+            }
+        }
+
+        function downloadCSV(csvContent) {
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            const hoje = new Date().toISOString().split('T')[0];
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', `QLP_${hoje}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function downloadJSON(jsonData) {
+            const blob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            const hoje = new Date().toISOString().split('T')[0];
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', `QLP_${hoje}.json`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function voltarMenu() {
+            window.location.href = '/menu';
+        }
+
+        window.onload = function() {
+            const usuario = sessionStorage.getItem('usuario');
+            if (!usuario) {
+                showStatus('<i class="fas fa-exclamation-triangle"></i> Sessão expirada. Redirecionando...', 'error');
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 2000);
+                return;
+            }
+            
+            carregarDados();
+        };
+    </script>
+</body>
+</html>
