@@ -1,16 +1,7 @@
 {
   "rewrites": [
-    {
-      "source": "/",
-      "destination": "/public/index.html"
-    },
-    {
-      "source": "/menu",
-      "destination": "/public/menu.html"
-    },
-    {
-      "source": "/painel",
-      "destination": "/public/painel.html"
-    }
+    { "source": "/", "destination": "/public/index.html" },
+    { "source": "/menu", "destination": "/public/menu.html" },
+    { "source": "/painel", "destination": "/public/painel.html" }
   ]
 }
