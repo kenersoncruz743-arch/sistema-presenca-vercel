@@ -1,13 +1,13 @@
-import sheetsService from '../lib/sheets.js';
+// api/colaboradores.js - VERSÃO FUNCIONAL ORIGINAL
+const sheetsService = require('../lib/sheets');
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
+    return res.status(200).end();
   }
 
   try {
@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-      const { action, supervisor, aba, matricula, colaborador, status } = req.body;
+      const { action, supervisor, aba, matricula, colaborador, status, dados } = req.body;
 
       switch (action) {
         case 'getBuffer':
@@ -57,7 +57,6 @@ export default async function handler(req, res) {
           return res.status(200).json(resultUpdate);
 
         case 'saveToBase':
-          const { dados } = req.body;
           if (!dados || !Array.isArray(dados)) {
             return res.status(400).json({ 
               ok: false, 
@@ -80,7 +79,7 @@ export default async function handler(req, res) {
     console.error('Erro na API de colaboradores:', error);
     return res.status(500).json({ 
       error: 'Erro interno do servidor',
-      message: error.message
+      details: error.message 
     });
   }
-}
+};
