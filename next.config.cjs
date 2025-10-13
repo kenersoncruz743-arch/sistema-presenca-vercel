@@ -28,7 +28,7 @@ const nextConfig = {
       {
         source: '/qlp',
         destination: '/qlp.html',
-      },
+      }
     ];
   },
 }
