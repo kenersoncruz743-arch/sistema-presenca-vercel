@@ -25,6 +25,10 @@ const nextConfig = {
         source: '/coletores',
         destination: '/coletores.html',
       },
+      {
+        source: '/qlp',
+        destination: '/qlp.html',
+      },
     ];
   },
 }
