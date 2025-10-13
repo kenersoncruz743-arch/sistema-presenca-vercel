@@ -1,4 +1,4 @@
-// api/qlp/dados.js - API para carregar dados do QLP
+// api/qlp/dados.js - API atualizada para carregar dados da aba QLP
 const sheetsService = require('../../lib/sheets');
 
 module.exports = async function handler(req, res) {
@@ -18,56 +18,45 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    console.log('[QLP/DADOS] Iniciando carregamento de dados...');
+    console.log('[QLP/DADOS] Iniciando carregamento de dados da aba QLP...');
     
-    // Inicializa conexão com Google Sheets
     const doc = await sheetsService.init();
     console.log(`[QLP/DADOS] Conectado à planilha: ${doc.title}`);
     
-    // Busca a aba Base (onde estão os registros salvos)
-    const sheetBase = doc.sheetsByTitle['Base'];
-    if (!sheetBase) {
-      console.error('[QLP/DADOS] Aba Base não encontrada');
+    // Busca a aba QLP
+    const sheetQLP = doc.sheetsByTitle['QLP'];
+    if (!sheetQLP) {
+      console.error('[QLP/DADOS] Aba QLP não encontrada');
       return res.status(404).json({
         ok: false,
-        msg: 'Aba Base não encontrada na planilha'
+        msg: 'Aba QLP não encontrada na planilha. Verifique se a aba existe.'
       });
     }
     
-    // Busca a aba Quadro (informações dos colaboradores)
-    const sheetQuadro = doc.sheetsByTitle['Quadro'];
+    // Carrega os dados da aba QLP
+    const rows = await sheetQLP.getRows();
+    console.log(`[QLP/DADOS] ${rows.length} registros encontrados na aba QLP`);
     
-    // Carrega todos os registros da Base
-    const rows = await sheetBase.getRows();
-    console.log(`[QLP/DADOS] ${rows.length} registros encontrados na Base`);
-    
-    // Cria um mapa de colaboradores do Quadro (para pegar tipo operacional)
-    const quadroMap = {};
-    if (sheetQuadro) {
-      const quadroRows = await sheetQuadro.getRows();
-      quadroRows.forEach(row => {
-        const matricula = String(row.get('Coluna 1') || '').trim();
-        const tipoOperacional = String(row.get('Coluna 2') || '').trim();
-        if (matricula) {
-          quadroMap[matricula] = tipoOperacional || 'Não operacional';
-        }
-      });
-      console.log(`[QLP/DADOS] ${Object.keys(quadroMap).length} colaboradores carregados do Quadro`);
-    }
-    
-    // Estrutura de dados para organizar por Função > Supervisor > Colaboradores
+    // Estrutura para organizar dados: Supervisor > Turno > Count
     const estrutura = {};
+    const totalPorTurno = {
+      'Turno A': 0,
+      'Turno B': 0,
+      'Turno C': 0,
+      'Total': 0
+    };
     
     rows.forEach(row => {
-      const supervisor = String(row.get('Supervisor') || '').trim();
-      const aba = String(row.get('Aba') || '').trim();
-      const matricula = String(row.get('Matricula') || '').trim();
-      const nome = String(row.get('Nome') || '').trim();
-      const funcao = String(row.get('Função') || 'Sem Função').trim();
-      const status = String(row.get('Status') || '').trim();
+      const supervisor = String(row.get('Supervisor') || row.get('supervisor') || '').trim();
+      const aba = String(row.get('Aba') || row.get('aba') || row.get('Grupo') || '').trim();
+      const matricula = String(row.get('Matricula') || row.get('matricula') || '').trim();
+      const nome = String(row.get('Nome') || row.get('nome') || '').trim();
       
-      // Determina o turno baseado na Aba
-      let turno = 'Não definido';
+      // Ignora linhas vazias
+      if (!supervisor || !nome) return;
+      
+      // Determina o turno baseado na coluna Aba
+      let turno = 'Turno C'; // Padrão
       if (aba.toLowerCase().includes('ta') || aba.toLowerCase().includes('turno a')) {
         turno = 'Turno A';
       } else if (aba.toLowerCase().includes('tb') || aba.toLowerCase().includes('turno b')) {
@@ -76,71 +65,48 @@ module.exports = async function handler(req, res) {
         turno = 'Turno C';
       }
       
-      // Busca tipo operacional do colaborador
-      const tipoOperacional = quadroMap[matricula] || 'Não operacional';
-      
-      // Ignora linhas sem nome
-      if (!nome) return;
-      
-      // Cria estrutura: Função > Supervisor > Colaboradores
-      if (!estrutura[funcao]) {
-        estrutura[funcao] = {
-          supervisores: {},
-          totalContadores: {
-            'Turno A': 0,
-            'Turno B': 0,
-            'Turno C': 0,
-            'Situacao': 0
-          }
+      // Inicializa supervisor se não existe
+      if (!estrutura[supervisor]) {
+        estrutura[supervisor] = {
+          'Turno A': new Set(),
+          'Turno B': new Set(),
+          'Turno C': new Set(),
+          'Total': new Set()
         };
       }
       
-      if (!estrutura[funcao].supervisores[supervisor]) {
-        estrutura[funcao].supervisores[supervisor] = {
-          colaboradores: [],
-          totalContadores: {
-            'Turno A': 0,
-            'Turno B': 0,
-            'Turno C': 0,
-            'Situacao': 0
-          }
-        };
-      }
-      
-      // Adiciona colaborador
-      estrutura[funcao].supervisores[supervisor].colaboradores.push({
-        matricula,
-        nome,
-        funcao,
-        status,
-        turno,
-        tipoOperacional,
-        aba
-      });
-      
-      // Atualiza contadores
-      if (turno === 'Turno A') {
-        estrutura[funcao].totalContadores['Turno A']++;
-        estrutura[funcao].supervisores[supervisor].totalContadores['Turno A']++;
-      } else if (turno === 'Turno B') {
-        estrutura[funcao].totalContadores['Turno B']++;
-        estrutura[funcao].supervisores[supervisor].totalContadores['Turno B']++;
-      } else if (turno === 'Turno C') {
-        estrutura[funcao].totalContadores['Turno C']++;
-        estrutura[funcao].supervisores[supervisor].totalContadores['Turno C']++;
-      } else {
-        estrutura[funcao].totalContadores['Situacao']++;
-        estrutura[funcao].supervisores[supervisor].totalContadores['Situacao']++;
-      }
+      // Adiciona matrícula ao Set (garante contagem única)
+      estrutura[supervisor][turno].add(matricula);
+      estrutura[supervisor]['Total'].add(matricula);
     });
     
-    console.log(`[QLP/DADOS] Dados estruturados: ${Object.keys(estrutura).length} funções`);
+    // Converte Sets para contagens e calcula totais
+    const dadosProcessados = {};
+    
+    Object.keys(estrutura).forEach(supervisor => {
+      dadosProcessados[supervisor] = {
+        'Turno A': estrutura[supervisor]['Turno A'].size,
+        'Turno B': estrutura[supervisor]['Turno B'].size,
+        'Turno C': estrutura[supervisor]['Turno C'].size,
+        'Total': estrutura[supervisor]['Total'].size
+      };
+      
+      // Atualiza totais gerais
+      totalPorTurno['Turno A'] += dadosProcessados[supervisor]['Turno A'];
+      totalPorTurno['Turno B'] += dadosProcessados[supervisor]['Turno B'];
+      totalPorTurno['Turno C'] += dadosProcessados[supervisor]['Turno C'];
+      totalPorTurno['Total'] += dadosProcessados[supervisor]['Total'];
+    });
+    
+    console.log(`[QLP/DADOS] Dados processados: ${Object.keys(dadosProcessados).length} supervisores`);
+    console.log(`[QLP/DADOS] Totais:`, totalPorTurno);
     
     return res.status(200).json({
       ok: true,
-      dados: estrutura,
-      totalRegistros: rows.length,
-      totalFuncoes: Object.keys(estrutura).length
+      dados: dadosProcessados,
+      totais: totalPorTurno,
+      totalSupervisores: Object.keys(dadosProcessados).length,
+      totalRegistros: rows.length
     });
     
   } catch (error) {
