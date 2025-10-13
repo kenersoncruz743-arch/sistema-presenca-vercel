@@ -16,7 +16,7 @@
         }
 
         .container {
-            max-width: 1600px;
+            max-width: 1400px;
             margin: 0 auto;
             background: white;
             border-radius: 20px;
@@ -43,6 +43,11 @@
             gap: 10px;
         }
 
+        .header-info {
+            color: #6c757d;
+            font-size: 14px;
+        }
+
         .header-actions {
             display: flex;
             gap: 10px;
@@ -67,30 +72,11 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
 
-        .btn-primary {
-            background: #667eea;
-            color: white;
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-
-        .btn-info {
-            background: #17a2b8;
-            color: white;
-        }
-
-        .btn-warning {
-            background: #ffc107;
-            color: #212529;
-        }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-info { background: #17a2b8; color: white; }
+        .btn-warning { background: #ffc107; color: #212529; }
 
         .stats-grid {
             display: grid;
@@ -124,62 +110,27 @@
             float: right;
         }
 
-        .filters {
+        .table-section {
             background: #f8f9fa;
-            padding: 20px;
+            padding: 25px;
             border-radius: 12px;
             margin-bottom: 20px;
         }
 
-        .filters-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .filter-group label {
-            font-size: 14px;
-            font-weight: 600;
-            color: #495057;
+        .table-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
-            gap: 5px;
-        }
-
-        .filter-group select,
-        .filter-group input {
-            padding: 10px 12px;
-            border: 2px solid #ced4da;
-            border-radius: 6px;
-            font-size: 14px;
-            transition: border-color 0.3s;
-        }
-
-        .filter-group select:focus,
-        .filter-group input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .filter-actions {
-            display: flex;
             gap: 10px;
-            flex-wrap: wrap;
         }
 
         .table-wrapper {
             overflow-x: auto;
             border-radius: 12px;
-            border: 1px solid #e9ecef;
-            max-height: 600px;
-            overflow-y: auto;
+            border: 2px solid #dee2e6;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
         table {
@@ -189,55 +140,44 @@
         }
 
         th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #dee2e6;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid #dee2e6;
         }
 
         th {
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             font-weight: 600;
+            white-space: nowrap;
             position: sticky;
             top: 0;
             z-index: 10;
-            white-space: nowrap;
         }
 
-        th.sortable {
-            cursor: pointer;
-            user-select: none;
+        th.supervisor-col {
+            text-align: left;
+            min-width: 200px;
         }
 
-        th.sortable:hover {
-            background: linear-gradient(135deg, #5a6fd8, #6a3b9a);
-        }
-
-        th.sortable::after {
-            content: " ⇅";
-            opacity: 0.5;
-        }
-
-        th.sort-asc::after {
-            content: " ↑";
-            opacity: 1;
-        }
-
-        th.sort-desc::after {
-            content: " ↓";
-            opacity: 1;
+        td.supervisor-name {
+            text-align: left;
+            font-weight: 600;
+            background: #f8f9fa;
         }
 
         tbody tr:hover {
-            background-color: #f5f5f5;
+            background-color: #f0f4ff;
         }
 
-        tbody tr:nth-child(even) {
-            background-color: #fafafa;
+        tfoot tr {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-weight: bold;
         }
 
-        tbody tr:nth-child(even):hover {
-            background-color: #f0f0f0;
+        tfoot td {
+            border-color: rgba(255,255,255,0.3);
         }
 
         .loading {
@@ -267,9 +207,23 @@
             gap: 10px;
         }
 
-        .status.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .status.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .status.info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .status.error { 
+            background: #f8d7da; 
+            color: #721c24; 
+            border: 1px solid #f5c6cb; 
+        }
+        
+        .status.success { 
+            background: #d4edda; 
+            color: #155724; 
+            border: 1px solid #c3e6cb; 
+        }
+        
+        .status.info { 
+            background: #d1ecf1; 
+            color: #0c5460; 
+            border: 1px solid #bee5eb; 
+        }
 
         .empty-state {
             text-align: center;
@@ -283,56 +237,14 @@
             opacity: 0.5;
         }
 
-        .badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
+        .count-cell {
+            font-size: 18px;
             font-weight: 600;
         }
 
-        .badge-operacional {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .badge-nao-operacional {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            margin-top: 20px;
-            padding: 20px;
-        }
-
-        .pagination button {
-            padding: 8px 16px;
-            border: 1px solid #667eea;
-            background: white;
-            color: #667eea;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-
-        .pagination button:hover:not(:disabled) {
-            background: #667eea;
-            color: white;
-        }
-
-        .pagination button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .pagination span {
-            color: #495057;
-            font-weight: 600;
+        .count-zero {
+            color: #adb5bd;
+            font-weight: normal;
         }
 
         @media print {
@@ -341,18 +253,12 @@
                 padding: 0;
             }
             .header-actions,
-            .filters,
-            .pagination,
             .btn {
                 display: none !important;
             }
             .container {
                 box-shadow: none;
                 padding: 20px;
-            }
-            .table-wrapper {
-                max-height: none;
-                overflow: visible;
             }
         }
 
@@ -367,14 +273,10 @@
             }
 
             .header h1 {
-                font-size: 24px;
+                font-size: 22px;
             }
 
             .stats-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .filters-row {
                 grid-template-columns: 1fr;
             }
 
@@ -391,7 +293,10 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1><i class="fas fa-chart-bar"></i> Dashboard QLP - Quadro de Pessoal</h1>
+            <div>
+                <h1><i class="fas fa-chart-bar"></i> Dashboard QLP - Quadro de Pessoal</h1>
+                <div class="header-info" id="headerInfo">Carregando dados...</div>
+            </div>
             <div class="header-actions">
                 <button class="btn btn-success" onclick="exportarCSV()">
                     <i class="fas fa-file-csv"></i> Exportar CSV
@@ -412,89 +317,49 @@
             <!-- Stats serão carregados dinamicamente -->
         </div>
 
-        <div class="filters">
-            <div class="filters-row">
-                <div class="filter-group">
-                    <label><i class="fas fa-search"></i> Buscar</label>
-                    <input type="text" id="searchInput" placeholder="Nome ou matrícula...">
-                </div>
-
-                <div class="filter-group">
-                    <label><i class="fas fa-briefcase"></i> Função</label>
-                    <select id="filtroFuncao">
-                        <option value="">Todas</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label><i class="fas fa-filter"></i> Tipo Operacional</label>
-                    <select id="filtroOperacional">
-                        <option value="">Todos</option>
-                        <option value="Operacional">Operacional</option>
-                        <option value="Não operacional">Não operacional</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label><i class="fas fa-sort-amount-down"></i> Registros por página</label>
-                    <select id="pageSize">
-                        <option value="25">25</option>
-                        <option value="50" selected>50</option>
-                        <option value="100">100</option>
-                        <option value="999999">Todos</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="filter-actions">
-                <button class="btn btn-primary" onclick="aplicarFiltros()">
-                    <i class="fas fa-filter"></i> Aplicar Filtros
-                </button>
-                <button class="btn btn-secondary" onclick="limparFiltros()">
-                    <i class="fas fa-eraser"></i> Limpar Filtros
-                </button>
-            </div>
-        </div>
-
         <div id="loadingDiv" class="loading">
             <i class="fas fa-spinner fa-spin"></i>
-            <p>Carregando dados do quadro...</p>
+            <p>Carregando dados do QLP...</p>
         </div>
 
         <div id="contentDiv" style="display: none;">
-            <div class="table-wrapper">
-                <table id="quadroTable">
-                    <thead>
-                        <tr>
-                            <th class="sortable" data-col="matricula">
-                                <i class="fas fa-id-badge"></i> Matrícula
-                            </th>
-                            <th class="sortable" data-col="nome">
-                                <i class="fas fa-user"></i> Nome
-                            </th>
-                            <th class="sortable" data-col="funcaoRM">
-                                <i class="fas fa-id-card"></i> Função no RM
-                            </th>
-                            <th class="sortable" data-col="funcaoAtua">
-                                <i class="fas fa-briefcase"></i> Função que Atua
-                            </th>
-                            <th class="sortable" data-col="tipoOperacional">
-                                <i class="fas fa-cogs"></i> Tipo
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-
-            <div class="pagination">
-                <button onclick="mudarPagina(-1)" id="btnPrev">
-                    <i class="fas fa-chevron-left"></i> Anterior
-                </button>
-                <span id="pageInfo">Página 1 de 1</span>
-                <button onclick="mudarPagina(1)" id="btnNext">
-                    Próxima <i class="fas fa-chevron-right"></i>
-                </button>
+            <div class="table-section">
+                <h2><i class="fas fa-table"></i> Distribuição por Supervisor e Turno</h2>
+                <div class="table-wrapper">
+                    <table id="qlpTable">
+                        <thead>
+                            <tr>
+                                <th class="supervisor-col">
+                                    <i class="fas fa-user-tie"></i> Supervisor
+                                </th>
+                                <th>
+                                    <i class="fas fa-sun"></i> Turno A
+                                </th>
+                                <th>
+                                    <i class="fas fa-moon"></i> Turno B
+                                </th>
+                                <th>
+                                    <i class="fas fa-star"></i> Turno C
+                                </th>
+                                <th>
+                                    <i class="fas fa-calculator"></i> Total
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                        <tfoot>
+                            <tr>
+                                <td style="text-align: left;">
+                                    <i class="fas fa-chart-line"></i> TOTAL GERAL
+                                </td>
+                                <td id="totalTurnoA">0</td>
+                                <td id="totalTurnoB">0</td>
+                                <td id="totalTurnoC">0</td>
+                                <td id="totalGeral">0</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -502,16 +367,17 @@
     </div>
 
     <script>
-        let dadosOriginais = [];
-        let dadosFiltrados = [];
-        let paginaAtual = 1;
-        let registrosPorPagina = 50;
-        let sortColumn = '';
-        let sortDirection = 'asc';
+        let dadosOriginais = null;
+        let totaisGerais = null;
 
         function showStatus(message, type = 'info') {
             const statusEl = document.getElementById('statusDiv');
-            statusEl.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'}"></i> ${message}`;
+            const icons = {
+                success: 'check-circle',
+                error: 'exclamation-triangle',
+                info: 'info-circle'
+            };
+            statusEl.innerHTML = `<i class="fas fa-${icons[type]}"></i> ${message}`;
             statusEl.className = `status ${type}`;
             setTimeout(() => {
                 statusEl.innerHTML = '';
@@ -520,7 +386,7 @@
 
         async function carregarDados() {
             try {
-                console.log('🔄 Carregando dados do quadro...');
+                console.log('🔄 Carregando dados da aba QLP...');
                 
                 const response = await fetch('/api/qlp/dados');
                 
@@ -528,245 +394,149 @@
                     throw new Error(`Erro HTTP ${response.status}`);
                 }
 
-                const text = await response.text();
-                let result;
-                
-                try {
-                    result = JSON.parse(text);
-                } catch (e) {
-                    console.error('❌ Erro ao fazer parse:', text.substring(0, 300));
-                    throw new Error('Resposta inválida da API');
-                }
+                const result = await response.json();
 
-                if (result.ok) {
-                    // Processa os dados da estrutura complexa para lista simples
-                    dadosOriginais = processarDados(result.dados);
-                    dadosFiltrados = [...dadosOriginais];
-                    
-                    console.log(`✅ ${dadosOriginais.length} colaboradores carregados`);
-                    
-                    atualizarStats();
-                    preencherFiltros();
-                    renderizarTabela();
-                    
-                    document.getElementById('loadingDiv').style.display = 'none';
-                    document.getElementById('contentDiv').style.display = 'block';
-                    
-                    showStatus('Dados carregados com sucesso!', 'success');
-                } else {
+                if (!result.ok) {
                     throw new Error(result.msg || 'Erro ao carregar dados');
                 }
+
+                dadosOriginais = result.dados;
+                totaisGerais = result.totais;
+
+                console.log(`✅ ${result.totalSupervisores} supervisores carregados`);
+                console.log('📊 Totais:', totaisGerais);
+                
+                atualizarStats();
+                renderizarTabela();
+                
+                document.getElementById('loadingDiv').style.display = 'none';
+                document.getElementById('contentDiv').style.display = 'block';
+                
+                document.getElementById('headerInfo').textContent = 
+                    `Última atualização: ${new Date().toLocaleString('pt-BR')} | ${result.totalRegistros} registros`;
+                
+                showStatus('Dados carregados com sucesso!', 'success');
+                
             } catch (error) {
                 console.error('❌ Erro:', error);
                 document.getElementById('loadingDiv').innerHTML = `
-                    <i class="fas fa-exclamation-triangle" style="color: #dc3545;"></i>
-                    <p style="color: #dc3545;">Erro ao carregar dados</p>
-                    <p style="font-size: 14px;">${error.message}</p>
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle" style="color: #dc3545;"></i>
+                        <p style="color: #dc3545; font-weight: 600;">Erro ao carregar dados</p>
+                        <p style="font-size: 14px; margin-top: 10px;">${error.message}</p>
+                        <button class="btn btn-primary" onclick="atualizarDados()" style="margin-top: 20px;">
+                            <i class="fas fa-redo"></i> Tentar Novamente
+                        </button>
+                    </div>
                 `;
                 showStatus(error.message, 'error');
             }
         }
 
-        function processarDados(estrutura) {
-            const lista = [];
-            
-            for (const [funcao, dadosFuncao] of Object.entries(estrutura)) {
-                if (!dadosFuncao.supervisores) continue;
-                
-                for (const [supervisor, dadosSup] of Object.entries(dadosFuncao.supervisores)) {
-                    if (!dadosSup.colaboradores) continue;
-                    
-                    dadosSup.colaboradores.forEach(colab => {
-                        lista.push({
-                            matricula: colab.matricula || '',
-                            nome: colab.nome || '',
-                            funcaoRM: colab.funcao || funcao,
-                            funcaoAtua: funcao,
-                            tipoOperacional: colab.tipoOperacional || 'Não operacional',
-                            turno: colab.turno || 'Não definido',
-                            supervisor: supervisor,
-                            aba: colab.aba || '',
-                            status: colab.status || ''
-                        });
-                    });
-                }
-            }
-            
-            return lista;
-        }
-
         function atualizarStats() {
-            const total = dadosOriginais.length;
-            const operacionais = dadosOriginais.filter(d => d.tipoOperacional === 'Operacional').length;
-            const naoOperacionais = total - operacionais;
-            const funcoes = new Set(dadosOriginais.map(d => d.funcaoAtua)).size;
-            
+            if (!totaisGerais) return;
+
             document.getElementById('statsGrid').innerHTML = `
                 <div class="stat-card">
-                    <h3>Total de Colaboradores</h3>
-                    <div class="stat-value">${total}</div>
-                    <i class="fas fa-users"></i>
+                    <h3><i class="fas fa-sun"></i> Turno A</h3>
+                    <div class="stat-value">${totaisGerais['Turno A']}</div>
                 </div>
                 <div class="stat-card">
-                    <h3>Operacionais</h3>
-                    <div class="stat-value">${operacionais}</div>
-                    <i class="fas fa-user-cog"></i>
+                    <h3><i class="fas fa-moon"></i> Turno B</h3>
+                    <div class="stat-value">${totaisGerais['Turno B']}</div>
                 </div>
                 <div class="stat-card">
-                    <h3>Não Operacionais</h3>
-                    <div class="stat-value">${naoOperacionais}</div>
-                    <i class="fas fa-user-tie"></i>
+                    <h3><i class="fas fa-star"></i> Turno C</h3>
+                    <div class="stat-value">${totaisGerais['Turno C']}</div>
                 </div>
                 <div class="stat-card">
-                    <h3>Funções Diferentes</h3>
-                    <div class="stat-value">${funcoes}</div>
-                    <i class="fas fa-briefcase"></i>
+                    <h3><i class="fas fa-users"></i> Total Geral</h3>
+                    <div class="stat-value">${totaisGerais['Total']}</div>
                 </div>
             `;
         }
 
-        function preencherFiltros() {
-            const funcoes = [...new Set(dadosOriginais.map(d => d.funcaoAtua))].sort();
-            const selectFuncao = document.getElementById('filtroFuncao');
-            
-            selectFuncao.innerHTML = '<option value="">Todas</option>';
-            funcoes.forEach(funcao => {
-                const option = document.createElement('option');
-                option.value = funcao;
-                option.textContent = funcao;
-                selectFuncao.appendChild(option);
-            });
-        }
-
-        function aplicarFiltros() {
-            const busca = document.getElementById('searchInput').value.toLowerCase();
-            const funcao = document.getElementById('filtroFuncao').value;
-            const operacional = document.getElementById('filtroOperacional').value;
-            
-            dadosFiltrados = dadosOriginais.filter(d => {
-                const matchBusca = !busca || 
-                    d.nome.toLowerCase().includes(busca) || 
-                    d.matricula.toLowerCase().includes(busca);
-                
-                const matchFuncao = !funcao || d.funcaoAtua === funcao;
-                const matchOperacional = !operacional || d.tipoOperacional === operacional;
-                
-                return matchBusca && matchFuncao && matchOperacional;
-            });
-            
-            paginaAtual = 1;
-            renderizarTabela();
-            
-            showStatus(`${dadosFiltrados.length} registro(s) encontrado(s)`, 'info');
-        }
-
-        function limparFiltros() {
-            document.getElementById('searchInput').value = '';
-            document.getElementById('filtroFuncao').value = '';
-            document.getElementById('filtroOperacional').value = '';
-            
-            dadosFiltrados = [...dadosOriginais];
-            paginaAtual = 1;
-            renderizarTabela();
-            
-            showStatus('Filtros limpos', 'info');
-        }
-
         function renderizarTabela() {
-            const tbody = document.querySelector('#quadroTable tbody');
-            registrosPorPagina = parseInt(document.getElementById('pageSize').value);
+            if (!dadosOriginais) return;
+
+            const tbody = document.querySelector('#qlpTable tbody');
             
-            // Ordenação
-            if (sortColumn) {
-                dadosFiltrados.sort((a, b) => {
-                    let valA = a[sortColumn] || '';
-                    let valB = b[sortColumn] || '';
-                    
-                    if (typeof valA === 'string') valA = valA.toLowerCase();
-                    if (typeof valB === 'string') valB = valB.toLowerCase();
-                    
-                    if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
-                    if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
-                    return 0;
-                });
-            }
-            
-            const totalPaginas = Math.ceil(dadosFiltrados.length / registrosPorPagina);
-            const inicio = (paginaAtual - 1) * registrosPorPagina;
-            const fim = inicio + registrosPorPagina;
-            const dadosPagina = dadosFiltrados.slice(inicio, fim);
-            
-            if (dadosPagina.length === 0) {
+            // Ordena supervisores alfabeticamente
+            const supervisores = Object.keys(dadosOriginais).sort((a, b) => 
+                a.localeCompare(b, 'pt-BR')
+            );
+
+            if (supervisores.length === 0) {
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="5" class="empty-state">
                             <i class="fas fa-inbox"></i>
-                            <p>Nenhum colaborador encontrado</p>
+                            <p>Nenhum dado encontrado na aba QLP</p>
                         </td>
                     </tr>
                 `;
-            } else {
-                tbody.innerHTML = dadosPagina.map(d => `
+                return;
+            }
+
+            tbody.innerHTML = supervisores.map(supervisor => {
+                const dados = dadosOriginais[supervisor];
+                return `
                     <tr>
-                        <td><strong>${d.matricula}</strong></td>
-                        <td>${d.nome}</td>
-                        <td>${d.funcaoRM}</td>
-                        <td>${d.funcaoAtua}</td>
-                        <td>
-                            <span class="badge ${d.tipoOperacional === 'Operacional' ? 'badge-operacional' : 'badge-nao-operacional'}">
-                                ${d.tipoOperacional}
-                            </span>
+                        <td class="supervisor-name">
+                            <i class="fas fa-user-tie" style="color: #667eea; margin-right: 8px;"></i>
+                            ${supervisor}
+                        </td>
+                        <td class="count-cell ${dados['Turno A'] === 0 ? 'count-zero' : ''}">
+                            ${dados['Turno A']}
+                        </td>
+                        <td class="count-cell ${dados['Turno B'] === 0 ? 'count-zero' : ''}">
+                            ${dados['Turno B']}
+                        </td>
+                        <td class="count-cell ${dados['Turno C'] === 0 ? 'count-zero' : ''}">
+                            ${dados['Turno C']}
+                        </td>
+                        <td class="count-cell" style="background: #f0f4ff; font-weight: 700;">
+                            ${dados['Total']}
                         </td>
                     </tr>
-                `).join('');
-            }
-            
-            // Atualiza paginação
-            document.getElementById('pageInfo').textContent = 
-                `Página ${paginaAtual} de ${totalPaginas || 1} (${dadosFiltrados.length} registros)`;
-            document.getElementById('btnPrev').disabled = paginaAtual === 1;
-            document.getElementById('btnNext').disabled = paginaAtual >= totalPaginas;
-        }
+                `;
+            }).join('');
 
-        function mudarPagina(direcao) {
-            paginaAtual += direcao;
-            renderizarTabela();
-            document.querySelector('.table-wrapper').scrollTop = 0;
-        }
-
-        function ordenarTabela(coluna) {
-            if (sortColumn === coluna) {
-                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-            } else {
-                sortColumn = coluna;
-                sortDirection = 'asc';
-            }
-            
-            // Atualiza classes dos cabeçalhos
-            document.querySelectorAll('th.sortable').forEach(th => {
-                th.classList.remove('sort-asc', 'sort-desc');
-                if (th.dataset.col === coluna) {
-                    th.classList.add(`sort-${sortDirection}`);
-                }
-            });
-            
-            renderizarTabela();
+            // Atualiza totais no rodapé
+            document.getElementById('totalTurnoA').textContent = totaisGerais['Turno A'];
+            document.getElementById('totalTurnoB').textContent = totaisGerais['Turno B'];
+            document.getElementById('totalTurnoC').textContent = totaisGerais['Turno C'];
+            document.getElementById('totalGeral').textContent = totaisGerais['Total'];
         }
 
         function exportarCSV() {
-            const headers = ['Matrícula', 'Nome', 'Função no RM', 'Função que Atua', 'Tipo Operacional'];
+            if (!dadosOriginais || !totaisGerais) {
+                showStatus('Nenhum dado disponível para exportar', 'error');
+                return;
+            }
+
+            const headers = ['Supervisor', 'Turno A', 'Turno B', 'Turno C', 'Total'];
             let csv = headers.join(',') + '\n';
             
-            dadosFiltrados.forEach(d => {
+            const supervisores = Object.keys(dadosOriginais).sort((a, b) => 
+                a.localeCompare(b, 'pt-BR')
+            );
+
+            supervisores.forEach(supervisor => {
+                const dados = dadosOriginais[supervisor];
                 const linha = [
-                    d.matricula,
-                    `"${d.nome}"`,
-                    `"${d.funcaoRM}"`,
-                    `"${d.funcaoAtua}"`,
-                    d.tipoOperacional
+                    `"${supervisor}"`,
+                    dados['Turno A'],
+                    dados['Turno B'],
+                    dados['Turno C'],
+                    dados['Total']
                 ].join(',');
                 csv += linha + '\n';
             });
+
+            // Adiciona linha de totais
+            csv += '\n';
+            csv += `"TOTAL GERAL",${totaisGerais['Turno A']},${totaisGerais['Turno B']},${totaisGerais['Turno C']},${totaisGerais['Total']}\n`;
             
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
@@ -774,7 +544,7 @@
             const hoje = new Date().toISOString().split('T')[0];
             
             link.setAttribute('href', url);
-            link.setAttribute('download', `Quadro_Pessoal_${hoje}.csv`);
+            link.setAttribute('download', `QLP_${hoje}.csv`);
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
@@ -786,26 +556,16 @@
         function atualizarDados() {
             document.getElementById('loadingDiv').style.display = 'block';
             document.getElementById('contentDiv').style.display = 'none';
+            document.getElementById('loadingDiv').innerHTML = `
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Carregando dados do QLP...</p>
+            `;
             carregarDados();
         }
 
         function voltarMenu() {
             window.location.href = '/menu';
         }
-
-        // Event Listeners
-        document.getElementById('searchInput').addEventListener('keyup', (e) => {
-            if (e.key === 'Enter') aplicarFiltros();
-        });
-
-        document.getElementById('pageSize').addEventListener('change', () => {
-            paginaAtual = 1;
-            renderizarTabela();
-        });
-
-        document.querySelectorAll('th.sortable').forEach(th => {
-            th.addEventListener('click', () => ordenarTabela(th.dataset.col));
-        });
 
         // Inicialização
         window.onload = function() {
