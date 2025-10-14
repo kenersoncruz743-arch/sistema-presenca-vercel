@@ -90,16 +90,6 @@
             overflow: hidden;
         }
 
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-        }
-
         .stat-card h3 {
             font-size: 14px;
             opacity: 0.9;
@@ -237,10 +227,6 @@
             background-color: #fafafa;
         }
 
-        tbody tr:nth-child(even):hover {
-            background-color: #f0f0f0;
-        }
-
         .badge {
             display: inline-block;
             padding: 4px 8px;
@@ -257,26 +243,6 @@
         .badge-inativo {
             background: #f8d7da;
             color: #721c24;
-        }
-
-        .badge-turno-a {
-            background: #cfe2ff;
-            color: #084298;
-        }
-
-        .badge-turno-b {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .badge-turno-c {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-
-        .badge-indefinido {
-            background: #e2e3e5;
-            color: #41464b;
         }
 
         .loading {
@@ -306,20 +272,14 @@
             gap: 10px;
         }
 
-        .status.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .status.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .status.info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.info { background: #d1ecf1; color: #0c5460; }
 
         .empty-state {
             text-align: center;
             padding: 60px 20px;
             color: #6c757d;
-        }
-
-        .empty-state i {
-            font-size: 64px;
-            margin-bottom: 20px;
-            opacity: 0.5;
         }
 
         .pagination {
@@ -349,11 +309,6 @@
         .pagination button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
-        }
-
-        .pagination span {
-            color: #495057;
-            font-weight: 600;
         }
 
         .analise-section {
@@ -399,11 +354,6 @@
             color: white;
             font-size: 12px;
             font-weight: bold;
-            transition: all 0.3s;
-        }
-
-        .analise-bar-item:hover {
-            filter: brightness(1.1);
         }
 
         .analise-bar-ativos {
@@ -414,32 +364,22 @@
             background: linear-gradient(135deg, #dc3545, #c82333);
         }
 
-        @media print {
-            body { background: white; padding: 0; }
-            .header-actions, .filters, .pagination, .btn { display: none !important; }
-            .container { box-shadow: none; padding: 20px; }
-            .table-wrapper { max-height: none; overflow: visible; }
-        }
-
         @media (max-width: 768px) {
             .container { padding: 15px; }
             .header { flex-direction: column; text-align: center; }
-            .header h1 { font-size: 24px; }
             .stats-grid { grid-template-columns: 1fr; }
             .filters-row { grid-template-columns: 1fr; }
-            .analise-grid { grid-template-columns: 1fr; }
             table { font-size: 11px; }
-            th, td { padding: 6px 4px; }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1><i class="fas fa-chart-bar"></i> Dashboard QLP - Quadro de Pessoal</h1>
+            <h1><i class="fas fa-chart-bar"></i> Dashboard QLP</h1>
             <div class="header-actions">
                 <button class="btn btn-success" onclick="exportarCSV()">
-                    <i class="fas fa-file-csv"></i> Exportar CSV
+                    <i class="fas fa-file-csv"></i> CSV
                 </button>
                 <button class="btn btn-info" onclick="window.print()">
                     <i class="fas fa-print"></i> Imprimir
@@ -453,9 +393,7 @@
             </div>
         </div>
 
-        <div class="stats-grid" id="statsGrid">
-            <!-- Stats serão carregados dinamicamente -->
-        </div>
+        <div class="stats-grid" id="statsGrid"></div>
 
         <div class="filters">
             <div class="filters-row">
@@ -463,35 +401,18 @@
                     <label><i class="fas fa-search"></i> Buscar</label>
                     <input type="text" id="searchInput" placeholder="Nome ou chapa...">
                 </div>
-
                 <div class="filter-group">
                     <label><i class="fas fa-layer-group"></i> Seção</label>
-                    <select id="filtroSecao">
-                        <option value="">Todas</option>
-                    </select>
+                    <select id="filtroSecao"><option value="">Todas</option></select>
                 </div>
-
                 <div class="filter-group">
                     <label><i class="fas fa-clock"></i> Turno</label>
-                    <select id="filtroTurno">
-                        <option value="">Todos</option>
-                    </select>
+                    <select id="filtroTurno"><option value="">Todos</option></select>
                 </div>
-
                 <div class="filter-group">
                     <label><i class="fas fa-user-tie"></i> Supervisor</label>
-                    <select id="filtroSupervisor">
-                        <option value="">Todos</option>
-                    </select>
+                    <select id="filtroSupervisor"><option value="">Todos</option></select>
                 </div>
-
-                <div class="filter-group">
-                    <label><i class="fas fa-briefcase"></i> Função</label>
-                    <select id="filtroFuncao">
-                        <option value="">Todas</option>
-                    </select>
-                </div>
-
                 <div class="filter-group">
                     <label><i class="fas fa-toggle-on"></i> Situação</label>
                     <select id="filtroSituacao">
@@ -500,18 +421,15 @@
                         <option value="inativo">Somente Inativos</option>
                     </select>
                 </div>
-
                 <div class="filter-group">
                     <label><i class="fas fa-list-ol"></i> Registros/página</label>
                     <select id="pageSize">
-                        <option value="25">25</option>
                         <option value="50" selected>50</option>
                         <option value="100">100</option>
                         <option value="999999">Todos</option>
                     </select>
                 </div>
             </div>
-
             <div class="filter-actions">
                 <button class="btn btn-primary" onclick="aplicarFiltros()">
                     <i class="fas fa-filter"></i> Aplicar Filtros
@@ -542,36 +460,19 @@
                 <table id="quadroTable">
                     <thead>
                         <tr>
-                            <th class="sortable" data-col="chapa">
-                                <i class="fas fa-id-badge"></i> Chapa
-                            </th>
-                            <th class="sortable" data-col="nome">
-                                <i class="fas fa-user"></i> Nome
-                            </th>
-                            <th class="sortable" data-col="funcao">
-                                <i class="fas fa-briefcase"></i> Função
-                            </th>
-                            <th class="sortable" data-col="secao">
-                                <i class="fas fa-layer-group"></i> Seção
-                            </th>
-                            <th class="sortable" data-col="turno">
-                                <i class="fas fa-clock"></i> Turno
-                            </th>
-                            <th class="sortable" data-col="supervisor">
-                                <i class="fas fa-user-tie"></i> Supervisor
-                            </th>
-                            <th class="sortable" data-col="dtAdmissao">
-                                <i class="fas fa-calendar"></i> Admissão
-                            </th>
-                            <th class="sortable" data-col="situacao">
-                                <i class="fas fa-info-circle"></i> Situação
-                            </th>
+                            <th class="sortable" data-col="chapa">Chapa</th>
+                            <th class="sortable" data-col="nome">Nome</th>
+                            <th class="sortable" data-col="funcao">Função</th>
+                            <th class="sortable" data-col="secao">Seção</th>
+                            <th class="sortable" data-col="turno">Turno</th>
+                            <th class="sortable" data-col="supervisor">Supervisor</th>
+                            <th class="sortable" data-col="dtAdmissao">Admissão</th>
+                            <th class="sortable" data-col="situacao">Situação</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
                 </table>
             </div>
-
             <div class="pagination">
                 <button onclick="mudarPagina(-1)" id="btnPrev">
                     <i class="fas fa-chevron-left"></i> Anterior
@@ -595,66 +496,276 @@
         let sortDirection = 'asc';
         let estatisticasGlobais = null;
 
-        function showStatus(message, type = 'info') {
-            const statusEl = document.getElementById('statusDiv');
-            statusEl.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'}"></i> ${message}`;
-            statusEl.className = `status ${type}`;
-            setTimeout(() => {
-                statusEl.innerHTML = '';
-            }, 5000);
+        function showStatus(msg, type = 'info') {
+            const el = document.getElementById('statusDiv');
+            el.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'}"></i> ${msg}`;
+            el.className = `status ${type}`;
+            setTimeout(() => el.innerHTML = '', 5000);
         }
 
         async function carregarDados() {
             try {
-                console.log('🔄 Carregando dados do quadro...');
+                const res = await fetch('/api/qlp/quadro');
+                if (!res.ok) throw new Error(`Erro HTTP ${res.status}`);
                 
-                const response = await fetch('/api/qlp/quadro');
-                
-                if (!response.ok) {
-                    throw new Error(`Erro HTTP ${response.status}`);
-                }
-
-                const result = await response.json();
-
+                const result = await res.json();
                 if (result.ok) {
                     dadosOriginais = result.colaboradores || [];
                     dadosFiltrados = [...dadosOriginais];
                     estatisticasGlobais = result.estatisticas;
                     
-                    console.log(`✅ ${dadosOriginais.length} colaboradores carregados`);
-                    
-                    atualizarStatsComDados(result.estatisticas);
+                    atualizarStats(result.estatisticas);
                     preencherFiltros();
                     renderizarTabela();
                     
                     document.getElementById('loadingDiv').style.display = 'none';
                     document.getElementById('contentDiv').style.display = 'block';
-                    
-                    showStatus(`Dados carregados com sucesso! ${dadosOriginais.length} colaboradores encontrados.`, 'success');
+                    showStatus(`${dadosOriginais.length} colaboradores carregados`, 'success');
                 } else {
-                    throw new Error(result.msg || 'Erro ao carregar dados');
+                    throw new Error(result.msg || 'Erro ao carregar');
                 }
             } catch (error) {
-                console.error('❌ Erro:', error);
+                console.error('Erro:', error);
                 document.getElementById('loadingDiv').innerHTML = `
                     <i class="fas fa-exclamation-triangle" style="color: #dc3545;"></i>
                     <p style="color: #dc3545;">Erro ao carregar dados</p>
                     <p style="font-size: 14px;">${error.message}</p>
-                    <button class="btn btn-warning" onclick="location.reload()" style="margin-top: 20px;">
-                        <i class="fas fa-redo"></i> Tentar Novamente
-                    </button>
                 `;
                 showStatus(error.message, 'error');
             }
         }
 
-        function atualizarStatsComDados(stats) {
+        function atualizarStats(stats) {
             document.getElementById('statsGrid').innerHTML = `
                 <div class="stat-card">
-                    <h3>Total de Colaboradores</h3>
+                    <h3>Total</h3>
                     <div class="stat-value">${stats.total}</div>
                     <i class="fas fa-users"></i>
                 </div>
                 <div class="stat-card" style="background: linear-gradient(135deg, #28a745, #20c997);">
                     <h3>Ativos</h3>
                     <div class="stat-value">${stats.ativos}</div>
+                    <i class="fas fa-user-check"></i>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #dc3545, #c82333);">
+                    <h3>Inativos</h3>
+                    <div class="stat-value">${stats.inativos}</div>
+                    <i class="fas fa-user-times"></i>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #17a2b8, #138496);">
+                    <h3>Seções</h3>
+                    <div class="stat-value">${stats.totalSecoes}</div>
+                    <i class="fas fa-layer-group"></i>
+                </div>
+            `;
+        }
+
+        function preencherFiltros() {
+            const secoes = [...new Set(dadosOriginais.map(d => d.secao).filter(Boolean))].sort();
+            const turnos = [...new Set(dadosOriginais.map(d => d.turno).filter(Boolean))].sort();
+            const sups = [...new Set(dadosOriginais.map(d => d.supervisor).filter(Boolean))].sort();
+            
+            document.getElementById('filtroSecao').innerHTML = '<option value="">Todas</option>' + 
+                secoes.map(s => `<option value="${s}">${s}</option>`).join('');
+            document.getElementById('filtroTurno').innerHTML = '<option value="">Todos</option>' + 
+                turnos.map(t => `<option value="${t}">${t}</option>`).join('');
+            document.getElementById('filtroSupervisor').innerHTML = '<option value="">Todos</option>' + 
+                sups.map(s => `<option value="${s}">${s}</option>`).join('');
+        }
+
+        function aplicarFiltros() {
+            const busca = document.getElementById('searchInput').value.toLowerCase();
+            const secao = document.getElementById('filtroSecao').value;
+            const turno = document.getElementById('filtroTurno').value;
+            const supervisor = document.getElementById('filtroSupervisor').value;
+            const situacao = document.getElementById('filtroSituacao').value;
+            
+            dadosFiltrados = dadosOriginais.filter(d => {
+                const matchBusca = !busca || d.nome.toLowerCase().includes(busca) || d.chapa.includes(busca);
+                const matchSecao = !secao || d.secao === secao;
+                const matchTurno = !turno || d.turno === turno;
+                const matchSup = !supervisor || d.supervisor === supervisor;
+                const matchSit = !situacao || (situacao === 'ativo' ? d.isAtivo : !d.isAtivo);
+                
+                return matchBusca && matchSecao && matchTurno && matchSup && matchSit;
+            });
+            
+            paginaAtual = 1;
+            renderizarTabela();
+            showStatus(`${dadosFiltrados.length} registros encontrados`, 'info');
+        }
+
+        function limparFiltros() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('filtroSecao').value = '';
+            document.getElementById('filtroTurno').value = '';
+            document.getElementById('filtroSupervisor').value = '';
+            document.getElementById('filtroSituacao').value = '';
+            dadosFiltrados = [...dadosOriginais];
+            paginaAtual = 1;
+            renderizarTabela();
+        }
+
+        function renderizarTabela() {
+            const tbody = document.querySelector('#quadroTable tbody');
+            registrosPorPagina = parseInt(document.getElementById('pageSize').value);
+            
+            if (sortColumn) {
+                dadosFiltrados.sort((a, b) => {
+                    let valA = (a[sortColumn] || '').toString().toLowerCase();
+                    let valB = (b[sortColumn] || '').toString().toLowerCase();
+                    if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+                    if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+                    return 0;
+                });
+            }
+            
+            const totalPaginas = Math.ceil(dadosFiltrados.length / registrosPorPagina);
+            const inicio = (paginaAtual - 1) * registrosPorPagina;
+            const fim = inicio + registrosPorPagina;
+            const dadosPagina = dadosFiltrados.slice(inicio, fim);
+            
+            if (dadosPagina.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><i class="fas fa-inbox"></i><p>Nenhum registro</p></td></tr>';
+            } else {
+                tbody.innerHTML = dadosPagina.map(d => `
+                    <tr>
+                        <td><strong>${d.chapa}</strong></td>
+                        <td>${d.nome}</td>
+                        <td>${d.funcao}</td>
+                        <td>${d.secao}</td>
+                        <td>${d.turno}</td>
+                        <td>${d.supervisor}</td>
+                        <td>${d.dtAdmissao}</td>
+                        <td><span class="badge ${d.isAtivo ? 'badge-ativo' : 'badge-inativo'}">${d.situacao}</span></td>
+                    </tr>
+                `).join('');
+            }
+            
+            document.getElementById('pageInfo').textContent = 
+                `Página ${paginaAtual} de ${totalPaginas || 1} (${dadosFiltrados.length} registros)`;
+            document.getElementById('btnPrev').disabled = paginaAtual === 1;
+            document.getElementById('btnNext').disabled = paginaAtual >= totalPaginas;
+        }
+
+        function mudarPagina(dir) {
+            paginaAtual += dir;
+            renderizarTabela();
+        }
+
+        function ordenarTabela(col) {
+            if (sortColumn === col) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = col;
+                sortDirection = 'asc';
+            }
+            
+            document.querySelectorAll('th.sortable').forEach(th => {
+                th.classList.remove('sort-asc', 'sort-desc');
+                if (th.dataset.col === col) th.classList.add(`sort-${sortDirection}`);
+            });
+            
+            renderizarTabela();
+        }
+
+        function toggleAnalise() {
+            const sec = document.getElementById('analiseSection');
+            const txt = document.getElementById('btnAnaliseText');
+            
+            if (sec.style.display === 'none') {
+                gerarAnalise();
+                sec.style.display = 'block';
+                txt.textContent = 'Ocultar Análises';
+            } else {
+                sec.style.display = 'none';
+                txt.textContent = 'Ver Análises';
+            }
+        }
+
+        function gerarAnalise() {
+            if (!estatisticasGlobais || !estatisticasGlobais.porSecao) return;
+            
+            const ordenado = Object.entries(estatisticasGlobais.porSecao)
+                .sort((a, b) => b[1].total - a[1].total);
+            
+            document.getElementById('analiseContent').innerHTML = `
+                <div class="analise-grid">
+                    ${ordenado.map(([secao, dados]) => {
+                        const percAtivos = ((dados.ativos / dados.total) * 100).toFixed(1);
+                        const percInat = ((dados.inativos / dados.total) * 100).toFixed(1);
+                        
+                        return `
+                            <div class="analise-card">
+                                <h4>${secao}</h4>
+                                <p style="color: #6c757d; margin-bottom: 10px;">Total: ${dados.total}</p>
+                                <div class="analise-bar">
+                                    <div class="analise-bar-item analise-bar-ativos" style="width: ${percAtivos}%">
+                                        ${dados.ativos > 0 ? dados.ativos : ''}
+                                    </div>
+                                    <div class="analise-bar-item analise-bar-inativos" style="width: ${percInat}%">
+                                        ${dados.inativos > 0 ? dados.inativos : ''}
+                                    </div>
+                                </div>
+                                <p style="font-size: 12px; color: #6c757d;">
+                                    <span style="color: #28a745;">●</span> Ativos: ${dados.ativos} (${percAtivos}%) | 
+                                    <span style="color: #dc3545;">●</span> Inativos: ${dados.inativos} (${percInat}%)
+                                </p>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        function exportarCSV() {
+            const headers = ['Chapa', 'Nome', 'Função', 'Seção', 'Turno', 'Supervisor', 'Admissão', 'Situação'];
+            let csv = headers.join(',') + '\n';
+            
+            dadosFiltrados.forEach(d => {
+                csv += [d.chapa, `"${d.nome}"`, `"${d.funcao}"`, `"${d.secao}"`, d.turno, `"${d.supervisor}"`, d.dtAdmissao, d.situacao].join(',') + '\n';
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `Quadro_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            showStatus('CSV exportado!', 'success');
+        }
+
+        function atualizarDados() {
+            document.getElementById('loadingDiv').style.display = 'block';
+            document.getElementById('contentDiv').style.display = 'none';
+            carregarDados();
+        }
+
+        function voltarMenu() {
+            window.location.href = '/menu';
+        }
+
+        document.getElementById('searchInput').addEventListener('keyup', e => {
+            if (e.key === 'Enter') aplicarFiltros();
+        });
+
+        document.getElementById('pageSize').addEventListener('change', () => {
+            paginaAtual = 1;
+            renderizarTabela();
+        });
+
+        document.querySelectorAll('th.sortable').forEach(th => {
+            th.addEventListener('click', () => ordenarTabela(th.dataset.col));
+        });
+
+        window.onload = function() {
+            const usuario = sessionStorage.getItem('usuario');
+            if (!usuario) {
+                showStatus('Sessão expirada', 'error');
+                setTimeout(() => window.location.href = '/', 2000);
+                return;
+            }
+            carregarDados();
+        };
+    </script>
+</body>
+</html>
