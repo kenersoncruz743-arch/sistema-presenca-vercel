@@ -1,8 +1,8 @@
-// api/qlp/quadro.js e api/qlp/dados.js - VERSÃO CORRIGIDA COM LEITURA CORRETA DAS COLUNAS
-// IMPORTANTE: Este mesmo código deve ser usado em AMBOS os arquivos
+// api/qlp/quadro.js - VERSÃO ROBUSTA COM TRATAMENTO COMPLETO DE ERROS
 const sheetsService = require('../../lib/sheets');
 
 module.exports = async function handler(req, res) {
+  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -19,29 +19,77 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    console.log('[QLP/QUADRO] ========== INÍCIO DA REQUISIÇÃO ==========');
     console.log('[QLP/QUADRO] Iniciando busca na aba Quadro...');
     
     // Inicializa conexão com Google Sheets
-    const doc = await sheetsService.init();
-    console.log(`[QLP/QUADRO] Conectado à planilha: ${doc.title}`);
+    let doc;
+    try {
+      doc = await sheetsService.init();
+      console.log(`[QLP/QUADRO] ✓ Conectado à planilha: ${doc.title}`);
+    } catch (initError) {
+      console.error('[QLP/QUADRO] ✗ Erro ao inicializar Google Sheets:', initError);
+      return res.status(500).json({
+        ok: false,
+        msg: 'Erro ao conectar com Google Sheets',
+        details: initError.message
+      });
+    }
     
     // Busca a aba Quadro
     const sheetQuadro = doc.sheetsByTitle['Quadro'];
     if (!sheetQuadro) {
-      console.error('[QLP/QUADRO] Aba Quadro não encontrada');
+      console.error('[QLP/QUADRO] ✗ Aba Quadro não encontrada');
+      console.log('[QLP/QUADRO] Abas disponíveis:', Object.keys(doc.sheetsByTitle));
       return res.status(404).json({
         ok: false,
-        msg: 'Aba Quadro não encontrada na planilha'
+        msg: 'Aba Quadro não encontrada na planilha',
+        abasDisponiveis: Object.keys(doc.sheetsByTitle)
       });
     }
     
+    console.log(`[QLP/QUADRO] ✓ Aba Quadro encontrada`);
+    
     // Carrega todos os registros
-    const rows = await sheetQuadro.getRows();
-    console.log(`[QLP/QUADRO] ${rows.length} registros encontrados`);
+    let rows;
+    try {
+      rows = await sheetQuadro.getRows();
+      console.log(`[QLP/QUADRO] ✓ ${rows.length} registros carregados`);
+    } catch (rowsError) {
+      console.error('[QLP/QUADRO] ✗ Erro ao carregar linhas:', rowsError);
+      return res.status(500).json({
+        ok: false,
+        msg: 'Erro ao carregar dados da planilha',
+        details: rowsError.message
+      });
+    }
     
     // Debug: mostra os headers disponíveis
     if (rows.length > 0) {
-      console.log('[QLP/QUADRO] Headers disponíveis:', rows[0]._sheet.headerValues);
+      const headers = rows[0]._sheet.headerValues;
+      console.log('[QLP/QUADRO] Headers disponíveis:', headers);
+      console.log('[QLP/QUADRO] Total de colunas:', headers.length);
+    } else {
+      console.warn('[QLP/QUADRO] ⚠ Nenhuma linha encontrada na planilha');
+      return res.status(200).json({
+        ok: true,
+        colaboradores: [],
+        estatisticas: {
+          total: 0,
+          ativos: 0,
+          inativos: 0,
+          porSecao: {},
+          porTurno: {},
+          porSupervisor: {},
+          porSituacao: {},
+          porFuncao: {},
+          totalSecoes: 0,
+          totalTurnos: 0,
+          totalSupervisores: 0,
+          totalFuncoes: 0
+        },
+        timestamp: new Date().toISOString()
+      });
     }
     
     // Processa os dados
@@ -57,72 +105,90 @@ module.exports = async function handler(req, res) {
       porFuncao: {}
     };
     
+    let linhasProcessadas = 0;
+    let linhasComErro = 0;
+    let linhasIgnoradas = 0;
+    
     rows.forEach((row, index) => {
       try {
-        // Lê as colunas EXATAMENTE como estão no seu arquivo
-        const filial = String(row.get('FILIAL') || '').trim();
-        const bandeira = String(row.get('BANDEIRA') || '').trim();
+        // Função helper para ler coluna com segurança
+        const getCol = (colName) => {
+          try {
+            return String(row.get(colName) || '').trim();
+          } catch (e) {
+            return '';
+          }
+        };
         
-        // CORREÇÃO: Usa CHAPA1 em vez de CHAPA
-        const chapa = String(row.get('CHAPA1') || '').trim();
-        
-        const dtAdmissao = String(row.get('DT_ADMISSAO') || '').trim();
-        const nome = String(row.get('NOME') || '').trim();
-        const funcao = String(row.get('FUNCAO') || '').trim();
-        const secao = String(row.get('SECAO') || '').trim();
-        const situacao = String(row.get('SITUACAO') || '').trim();
-        
-        // CORREÇÃO: Lê Supervisor e Turno corretamente
-        const supervisor = String(row.get('Supervisor') || '').trim();
-        const turno = String(row.get('Turno') || '').trim();
-        const gestao = String(row.get('Gestão') || '').trim();
+        // Lê as colunas
+        const filial = getCol('FILIAL');
+        const bandeira = getCol('BANDEIRA');
+        const chapa = getCol('CHAPA1');
+        const dtAdmissao = getCol('DT_ADMISSAO');
+        const nome = getCol('NOME');
+        const funcao = getCol('FUNCAO');
+        const secao = getCol('SECAO');
+        const situacao = getCol('SITUACAO');
+        const supervisor = getCol('Supervisor');
+        const turno = getCol('Turno');
+        const gestao = getCol('Gestão');
         
         // Debug para primeira linha
         if (index === 0) {
-          console.log('[QLP/QUADRO] Exemplo de dados lidos:', {
+          console.log('[QLP/QUADRO] Exemplo de dados (linha 1):', {
             chapa, nome, funcao, secao, situacao, supervisor, turno
           });
         }
         
         // Ignora linhas sem nome
-        if (!nome) {
-          console.log(`[QLP/QUADRO] Linha ${index + 1} ignorada: sem nome`);
+        if (!nome || nome === '') {
+          linhasIgnoradas++;
           return;
         }
         
         // Determina se está ativo
-        // CORREÇÃO: Melhora a lógica de detecção de ativo
         const situacaoLower = situacao.toLowerCase();
-        const isAtivo = situacaoLower === 'ativo' || 
-                       (situacaoLower.includes('ativo') && !situacaoLower.includes('não') && !situacaoLower.includes('af.'));
+        const isAtivo = situacao === 'Ativo' || 
+                       (situacaoLower.includes('ativo') && 
+                        !situacaoLower.includes('não') && 
+                        !situacaoLower.includes('af.') &&
+                        !situacaoLower.includes('aviso'));
         
-        // CORREÇÃO: Normaliza o turno
-        let turnoNormalizado = turno || 'Não definido';
-        if (!turno || turno === '' || turno.toLowerCase().includes('não')) {
-          turnoNormalizado = 'Não definido';
-        } else if (turno.toLowerCase().includes('turno a')) {
-          turnoNormalizado = 'Turno A';
-        } else if (turno.toLowerCase().includes('turno b')) {
-          turnoNormalizado = 'Turno B';
-        } else if (turno.toLowerCase().includes('turno c')) {
-          turnoNormalizado = 'Turno C';
+        // Normaliza o turno
+        let turnoNormalizado = 'Não definido';
+        if (turno && turno !== '') {
+          const turnoLower = turno.toLowerCase();
+          if (turnoLower.includes('turno a') || turnoLower === 'turno a') {
+            turnoNormalizado = 'Turno A';
+          } else if (turnoLower.includes('turno b') || turnoLower === 'turno b') {
+            turnoNormalizado = 'Turno B';
+          } else if (turnoLower.includes('turno c') || turnoLower === 'turno c') {
+            turnoNormalizado = 'Turno C';
+          } else if (!turnoLower.includes('não') && !turnoLower.includes('definido')) {
+            turnoNormalizado = turno; // Mantém o valor original se não for vazio
+          }
         }
+        
+        // Normaliza supervisor
+        const supervisorNormalizado = supervisor && supervisor !== '' ? supervisor : 'Sem supervisor';
         
         // Adiciona à lista
         colaboradores.push({
           filial,
           bandeira,
-          chapa,
+          chapa: chapa || 'S/N',
           dtAdmissao,
           nome,
           funcao,
           secao,
           situacao,
-          supervisor: supervisor || 'Sem supervisor',
+          supervisor: supervisorNormalizado,
           turno: turnoNormalizado,
           gestao,
           isAtivo
         });
+        
+        linhasProcessadas++;
         
         // Atualiza estatísticas
         estatisticas.total++;
@@ -156,7 +222,6 @@ module.exports = async function handler(req, res) {
         }
         
         // Por supervisor
-        const supervisorNormalizado = supervisor || 'Sem supervisor';
         if (!estatisticas.porSupervisor[supervisorNormalizado]) {
           estatisticas.porSupervisor[supervisorNormalizado] = { total: 0, ativos: 0 };
         }
@@ -182,8 +247,10 @@ module.exports = async function handler(req, res) {
             estatisticas.porFuncao[funcao].ativos++;
           }
         }
+        
       } catch (rowError) {
-        console.error(`[QLP/QUADRO] Erro ao processar linha ${index + 1}:`, rowError);
+        linhasComErro++;
+        console.error(`[QLP/QUADRO] ✗ Erro ao processar linha ${index + 1}:`, rowError.message);
       }
     });
     
@@ -193,23 +260,40 @@ module.exports = async function handler(req, res) {
     estatisticas.totalSupervisores = Object.keys(estatisticas.porSupervisor).length;
     estatisticas.totalFuncoes = Object.keys(estatisticas.porFuncao).length;
     
-    console.log(`[QLP/QUADRO] Processados ${colaboradores.length} colaboradores`);
-    console.log(`[QLP/QUADRO] ${estatisticas.ativos} ativos, ${estatisticas.inativos} inativos`);
-    console.log(`[QLP/QUADRO] ${estatisticas.totalSecoes} seções diferentes`);
-    console.log(`[QLP/QUADRO] Distribuição por turno:`, estatisticas.porTurno);
+    console.log('[QLP/QUADRO] ========== RESUMO DO PROCESSAMENTO ==========');
+    console.log(`[QLP/QUADRO] ✓ Processados: ${linhasProcessadas} colaboradores`);
+    console.log(`[QLP/QUADRO] ⚠ Ignoradas: ${linhasIgnoradas} linhas (sem nome)`);
+    console.log(`[QLP/QUADRO] ✗ Com erro: ${linhasComErro} linhas`);
+    console.log(`[QLP/QUADRO] Status: ${estatisticas.ativos} ativos, ${estatisticas.inativos} inativos`);
+    console.log(`[QLP/QUADRO] Seções: ${estatisticas.totalSecoes} diferentes`);
+    console.log(`[QLP/QUADRO] Turnos: ${estatisticas.totalTurnos} diferentes`);
+    console.log('[QLP/QUADRO] Distribuição por turno:', JSON.stringify(estatisticas.porTurno, null, 2));
+    console.log('[QLP/QUADRO] ========== FIM DA REQUISIÇÃO ==========');
     
     return res.status(200).json({
       ok: true,
       colaboradores: colaboradores,
       estatisticas: estatisticas,
+      debug: {
+        linhasProcessadas,
+        linhasIgnoradas,
+        linhasComErro,
+        totalLinhas: rows.length
+      },
       timestamp: new Date().toISOString()
     });
     
   } catch (error) {
-    console.error('[QLP/QUADRO] Erro ao buscar dados:', error);
+    console.error('[QLP/QUADRO] ========== ERRO FATAL ==========');
+    console.error('[QLP/QUADRO] Tipo:', error.name);
+    console.error('[QLP/QUADRO] Mensagem:', error.message);
+    console.error('[QLP/QUADRO] Stack:', error.stack);
+    console.error('[QLP/QUADRO] =====================================');
+    
     return res.status(500).json({
       ok: false,
       msg: 'Erro ao buscar dados do Quadro',
+      error: error.name,
       details: error.message,
       stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
