@@ -326,7 +326,7 @@
         async function carregarDados() {
             try {
                 console.log('Buscando /api/qlp/quadro');
-                const res = await fetch('/api/qlp/quadro');
+                const res = await fetch('/api/qlp/dados');
                 console.log('Status:', res.status);
                 
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
