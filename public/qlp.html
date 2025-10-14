@@ -566,24 +566,29 @@
             document.getElementById('analiseContent').innerHTML = `
                 <div class="analise-grid">
                     ${dados.map(([nome, d]) => {
-                        const pA = ((d.ativos / d.total) * 100).toFixed(1);
-                        const pI = ((d.inativos / d.total) * 100).toFixed(1);
+                        // Garante que temos valores numéricos válidos
+                        const total = d.total || 0;
+                        const ativos = d.ativos || 0;
+                        const inativos = total - ativos; // Calcula inativos corretamente
+                        
+                        const pA = total > 0 ? ((ativos / total) * 100).toFixed(1) : '0.0';
+                        const pI = total > 0 ? ((inativos / total) * 100).toFixed(1) : '0.0';
                         
                         return `
                             <div class="analise-card">
                                 <h4><i class="fas fa-${icone}" style="color: #667eea; margin-right: 8px;"></i>${nome}</h4>
-                                <p style="color: #6c757d; margin-bottom: 10px; font-weight: 600;">Total: ${d.total} colaboradores</p>
+                                <p style="color: #6c757d; margin-bottom: 10px; font-weight: 600;">Total: ${total} colaboradores</p>
                                 <div class="analise-bar">
                                     <div class="analise-bar-item analise-bar-ativos" style="width: ${pA}%">
-                                        ${d.ativos > 0 ? d.ativos : ''}
+                                        ${ativos > 0 ? ativos : ''}
                                     </div>
                                     <div class="analise-bar-item analise-bar-inativos" style="width: ${pI}%">
-                                        ${d.inativos > 0 ? d.inativos : ''}
+                                        ${inativos > 0 ? inativos : ''}
                                     </div>
                                 </div>
                                 <p style="font-size: 12px; color: #6c757d; margin-top: 10px;">
-                                    <span style="color: #28a745; font-weight: bold;">●</span> Ativos: ${d.ativos} (${pA}%) | 
-                                    <span style="color: #dc3545; font-weight: bold;">●</span> Inativos: ${d.inativos} (${pI}%)
+                                    <span style="color: #28a745; font-weight: bold;">●</span> Ativos: ${ativos} (${pA}%) | 
+                                    <span style="color: #dc3545; font-weight: bold;">●</span> Inativos: ${inativos} (${pI}%)
                                 </p>
                             </div>
                         `;
