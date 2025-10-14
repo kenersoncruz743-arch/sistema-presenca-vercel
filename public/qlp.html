@@ -364,6 +364,27 @@
             background: linear-gradient(135deg, #dc3545, #c82333);
         }
 
+        .error-details {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .error-details h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .error-details pre {
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+
         @media (max-width: 768px) {
             .container { padding: 15px; }
             .header { flex-direction: column; text-align: center; }
@@ -488,6 +509,9 @@
     </div>
 
     <script>
+        // CORREÇÃO: Define a URL base da API
+        const API_BASE = window.location.origin;
+        
         let dadosOriginais = [];
         let dadosFiltrados = [];
         let paginaAtual = 1;
@@ -505,10 +529,27 @@
 
         async function carregarDados() {
             try {
-                const res = await fetch('/api/qlp/quadro');
-                if (!res.ok) throw new Error(`Erro HTTP ${res.status}`);
+                console.log('[QLP] Iniciando requisição para:', `${API_BASE}/api/qlp/quadro`);
+                
+                const res = await fetch(`${API_BASE}/api/qlp/quadro`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log('[QLP] Status da resposta:', res.status, res.statusText);
+                
+                if (!res.ok) {
+                    const errorText = await res.text();
+                    console.error('[QLP] Erro na resposta:', errorText);
+                    
+                    throw new Error(`Erro HTTP ${res.status}: ${res.statusText}\n\nDetalhes: ${errorText}`);
+                }
                 
                 const result = await res.json();
+                console.log('[QLP] Dados recebidos:', result);
+                
                 if (result.ok) {
                     dadosOriginais = result.colaboradores || [];
                     dadosFiltrados = [...dadosOriginais];
@@ -522,16 +563,33 @@
                     document.getElementById('contentDiv').style.display = 'block';
                     showStatus(`${dadosOriginais.length} colaboradores carregados`, 'success');
                 } else {
-                    throw new Error(result.msg || 'Erro ao carregar');
+                    throw new Error(result.msg || 'Erro desconhecido ao carregar dados');
                 }
             } catch (error) {
-                console.error('Erro:', error);
+                console.error('[QLP] Erro completo:', error);
+                
                 document.getElementById('loadingDiv').innerHTML = `
-                    <i class="fas fa-exclamation-triangle" style="color: #dc3545;"></i>
-                    <p style="color: #dc3545;">Erro ao carregar dados</p>
-                    <p style="font-size: 14px;">${error.message}</p>
+                    <div class="error-details">
+                        <h3><i class="fas fa-exclamation-triangle"></i> Erro ao Carregar Dados</h3>
+                        <p><strong>Mensagem:</strong> ${error.message}</p>
+                        <p><strong>URL:</strong> ${API_BASE}/api/qlp/quadro</p>
+                        <p><strong>Possíveis causas:</strong></p>
+                        <ul style="text-align: left; margin-left: 20px;">
+                            <li>A aba "QLP" não existe na planilha do Google Sheets</li>
+                            <li>Erro de autenticação com o Google Sheets</li>
+                            <li>Variáveis de ambiente não configuradas no Vercel</li>
+                            <li>Problema de permissões na planilha</li>
+                        </ul>
+                        <button class="btn btn-warning" onclick="atualizarDados()" style="margin-top: 15px;">
+                            <i class="fas fa-sync-alt"></i> Tentar Novamente
+                        </button>
+                        <button class="btn btn-secondary" onclick="voltarMenu()" style="margin-top: 15px;">
+                            <i class="fas fa-arrow-left"></i> Voltar ao Menu
+                        </button>
+                    </div>
                 `;
-                showStatus(error.message, 'error');
+                
+                showStatus(`Erro: ${error.message}`, 'error');
             }
         }
 
@@ -626,7 +684,7 @@
             const dadosPagina = dadosFiltrados.slice(inicio, fim);
             
             if (dadosPagina.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><i class="fas fa-inbox"></i><p>Nenhum registro</p></td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><i class="fas fa-inbox"></i><p>Nenhum registro encontrado</p></td></tr>';
             } else {
                 tbody.innerHTML = dadosPagina.map(d => `
                     <tr>
@@ -709,63 +767,4 @@
                                 </div>
                                 <p style="font-size: 12px; color: #6c757d;">
                                     <span style="color: #28a745;">●</span> Ativos: ${dados.ativos} (${percAtivos}%) | 
-                                    <span style="color: #dc3545;">●</span> Inativos: ${dados.inativos} (${percInat}%)
-                                </p>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-            `;
-        }
-
-        function exportarCSV() {
-            const headers = ['Chapa', 'Nome', 'Função', 'Seção', 'Turno', 'Supervisor', 'Admissão', 'Situação'];
-            let csv = headers.join(',') + '\n';
-            
-            dadosFiltrados.forEach(d => {
-                csv += [d.chapa, `"${d.nome}"`, `"${d.funcao}"`, `"${d.secao}"`, d.turno, `"${d.supervisor}"`, d.dtAdmissao, d.situacao].join(',') + '\n';
-            });
-            
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `Quadro_${new Date().toISOString().split('T')[0]}.csv`;
-            link.click();
-            showStatus('CSV exportado!', 'success');
-        }
-
-        function atualizarDados() {
-            document.getElementById('loadingDiv').style.display = 'block';
-            document.getElementById('contentDiv').style.display = 'none';
-            carregarDados();
-        }
-
-        function voltarMenu() {
-            window.location.href = '/menu';
-        }
-
-        document.getElementById('searchInput').addEventListener('keyup', e => {
-            if (e.key === 'Enter') aplicarFiltros();
-        });
-
-        document.getElementById('pageSize').addEventListener('change', () => {
-            paginaAtual = 1;
-            renderizarTabela();
-        });
-
-        document.querySelectorAll('th.sortable').forEach(th => {
-            th.addEventListener('click', () => ordenarTabela(th.dataset.col));
-        });
-
-        window.onload = function() {
-            const usuario = sessionStorage.getItem('usuario');
-            if (!usuario) {
-                showStatus('Sessão expirada', 'error');
-                setTimeout(() => window.location.href = '/', 2000);
-                return;
-            }
-            carregarDados();
-        };
-    </script>
-</body>
-</html>
+                                    <span style="color: #dc3545;">●
