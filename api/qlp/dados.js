@@ -1,9 +1,8 @@
-// api/qlp/quadro.js e api/qlp/dados.js - VERSÃO CORRIGIDA (Erro headerValues resolvido)
+// api/qlp/quadro.js e api/qlp/dados.js - COM DETECÇÃO AUTOMÁTICA DE COLUNAS
 // USE ESTE CÓDIGO EM AMBOS OS ARQUIVOS
 const sheetsService = require('../../lib/sheets');
 
 module.exports = async function handler(req, res) {
-  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -20,60 +19,85 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    console.log('[QLP/QUADRO] ========== INÍCIO DA REQUISIÇÃO ==========');
-    console.log('[QLP/QUADRO] Iniciando busca na aba Quadro...');
+    console.log('[QLP/QUADRO] ========== INÍCIO ==========');
     
-    // Inicializa conexão com Google Sheets
-    let doc;
-    try {
-      doc = await sheetsService.init();
-      console.log(`[QLP/QUADRO] ✓ Conectado à planilha: ${doc.title}`);
-    } catch (initError) {
-      console.error('[QLP/QUADRO] ✗ Erro ao inicializar Google Sheets:', initError);
-      return res.status(500).json({
-        ok: false,
-        msg: 'Erro ao conectar com Google Sheets',
-        details: initError.message
-      });
-    }
+    // Inicializa conexão
+    const doc = await sheetsService.init();
+    console.log(`[QLP/QUADRO] ✓ Conectado: ${doc.title}`);
     
-    // Busca a aba Quadro
+    // Busca aba
     const sheetQuadro = doc.sheetsByTitle['Quadro'];
     if (!sheetQuadro) {
-      console.error('[QLP/QUADRO] ✗ Aba Quadro não encontrada');
-      console.log('[QLP/QUADRO] Abas disponíveis:', Object.keys(doc.sheetsByTitle));
       return res.status(404).json({
         ok: false,
-        msg: 'Aba Quadro não encontrada na planilha',
+        msg: 'Aba Quadro não encontrada',
         abasDisponiveis: Object.keys(doc.sheetsByTitle)
       });
     }
     
-    console.log(`[QLP/QUADRO] ✓ Aba Quadro encontrada`);
-    
-    // CORREÇÃO: Carrega o header da aba ANTES de buscar as linhas
+    // Carrega headers
     await sheetQuadro.loadHeaderRow();
     const headers = sheetQuadro.headerValues;
-    console.log('[QLP/QUADRO] Headers carregados:', headers);
-    console.log('[QLP/QUADRO] Total de colunas:', headers.length);
+    console.log('[QLP/QUADRO] Headers encontrados:', headers);
     
-    // Carrega todos os registros
-    let rows;
-    try {
-      rows = await sheetQuadro.getRows();
-      console.log(`[QLP/QUADRO] ✓ ${rows.length} registros carregados`);
-    } catch (rowsError) {
-      console.error('[QLP/QUADRO] ✗ Erro ao carregar linhas:', rowsError);
-      return res.status(500).json({
-        ok: false,
-        msg: 'Erro ao carregar dados da planilha',
-        details: rowsError.message
-      });
-    }
+    // NOVO: Mapeia os nomes reais das colunas
+    const colunaMap = {};
+    headers.forEach(header => {
+      const headerNorm = header.trim().toUpperCase();
+      
+      // Detecta CHAPA
+      if (headerNorm.includes('CHAPA')) {
+        colunaMap.chapa = header;
+      }
+      // Detecta NOME
+      if (headerNorm === 'NOME') {
+        colunaMap.nome = header;
+      }
+      // Detecta FUNÇÃO
+      if (headerNorm.includes('FUNCAO') || headerNorm.includes('FUNÇÃO')) {
+        colunaMap.funcao = header;
+      }
+      // Detecta SEÇÃO
+      if (headerNorm.includes('SECAO') || headerNorm.includes('SEÇÃO')) {
+        colunaMap.secao = header;
+      }
+      // Detecta SITUAÇÃO
+      if (headerNorm.includes('SITUACAO') || headerNorm.includes('SITUAÇÃO')) {
+        colunaMap.situacao = header;
+      }
+      // Detecta TURNO
+      if (headerNorm === 'TURNO') {
+        colunaMap.turno = header;
+      }
+      // Detecta SUPERVISOR
+      if (headerNorm.includes('SUPERVISOR')) {
+        colunaMap.supervisor = header;
+      }
+      // Detecta FILIAL
+      if (headerNorm === 'FILIAL') {
+        colunaMap.filial = header;
+      }
+      // Detecta BANDEIRA
+      if (headerNorm === 'BANDEIRA') {
+        colunaMap.bandeira = header;
+      }
+      // Detecta DATA ADMISSÃO
+      if (headerNorm.includes('ADMISSAO') || headerNorm.includes('ADMISSÃO') || headerNorm.includes('DT_')) {
+        colunaMap.dtAdmissao = header;
+      }
+      // Detecta GESTÃO
+      if (headerNorm.includes('GESTAO') || headerNorm.includes('GESTÃO')) {
+        colunaMap.gestao = header;
+      }
+    });
     
-    // Se não houver linhas, retorna vazio
+    console.log('[QLP/QUADRO] Mapeamento de colunas:', colunaMap);
+    
+    // Carrega linhas
+    const rows = await sheetQuadro.getRows();
+    console.log(`[QLP/QUADRO] ✓ ${rows.length} linhas carregadas`);
+    
     if (rows.length === 0) {
-      console.warn('[QLP/QUADRO] ⚠ Nenhuma linha encontrada na planilha');
       return res.status(200).json({
         ok: true,
         colaboradores: [],
@@ -95,7 +119,7 @@ module.exports = async function handler(req, res) {
       });
     }
     
-    // Processa os dados
+    // Processa dados
     const colaboradores = [];
     const estatisticas = {
       total: 0,
@@ -109,14 +133,16 @@ module.exports = async function handler(req, res) {
     };
     
     let linhasProcessadas = 0;
-    let linhasComErro = 0;
     let linhasIgnoradas = 0;
+    let linhasComErro = 0;
     
     rows.forEach((row, index) => {
       try {
-        // Função helper para ler coluna com segurança
-        const getCol = (colName) => {
+        // Função helper MELHORADA
+        const getCol = (colKey) => {
           try {
+            const colName = colunaMap[colKey];
+            if (!colName) return '';
             const valor = row.get(colName);
             return valor ? String(valor).trim() : '';
           } catch (e) {
@@ -124,59 +150,66 @@ module.exports = async function handler(req, res) {
           }
         };
         
-        // Lê as colunas
-        const filial = getCol('FILIAL');
-        const bandeira = getCol('BANDEIRA');
-        const chapa = getCol('CHAPA1');
-        const dtAdmissao = getCol('DT_ADMISSAO');
-        const nome = getCol('NOME');
-        const funcao = getCol('FUNCAO');
-        const secao = getCol('SECAO');
-        const situacao = getCol('SITUACAO');
-        const supervisor = getCol('Supervisor');
-        const turno = getCol('Turno');
-        const gestao = getCol('Gestão');
+        // Lê dados usando o mapeamento
+        const filial = getCol('filial');
+        const bandeira = getCol('bandeira');
+        const chapa = getCol('chapa');
+        const dtAdmissao = getCol('dtAdmissao');
+        const nome = getCol('nome');
+        const funcao = getCol('funcao');
+        const secao = getCol('secao');
+        const situacao = getCol('situacao');
+        const supervisor = getCol('supervisor');
+        const turno = getCol('turno');
+        const gestao = getCol('gestao');
         
-        // Debug para primeira linha
+        // Debug primeira linha
         if (index === 0) {
-          console.log('[QLP/QUADRO] Exemplo de dados (linha 1):', {
-            chapa, nome, funcao, secao, situacao, supervisor, turno
+          console.log('[QLP/QUADRO] EXEMPLO linha 1:', {
+            chapa,
+            nome,
+            funcao,
+            secao,
+            situacao,
+            supervisor,
+            turno
           });
         }
         
-        // Ignora linhas sem nome
-        if (!nome || nome === '') {
+        // Ignora sem nome
+        if (!nome) {
           linhasIgnoradas++;
           return;
         }
         
-        // Determina se está ativo
+        // Determina ativo
         const situacaoLower = situacao.toLowerCase();
         const isAtivo = situacao === 'Ativo' || 
                        (situacaoLower.includes('ativo') && 
                         !situacaoLower.includes('não') && 
                         !situacaoLower.includes('af.') &&
-                        !situacaoLower.includes('aviso'));
+                        !situacaoLower.includes('aviso') &&
+                        !situacaoLower.includes('previdência'));
         
-        // Normaliza o turno
+        // Normaliza turno
         let turnoNormalizado = 'Não definido';
         if (turno && turno !== '') {
-          const turnoLower = turno.toLowerCase();
-          if (turnoLower.includes('TURNO A') || turnoLower === 'TURNO A') {
+          const turnoUpper = turno.toUpperCase();
+          if (turnoUpper.includes('TURNO A') || turnoUpper === 'TURNO A') {
             turnoNormalizado = 'Turno A';
-          } else if (turnoLower.includes('TURNO B') || turnoLower === 'TURNO B') {
+          } else if (turnoUpper.includes('TURNO B') || turnoUpper === 'TURNO B') {
             turnoNormalizado = 'Turno B';
-          } else if (turnoLower.includes('TURNO C') || turnoLower === 'TURNO C') {
+          } else if (turnoUpper.includes('TURNO C') || turnoUpper === 'TURNO C') {
             turnoNormalizado = 'Turno C';
-          } else if (!turnoLower.includes('não') && !turnoLower.includes('definido')) {
-            turnoNormalizado = turno; // Mantém o valor original se não for vazio
+          } else if (!turnoUpper.includes('NÃO') && !turnoUpper.includes('DEFINIDO')) {
+            turnoNormalizado = turno;
           }
         }
         
         // Normaliza supervisor
         const supervisorNormalizado = supervisor && supervisor !== '' ? supervisor : 'Sem supervisor';
         
-        // Adiciona à lista
+        // Adiciona colaborador
         colaboradores.push({
           filial,
           bandeira,
@@ -194,7 +227,7 @@ module.exports = async function handler(req, res) {
         
         linhasProcessadas++;
         
-        // Atualiza estatísticas
+        // Estatísticas
         estatisticas.total++;
         
         if (isAtivo) {
@@ -254,52 +287,48 @@ module.exports = async function handler(req, res) {
         
       } catch (rowError) {
         linhasComErro++;
-        console.error(`[QLP/QUADRO] ✗ Erro ao processar linha ${index + 1}:`, rowError.message);
+        console.error(`[QLP/QUADRO] ✗ Erro linha ${index + 1}:`, rowError.message);
       }
     });
     
-    // Adiciona contagens de categorias únicas
+    // Totais
     estatisticas.totalSecoes = Object.keys(estatisticas.porSecao).length;
     estatisticas.totalTurnos = Object.keys(estatisticas.porTurno).length;
     estatisticas.totalSupervisores = Object.keys(estatisticas.porSupervisor).length;
     estatisticas.totalFuncoes = Object.keys(estatisticas.porFuncao).length;
     
-    console.log('[QLP/QUADRO] ========== RESUMO DO PROCESSAMENTO ==========');
-    console.log(`[QLP/QUADRO] ✓ Processados: ${linhasProcessadas} colaboradores`);
-    console.log(`[QLP/QUADRO] ⚠ Ignoradas: ${linhasIgnoradas} linhas (sem nome)`);
-    console.log(`[QLP/QUADRO] ✗ Com erro: ${linhasComErro} linhas`);
-    console.log(`[QLP/QUADRO] Status: ${estatisticas.ativos} ativos, ${estatisticas.inativos} inativos`);
-    console.log(`[QLP/QUADRO] Seções: ${estatisticas.totalSecoes} diferentes`);
-    console.log(`[QLP/QUADRO] Turnos: ${estatisticas.totalTurnos} diferentes`);
-    console.log('[QLP/QUADRO] Distribuição por turno:', JSON.stringify(estatisticas.porTurno, null, 2));
-    console.log('[QLP/QUADRO] ========== FIM DA REQUISIÇÃO ==========');
+    console.log('[QLP/QUADRO] ========== RESUMO ==========');
+    console.log(`[QLP/QUADRO] ✓ Processados: ${linhasProcessadas}`);
+    console.log(`[QLP/QUADRO] ⚠ Ignoradas: ${linhasIgnoradas}`);
+    console.log(`[QLP/QUADRO] ✗ Erros: ${linhasComErro}`);
+    console.log(`[QLP/QUADRO] Ativos: ${estatisticas.ativos} | Inativos: ${estatisticas.inativos}`);
+    console.log('[QLP/QUADRO] Turnos:', Object.keys(estatisticas.porTurno));
+    console.log('[QLP/QUADRO] ========== FIM ==========');
     
     return res.status(200).json({
       ok: true,
-      colaboradores: colaboradores,
-      estatisticas: estatisticas,
+      colaboradores,
+      estatisticas,
       debug: {
         linhasProcessadas,
         linhasIgnoradas,
         linhasComErro,
-        totalLinhas: rows.length
+        totalLinhas: rows.length,
+        mapeamentoColunas: colunaMap
       },
       timestamp: new Date().toISOString()
     });
     
   } catch (error) {
-    console.error('[QLP/QUADRO] ========== ERRO FATAL ==========');
-    console.error('[QLP/QUADRO] Tipo:', error.name);
-    console.error('[QLP/QUADRO] Mensagem:', error.message);
-    console.error('[QLP/QUADRO] Stack:', error.stack);
-    console.error('[QLP/QUADRO] =====================================');
+    console.error('[QLP/QUADRO] ========== ERRO ==========');
+    console.error('[QLP/QUADRO]', error.message);
+    console.error('[QLP/QUADRO]', error.stack);
     
     return res.status(500).json({
       ok: false,
-      msg: 'Erro ao buscar dados do Quadro',
+      msg: 'Erro ao buscar dados',
       error: error.name,
-      details: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      details: error.message
     });
   }
 };
