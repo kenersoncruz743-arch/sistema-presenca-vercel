@@ -46,7 +46,7 @@ module.exports = async function handler(req, res) {
       const headerNorm = header.trim().toUpperCase();
       
       // Detecta CHAPA
-      if (headerNorm.includes('CHAPA')) {
+      if (headerNorm.includes('CHAPA1')) {
         colunaMap.chapa = header;
       }
       // Detecta NOME
@@ -70,7 +70,7 @@ module.exports = async function handler(req, res) {
         colunaMap.turno = header;
       }
       // Detecta SUPERVISOR
-      if (headerNorm.includes('SUPERVISOR')) {
+      if (headerNorm.includes('Supervisão')) {
         colunaMap.supervisor = header;
       }
       // Detecta FILIAL
@@ -153,7 +153,7 @@ module.exports = async function handler(req, res) {
         // Lê dados usando o mapeamento
         const filial = getCol('filial');
         const bandeira = getCol('bandeira');
-        const chapa = getCol('chapa');
+        const chapa = getCol('CHAPA1');
         const dtAdmissao = getCol('dtAdmissao');
         const nome = getCol('nome');
         const funcao = getCol('funcao');
