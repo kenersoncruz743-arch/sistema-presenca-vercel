@@ -233,6 +233,10 @@
                     <select id="filtroSupervisor"><option value="">Todos</option></select>
                 </div>
                 <div class="filter-group">
+                    <label><i class="fas fa-briefcase"></i> Função</label>
+                    <select id="filtroFuncao"><option value="">Todas</option></select>
+                </div>
+                <div class="filter-group">
                     <label><i class="fas fa-toggle-on"></i> Situação</label>
                     <select id="filtroSituacao">
                         <option value="">Todas</option>
@@ -326,7 +330,7 @@
         async function carregarDados() {
             try {
                 console.log('Buscando /api/qlp/quadro');
-                const res = await fetch('/api/qlp/dados');
+                const res = await fetch('/api/qlp/quadro');
                 console.log('Status:', res.status);
                 
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
