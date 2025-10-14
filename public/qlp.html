@@ -267,9 +267,19 @@
         </div>
 
         <div id="analiseSection" class="analise-section" style="display: none;">
-            <h3 style="color: #667eea; margin-bottom: 15px;">
-                <i class="fas fa-chart-pie"></i> Análise por Seção
-            </h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                <h3 style="color: #667eea; margin: 0;">
+                    <i class="fas fa-chart-pie"></i> <span id="tituloAnalise">Análise por Seção</span>
+                </h3>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-primary" id="btnSecao" onclick="mudarAnalise('secao')" style="opacity: 1;">
+                        <i class="fas fa-layer-group"></i> Por Seção
+                    </button>
+                    <button class="btn btn-secondary" id="btnFuncao" onclick="mudarAnalise('funcao')" style="opacity: 0.6;">
+                        <i class="fas fa-briefcase"></i> Por Função
+                    </button>
+                </div>
+            </div>
             <div id="analiseContent"></div>
         </div>
 
@@ -318,6 +328,7 @@
         let sortCol = '';
         let sortDir = 'asc';
         let stats = null;
+        let tipoAnalise = 'secao';
 
         function showStatus(msg, type = 'info') {
             const el = document.getElementById('statusDiv');
@@ -513,28 +524,55 @@
             if (sec.style.display === 'none') {
                 gerarAnalise();
                 sec.style.display = 'block';
-                txt.textContent = 'Ocultar';
+                txt.textContent = 'Ocultar Análises';
             } else {
                 sec.style.display = 'none';
-                txt.textContent = 'Análises';
+                txt.textContent = 'Mostrar Análises';
             }
         }
 
-        function gerarAnalise() {
-            if (!stats || !stats.porSecao) return;
+        function mudarAnalise(tipo) {
+            tipoAnalise = tipo;
             
-            const ord = Object.entries(stats.porSecao).sort((a, b) => b[1].total - a[1].total);
+            // Atualiza botões
+            document.getElementById('btnSecao').style.opacity = tipo === 'secao' ? '1' : '0.6';
+            document.getElementById('btnFuncao').style.opacity = tipo === 'funcao' ? '1' : '0.6';
+            
+            document.getElementById('btnSecao').className = tipo === 'secao' ? 'btn btn-primary' : 'btn btn-secondary';
+            document.getElementById('btnFuncao').className = tipo === 'funcao' ? 'btn btn-primary' : 'btn btn-secondary';
+            
+            // Atualiza título
+            document.getElementById('tituloAnalise').textContent = tipo === 'secao' ? 'Análise por Seção' : 'Análise por Função';
+            
+            // Regera análise
+            gerarAnalise();
+        }
+
+        function gerarAnalise() {
+            if (!stats) return;
+            
+            let dados, icone;
+            
+            if (tipoAnalise === 'secao') {
+                if (!stats.porSecao) return;
+                dados = Object.entries(stats.porSecao).sort((a, b) => b[1].total - a[1].total);
+                icone = 'layer-group';
+            } else {
+                if (!stats.porFuncao) return;
+                dados = Object.entries(stats.porFuncao).sort((a, b) => b[1].total - a[1].total);
+                icone = 'briefcase';
+            }
             
             document.getElementById('analiseContent').innerHTML = `
                 <div class="analise-grid">
-                    ${ord.map(([secao, d]) => {
+                    ${dados.map(([nome, d]) => {
                         const pA = ((d.ativos / d.total) * 100).toFixed(1);
                         const pI = ((d.inativos / d.total) * 100).toFixed(1);
                         
                         return `
                             <div class="analise-card">
-                                <h4>${secao}</h4>
-                                <p style="color: #6c757d; margin-bottom: 10px;">Total: ${d.total}</p>
+                                <h4><i class="fas fa-${icone}" style="color: #667eea; margin-right: 8px;"></i>${nome}</h4>
+                                <p style="color: #6c757d; margin-bottom: 10px; font-weight: 600;">Total: ${d.total} colaboradores</p>
                                 <div class="analise-bar">
                                     <div class="analise-bar-item analise-bar-ativos" style="width: ${pA}%">
                                         ${d.ativos > 0 ? d.ativos : ''}
@@ -543,9 +581,9 @@
                                         ${d.inativos > 0 ? d.inativos : ''}
                                     </div>
                                 </div>
-                                <p style="font-size: 12px; color: #6c757d;">
-                                    <span style="color: #28a745;">●</span> Ativos: ${d.ativos} (${pA}%) | 
-                                    <span style="color: #dc3545;">●</span> Inativos: ${d.inativos} (${pI}%)
+                                <p style="font-size: 12px; color: #6c757d; margin-top: 10px;">
+                                    <span style="color: #28a745; font-weight: bold;">●</span> Ativos: ${d.ativos} (${pA}%) | 
+                                    <span style="color: #dc3545; font-weight: bold;">●</span> Inativos: ${d.inativos} (${pI}%)
                                 </p>
                             </div>
                         `;
