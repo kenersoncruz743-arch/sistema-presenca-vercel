@@ -162,11 +162,11 @@ module.exports = async function handler(req, res) {
         let turnoNormalizado = 'Não definido';
         if (turno && turno !== '') {
           const turnoLower = turno.toLowerCase();
-          if (turnoLower.includes('turno a') || turnoLower === 'turno a') {
+          if (turnoLower.includes('TURNO A') || turnoLower === 'TURNO A') {
             turnoNormalizado = 'Turno A';
-          } else if (turnoLower.includes('turno b') || turnoLower === 'turno b') {
+          } else if (turnoLower.includes('TURNO B') || turnoLower === 'TURNO B') {
             turnoNormalizado = 'Turno B';
-          } else if (turnoLower.includes('turno c') || turnoLower === 'turno c') {
+          } else if (turnoLower.includes('TURNO C') || turnoLower === 'TURNO C') {
             turnoNormalizado = 'Turno C';
           } else if (!turnoLower.includes('não') && !turnoLower.includes('definido')) {
             turnoNormalizado = turno; // Mantém o valor original se não for vazio
