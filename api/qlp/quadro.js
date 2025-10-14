@@ -1,4 +1,5 @@
-// api/qlp/quadro.js - VERSÃO CORRIGIDA PARA ABA "QLP"
+// api/qlp/quadro.js e api/qlp/dados.js - VERSÃO CORRIGIDA (Erro headerValues resolvido)
+// USE ESTE CÓDIGO EM AMBOS OS ARQUIVOS
 const sheetsService = require('../../lib/sheets');
 
 module.exports = async function handler(req, res) {
@@ -20,7 +21,7 @@ module.exports = async function handler(req, res) {
 
   try {
     console.log('[QLP/QUADRO] ========== INÍCIO DA REQUISIÇÃO ==========');
-    console.log('[QLP/QUADRO] Iniciando busca na aba QLP...');
+    console.log('[QLP/QUADRO] Iniciando busca na aba Quadro...');
     
     // Inicializa conexão com Google Sheets
     let doc;
@@ -36,19 +37,25 @@ module.exports = async function handler(req, res) {
       });
     }
     
-    // Busca a aba QLP (CORRIGIDO)
-    const sheetQuadro = doc.sheetsByTitle['QLP'];
+    // Busca a aba Quadro
+    const sheetQuadro = doc.sheetsByTitle['Quadro'];
     if (!sheetQuadro) {
-      console.error('[QLP/QUADRO] ✗ Aba QLP não encontrada');
+      console.error('[QLP/QUADRO] ✗ Aba Quadro não encontrada');
       console.log('[QLP/QUADRO] Abas disponíveis:', Object.keys(doc.sheetsByTitle));
       return res.status(404).json({
         ok: false,
-        msg: 'Aba QLP não encontrada na planilha',
+        msg: 'Aba Quadro não encontrada na planilha',
         abasDisponiveis: Object.keys(doc.sheetsByTitle)
       });
     }
     
-    console.log(`[QLP/QUADRO] ✓ Aba QLP encontrada`);
+    console.log(`[QLP/QUADRO] ✓ Aba Quadro encontrada`);
+    
+    // CORREÇÃO: Carrega o header da aba ANTES de buscar as linhas
+    await sheetQuadro.loadHeaderRow();
+    const headers = sheetQuadro.headerValues;
+    console.log('[QLP/QUADRO] Headers carregados:', headers);
+    console.log('[QLP/QUADRO] Total de colunas:', headers.length);
     
     // Carrega todos os registros
     let rows;
@@ -64,12 +71,8 @@ module.exports = async function handler(req, res) {
       });
     }
     
-    // Debug: mostra os headers disponíveis
-    if (rows.length > 0) {
-      const headers = rows[0]._sheet.headerValues;
-      console.log('[QLP/QUADRO] Headers disponíveis:', headers);
-      console.log('[QLP/QUADRO] Total de colunas:', headers.length);
-    } else {
+    // Se não houver linhas, retorna vazio
+    if (rows.length === 0) {
       console.warn('[QLP/QUADRO] ⚠ Nenhuma linha encontrada na planilha');
       return res.status(200).json({
         ok: true,
@@ -114,21 +117,22 @@ module.exports = async function handler(req, res) {
         // Função helper para ler coluna com segurança
         const getCol = (colName) => {
           try {
-            return String(row.get(colName) || '').trim();
+            const valor = row.get(colName);
+            return valor ? String(valor).trim() : '';
           } catch (e) {
             return '';
           }
         };
         
-        // Lê as colunas (ajuste conforme os nomes reais na sua planilha QLP)
+        // Lê as colunas
         const filial = getCol('FILIAL');
         const bandeira = getCol('BANDEIRA');
-        const chapa = getCol('CHAPA1') || getCol('CHAPA') || getCol('Chapa');
-        const dtAdmissao = getCol('DT_ADMISSAO') || getCol('Data Admissão');
-        const nome = getCol('NOME') || getCol('Nome');
-        const funcao = getCol('FUNCAO') || getCol('Função');
-        const secao = getCol('SECAO') || getCol('Seção');
-        const situacao = getCol('SITUACAO') || getCol('Situação');
+        const chapa = getCol('CHAPA1');
+        const dtAdmissao = getCol('DT_ADMISSAO');
+        const nome = getCol('NOME');
+        const funcao = getCol('FUNCAO');
+        const secao = getCol('SECAO');
+        const situacao = getCol('SITUACAO');
         const supervisor = getCol('Supervisor');
         const turno = getCol('Turno');
         const gestao = getCol('Gestão');
@@ -158,14 +162,14 @@ module.exports = async function handler(req, res) {
         let turnoNormalizado = 'Não definido';
         if (turno && turno !== '') {
           const turnoLower = turno.toLowerCase();
-          if (turnoLower.includes('turno a') || turnoLower === 'turno a' || turnoLower === 'a') {
+          if (turnoLower.includes('turno a') || turnoLower === 'turno a') {
             turnoNormalizado = 'Turno A';
-          } else if (turnoLower.includes('turno b') || turnoLower === 'turno b' || turnoLower === 'b') {
+          } else if (turnoLower.includes('turno b') || turnoLower === 'turno b') {
             turnoNormalizado = 'Turno B';
-          } else if (turnoLower.includes('turno c') || turnoLower === 'turno c' || turnoLower === 'c') {
+          } else if (turnoLower.includes('turno c') || turnoLower === 'turno c') {
             turnoNormalizado = 'Turno C';
           } else if (!turnoLower.includes('não') && !turnoLower.includes('definido')) {
-            turnoNormalizado = turno;
+            turnoNormalizado = turno; // Mantém o valor original se não for vazio
           }
         }
         
@@ -292,7 +296,7 @@ module.exports = async function handler(req, res) {
     
     return res.status(500).json({
       ok: false,
-      msg: 'Erro ao buscar dados do QLP',
+      msg: 'Erro ao buscar dados do Quadro',
       error: error.name,
       details: error.message,
       stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
