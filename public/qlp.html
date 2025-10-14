@@ -399,6 +399,7 @@
             const secoes = [...new Set(dados.map(d => d.secao).filter(Boolean))].sort();
             const turnos = [...new Set(dados.map(d => d.turno).filter(Boolean))].sort();
             const sups = [...new Set(dados.map(d => d.supervisor).filter(Boolean))].sort();
+            const funcoes = [...new Set(dados.map(d => d.funcao).filter(Boolean))].sort();
             
             document.getElementById('filtroSecao').innerHTML = '<option value="">Todas</option>' + 
                 secoes.map(s => `<option value="${s}">${s}</option>`).join('');
@@ -406,6 +407,8 @@
                 turnos.map(t => `<option value="${t}">${t}</option>`).join('');
             document.getElementById('filtroSupervisor').innerHTML = '<option value="">Todos</option>' + 
                 sups.map(s => `<option value="${s}">${s}</option>`).join('');
+            document.getElementById('filtroFuncao').innerHTML = '<option value="">Todas</option>' + 
+                funcoes.map(f => `<option value="${f}">${f}</option>`).join('');
         }
 
         function aplicarFiltros() {
@@ -413,6 +416,7 @@
             const secao = document.getElementById('filtroSecao').value;
             const turno = document.getElementById('filtroTurno').value;
             const supervisor = document.getElementById('filtroSupervisor').value;
+            const funcao = document.getElementById('filtroFuncao').value;
             const situacao = document.getElementById('filtroSituacao').value;
             
             filtrados = dados.filter(d => {
@@ -420,8 +424,9 @@
                 const sec = !secao || d.secao === secao;
                 const tur = !turno || d.turno === turno;
                 const sup = !supervisor || d.supervisor === supervisor;
+                const func = !funcao || d.funcao === funcao;
                 const sit = !situacao || (situacao === 'ativo' ? d.isAtivo : !d.isAtivo);
-                return b && sec && tur && sup && sit;
+                return b && sec && tur && sup && func && sit;
             });
             
             pagina = 1;
@@ -434,6 +439,7 @@
             document.getElementById('filtroSecao').value = '';
             document.getElementById('filtroTurno').value = '';
             document.getElementById('filtroSupervisor').value = '';
+            document.getElementById('filtroFuncao').value = '';
             document.getElementById('filtroSituacao').value = '';
             filtrados = [...dados];
             pagina = 1;
