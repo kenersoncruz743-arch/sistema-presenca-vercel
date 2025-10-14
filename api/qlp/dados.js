@@ -1,4 +1,4 @@
-// api/qlp/quadro.js e api/qlp/dados.js - COM DETECÇÃO AUTOMÁTICA DE COLUNAS
+// api/qlp/quadro.js e api/qlp/dados.js - MAPEAMENTO EXATO DAS COLUNAS
 // USE ESTE CÓDIGO EM AMBOS OS ARQUIVOS
 const sheetsService = require('../../lib/sheets');
 
@@ -25,7 +25,7 @@ module.exports = async function handler(req, res) {
     const doc = await sheetsService.init();
     console.log(`[QLP/QUADRO] ✓ Conectado: ${doc.title}`);
     
-    // Busca aba
+    // Busca aba Quadro
     const sheetQuadro = doc.sheetsByTitle['Quadro'];
     if (!sheetQuadro) {
       return res.status(404).json({
@@ -38,60 +38,7 @@ module.exports = async function handler(req, res) {
     // Carrega headers
     await sheetQuadro.loadHeaderRow();
     const headers = sheetQuadro.headerValues;
-    console.log('[QLP/QUADRO] Headers encontrados:', headers);
-    
-    // NOVO: Mapeia os nomes reais das colunas
-    const colunaMap = {};
-    headers.forEach(header => {
-      const headerNorm = header.trim().toUpperCase();
-      
-      // Detecta CHAPA
-      if (headerNorm.includes('CHAPA1')) {
-        colunaMap.chapa = header;
-      }
-      // Detecta NOME
-      if (headerNorm === 'NOME') {
-        colunaMap.nome = header;
-      }
-      // Detecta FUNÇÃO
-      if (headerNorm.includes('FUNCAO') || headerNorm.includes('FUNÇÃO')) {
-        colunaMap.funcao = header;
-      }
-      // Detecta SEÇÃO
-      if (headerNorm.includes('SECAO') || headerNorm.includes('SEÇÃO')) {
-        colunaMap.secao = header;
-      }
-      // Detecta SITUAÇÃO
-      if (headerNorm.includes('SITUACAO') || headerNorm.includes('SITUAÇÃO')) {
-        colunaMap.situacao = header;
-      }
-      // Detecta TURNO
-      if (headerNorm === 'TURNO') {
-        colunaMap.turno = header;
-      }
-      // Detecta SUPERVISOR
-      if (headerNorm.includes('Supervisão')) {
-        colunaMap.supervisor = header;
-      }
-      // Detecta FILIAL
-      if (headerNorm === 'FILIAL') {
-        colunaMap.filial = header;
-      }
-      // Detecta BANDEIRA
-      if (headerNorm === 'BANDEIRA') {
-        colunaMap.bandeira = header;
-      }
-      // Detecta DATA ADMISSÃO
-      if (headerNorm.includes('ADMISSAO') || headerNorm.includes('ADMISSÃO') || headerNorm.includes('DT_')) {
-        colunaMap.dtAdmissao = header;
-      }
-      // Detecta GESTÃO
-      if (headerNorm.includes('GESTAO') || headerNorm.includes('GESTÃO')) {
-        colunaMap.gestao = header;
-      }
-    });
-    
-    console.log('[QLP/QUADRO] Mapeamento de colunas:', colunaMap);
+    console.log('[QLP/QUADRO] Headers da planilha:', headers);
     
     // Carrega linhas
     const rows = await sheetQuadro.getRows();
@@ -138,34 +85,34 @@ module.exports = async function handler(req, res) {
     
     rows.forEach((row, index) => {
       try {
-        // Função helper MELHORADA
-        const getCol = (colKey) => {
+        // Função helper para ler coluna com segurança
+        const getCol = (colName) => {
           try {
-            const colName = colunaMap[colKey];
-            if (!colName) return '';
             const valor = row.get(colName);
             return valor ? String(valor).trim() : '';
           } catch (e) {
+            console.error(`[QLP/QUADRO] Erro ao ler coluna "${colName}":`, e.message);
             return '';
           }
         };
         
-        // Lê dados usando o mapeamento
-        const filial = getCol('filial');
-        const bandeira = getCol('bandeira');
+        // Lê as colunas COM OS NOMES EXATOS
+        const filial = getCol('FILIAL');
+        const bandeira = getCol('BANDEIRA');
         const chapa = getCol('CHAPA1');
-        const dtAdmissao = getCol('dtAdmissao');
-        const nome = getCol('nome');
-        const funcao = getCol('funcao');
-        const secao = getCol('secao');
-        const situacao = getCol('situacao');
-        const supervisor = getCol('supervisor');
-        const turno = getCol('turno');
-        const gestao = getCol('gestao');
+        const dtAdmissao = getCol('DT_ADMISSAO');
+        const nome = getCol('NOME');
+        const funcao = getCol('FUNCAO');
+        const secao = getCol('SECAO');
+        const situacao = getCol('SITUACAO');
+        const totalGeral = getCol('Total Geral');
+        const supervisor = getCol('Supervisor');
+        const turno = getCol('Turno');
+        const gestao = getCol('Gestão');
         
-        // Debug primeira linha
-        if (index === 0) {
-          console.log('[QLP/QUADRO] EXEMPLO linha 1:', {
+        // Debug primeiras 3 linhas
+        if (index < 3) {
+          console.log(`[QLP/QUADRO] Linha ${index + 1}:`, {
             chapa,
             nome,
             funcao,
@@ -176,13 +123,13 @@ module.exports = async function handler(req, res) {
           });
         }
         
-        // Ignora sem nome
-        if (!nome) {
+        // Ignora linhas sem nome
+        if (!nome || nome === '') {
           linhasIgnoradas++;
           return;
         }
         
-        // Determina ativo
+        // Determina se está ativo
         const situacaoLower = situacao.toLowerCase();
         const isAtivo = situacao === 'Ativo' || 
                        (situacaoLower.includes('ativo') && 
@@ -194,14 +141,20 @@ module.exports = async function handler(req, res) {
         // Normaliza turno
         let turnoNormalizado = 'Não definido';
         if (turno && turno !== '') {
-          const turnoUpper = turno.toUpperCase();
-          if (turnoUpper.includes('TURNO A') || turnoUpper === 'TURNO A') {
+          const turnoUpper = turno.toUpperCase().trim();
+          
+          if (turnoUpper === 'TURNO A') {
             turnoNormalizado = 'Turno A';
-          } else if (turnoUpper.includes('TURNO B') || turnoUpper === 'TURNO B') {
+          } else if (turnoUpper === 'TURNO B') {
             turnoNormalizado = 'Turno B';
-          } else if (turnoUpper.includes('TURNO C') || turnoUpper === 'TURNO C') {
+          } else if (turnoUpper === 'TURNO C') {
             turnoNormalizado = 'Turno C';
-          } else if (!turnoUpper.includes('NÃO') && !turnoUpper.includes('DEFINIDO')) {
+          } else if (turnoUpper.includes('NÃO DEFINIDO') || turnoUpper.includes('NAO DEFINIDO')) {
+            turnoNormalizado = 'Não definido';
+          } else if (turnoUpper.includes('NÃO ATIVO') || turnoUpper.includes('NAO ATIVO')) {
+            turnoNormalizado = 'Não ativo';
+          } else {
+            // Mantém valor original se não for vazio
             turnoNormalizado = turno;
           }
         }
@@ -209,7 +162,7 @@ module.exports = async function handler(req, res) {
         // Normaliza supervisor
         const supervisorNormalizado = supervisor && supervisor !== '' ? supervisor : 'Sem supervisor';
         
-        // Adiciona colaborador
+        // Adiciona à lista de colaboradores
         colaboradores.push({
           filial,
           bandeira,
@@ -219,6 +172,7 @@ module.exports = async function handler(req, res) {
           funcao,
           secao,
           situacao,
+          totalGeral,
           supervisor: supervisorNormalizado,
           turno: turnoNormalizado,
           gestao,
@@ -227,7 +181,7 @@ module.exports = async function handler(req, res) {
         
         linhasProcessadas++;
         
-        // Estatísticas
+        // Atualiza estatísticas
         estatisticas.total++;
         
         if (isAtivo) {
@@ -236,7 +190,7 @@ module.exports = async function handler(req, res) {
           estatisticas.inativos++;
         }
         
-        // Por seção
+        // Estatísticas por seção
         if (secao) {
           if (!estatisticas.porSecao[secao]) {
             estatisticas.porSecao[secao] = { total: 0, ativos: 0, inativos: 0 };
@@ -249,7 +203,7 @@ module.exports = async function handler(req, res) {
           }
         }
         
-        // Por turno
+        // Estatísticas por turno
         if (!estatisticas.porTurno[turnoNormalizado]) {
           estatisticas.porTurno[turnoNormalizado] = { total: 0, ativos: 0 };
         }
@@ -258,7 +212,7 @@ module.exports = async function handler(req, res) {
           estatisticas.porTurno[turnoNormalizado].ativos++;
         }
         
-        // Por supervisor
+        // Estatísticas por supervisor
         if (!estatisticas.porSupervisor[supervisorNormalizado]) {
           estatisticas.porSupervisor[supervisorNormalizado] = { total: 0, ativos: 0 };
         }
@@ -267,14 +221,14 @@ module.exports = async function handler(req, res) {
           estatisticas.porSupervisor[supervisorNormalizado].ativos++;
         }
         
-        // Por situação
+        // Estatísticas por situação
         const situacaoNormalizada = situacao || 'Sem situação';
         if (!estatisticas.porSituacao[situacaoNormalizada]) {
           estatisticas.porSituacao[situacaoNormalizada] = 0;
         }
         estatisticas.porSituacao[situacaoNormalizada]++;
         
-        // Por função
+        // Estatísticas por função
         if (funcao) {
           if (!estatisticas.porFuncao[funcao]) {
             estatisticas.porFuncao[funcao] = { total: 0, ativos: 0 };
@@ -287,22 +241,24 @@ module.exports = async function handler(req, res) {
         
       } catch (rowError) {
         linhasComErro++;
-        console.error(`[QLP/QUADRO] ✗ Erro linha ${index + 1}:`, rowError.message);
+        console.error(`[QLP/QUADRO] ✗ Erro ao processar linha ${index + 1}:`, rowError.message);
       }
     });
     
-    // Totais
+    // Totais de categorias únicas
     estatisticas.totalSecoes = Object.keys(estatisticas.porSecao).length;
     estatisticas.totalTurnos = Object.keys(estatisticas.porTurno).length;
     estatisticas.totalSupervisores = Object.keys(estatisticas.porSupervisor).length;
     estatisticas.totalFuncoes = Object.keys(estatisticas.porFuncao).length;
     
     console.log('[QLP/QUADRO] ========== RESUMO ==========');
-    console.log(`[QLP/QUADRO] ✓ Processados: ${linhasProcessadas}`);
-    console.log(`[QLP/QUADRO] ⚠ Ignoradas: ${linhasIgnoradas}`);
-    console.log(`[QLP/QUADRO] ✗ Erros: ${linhasComErro}`);
-    console.log(`[QLP/QUADRO] Ativos: ${estatisticas.ativos} | Inativos: ${estatisticas.inativos}`);
-    console.log('[QLP/QUADRO] Turnos:', Object.keys(estatisticas.porTurno));
+    console.log(`[QLP/QUADRO] ✓ Processados: ${linhasProcessadas} colaboradores`);
+    console.log(`[QLP/QUADRO] ⚠ Ignoradas: ${linhasIgnoradas} linhas (sem nome)`);
+    console.log(`[QLP/QUADRO] ✗ Com erro: ${linhasComErro} linhas`);
+    console.log(`[QLP/QUADRO] Status: ${estatisticas.ativos} ativos, ${estatisticas.inativos} inativos`);
+    console.log(`[QLP/QUADRO] Seções: ${estatisticas.totalSecoes} diferentes`);
+    console.log(`[QLP/QUADRO] Turnos: ${estatisticas.totalTurnos} diferentes`);
+    console.log('[QLP/QUADRO] Distribuição por turno:', estatisticas.porTurno);
     console.log('[QLP/QUADRO] ========== FIM ==========');
     
     return res.status(200).json({
@@ -314,21 +270,24 @@ module.exports = async function handler(req, res) {
         linhasIgnoradas,
         linhasComErro,
         totalLinhas: rows.length,
-        mapeamentoColunas: colunaMap
+        headersEncontrados: headers
       },
       timestamp: new Date().toISOString()
     });
     
   } catch (error) {
-    console.error('[QLP/QUADRO] ========== ERRO ==========');
-    console.error('[QLP/QUADRO]', error.message);
-    console.error('[QLP/QUADRO]', error.stack);
+    console.error('[QLP/QUADRO] ========== ERRO FATAL ==========');
+    console.error('[QLP/QUADRO] Tipo:', error.name);
+    console.error('[QLP/QUADRO] Mensagem:', error.message);
+    console.error('[QLP/QUADRO] Stack:', error.stack);
+    console.error('[QLP/QUADRO] =====================================');
     
     return res.status(500).json({
       ok: false,
-      msg: 'Erro ao buscar dados',
+      msg: 'Erro ao buscar dados do Quadro',
       error: error.name,
-      details: error.message
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };
