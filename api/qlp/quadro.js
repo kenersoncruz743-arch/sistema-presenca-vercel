@@ -1,5 +1,5 @@
-// api/qlp/quadro.js e api/qlp/dados.js - MAPEAMENTO EXATO DAS COLUNAS
-// USE ESTE CÓDIGO EM AMBOS OS ARQUIVOS
+// api/qlp/quadro.js e api/qlp/dados.js
+// COPIE ESTE CÓDIGO PARA AMBOS OS ARQUIVOS
 const sheetsService = require('../../lib/sheets');
 
 module.exports = async function handler(req, res) {
@@ -19,30 +19,34 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    console.log('[QLP/QUADRO] ========== INÍCIO ==========');
+    console.log('[QLP] ========== INÍCIO ==========');
     
     // Inicializa conexão
     const doc = await sheetsService.init();
-    console.log(`[QLP/QUADRO] ✓ Conectado: ${doc.title}`);
+    console.log(`[QLP] ✓ Conectado: ${doc.title}`);
     
-    // Busca aba Quadro
-    const sheetQuadro = doc.sheetsByTitle['Quadro'];
-    if (!sheetQuadro) {
+    // CORREÇÃO: Busca aba QLP (não Quadro!)
+    const sheetQLP = doc.sheetsByTitle['QLP'];
+    if (!sheetQLP) {
+      console.error('[QLP] ✗ Aba QLP não encontrada');
+      console.log('[QLP] Abas disponíveis:', Object.keys(doc.sheetsByTitle));
       return res.status(404).json({
         ok: false,
-        msg: 'Aba Quadro não encontrada',
+        msg: 'Aba QLP não encontrada',
         abasDisponiveis: Object.keys(doc.sheetsByTitle)
       });
     }
     
+    console.log(`[QLP] ✓ Aba QLP encontrada`);
+    
     // Carrega headers
-    await sheetQuadro.loadHeaderRow();
-    const headers = sheetQuadro.headerValues;
-    console.log('[QLP/QUADRO] Headers da planilha:', headers);
+    await sheetQLP.loadHeaderRow();
+    const headers = sheetQLP.headerValues;
+    console.log('[QLP] Headers da planilha:', headers);
     
     // Carrega linhas
-    const rows = await sheetQuadro.getRows();
-    console.log(`[QLP/QUADRO] ✓ ${rows.length} linhas carregadas`);
+    const rows = await sheetQLP.getRows();
+    console.log(`[QLP] ✓ ${rows.length} linhas carregadas`);
     
     if (rows.length === 0) {
       return res.status(200).json({
@@ -91,12 +95,11 @@ module.exports = async function handler(req, res) {
             const valor = row.get(colName);
             return valor ? String(valor).trim() : '';
           } catch (e) {
-            console.error(`[QLP/QUADRO] Erro ao ler coluna "${colName}":`, e.message);
             return '';
           }
         };
         
-        // Lê as colunas COM OS NOMES EXATOS
+        // Lê as colunas COM OS NOMES EXATOS DA ABA QLP
         const filial = getCol('FILIAL');
         const bandeira = getCol('BANDEIRA');
         const chapa = getCol('CHAPA1');
@@ -112,7 +115,7 @@ module.exports = async function handler(req, res) {
         
         // Debug primeiras 3 linhas
         if (index < 3) {
-          console.log(`[QLP/QUADRO] Linha ${index + 1}:`, {
+          console.log(`[QLP] Linha ${index + 1}:`, {
             chapa,
             nome,
             funcao,
@@ -154,7 +157,6 @@ module.exports = async function handler(req, res) {
           } else if (turnoUpper.includes('NÃO ATIVO') || turnoUpper.includes('NAO ATIVO')) {
             turnoNormalizado = 'Não ativo';
           } else {
-            // Mantém valor original se não for vazio
             turnoNormalizado = turno;
           }
         }
@@ -241,7 +243,7 @@ module.exports = async function handler(req, res) {
         
       } catch (rowError) {
         linhasComErro++;
-        console.error(`[QLP/QUADRO] ✗ Erro ao processar linha ${index + 1}:`, rowError.message);
+        console.error(`[QLP] ✗ Erro na linha ${index + 1}:`, rowError.message);
       }
     });
     
@@ -251,15 +253,14 @@ module.exports = async function handler(req, res) {
     estatisticas.totalSupervisores = Object.keys(estatisticas.porSupervisor).length;
     estatisticas.totalFuncoes = Object.keys(estatisticas.porFuncao).length;
     
-    console.log('[QLP/QUADRO] ========== RESUMO ==========');
-    console.log(`[QLP/QUADRO] ✓ Processados: ${linhasProcessadas} colaboradores`);
-    console.log(`[QLP/QUADRO] ⚠ Ignoradas: ${linhasIgnoradas} linhas (sem nome)`);
-    console.log(`[QLP/QUADRO] ✗ Com erro: ${linhasComErro} linhas`);
-    console.log(`[QLP/QUADRO] Status: ${estatisticas.ativos} ativos, ${estatisticas.inativos} inativos`);
-    console.log(`[QLP/QUADRO] Seções: ${estatisticas.totalSecoes} diferentes`);
-    console.log(`[QLP/QUADRO] Turnos: ${estatisticas.totalTurnos} diferentes`);
-    console.log('[QLP/QUADRO] Distribuição por turno:', estatisticas.porTurno);
-    console.log('[QLP/QUADRO] ========== FIM ==========');
+    console.log('[QLP] ========== RESUMO ==========');
+    console.log(`[QLP] ✓ Processados: ${linhasProcessadas} colaboradores`);
+    console.log(`[QLP] ⚠ Ignoradas: ${linhasIgnoradas} linhas (sem nome)`);
+    console.log(`[QLP] ✗ Com erro: ${linhasComErro} linhas`);
+    console.log(`[QLP] Status: ${estatisticas.ativos} ativos, ${estatisticas.inativos} inativos`);
+    console.log(`[QLP] Seções: ${estatisticas.totalSecoes} diferentes`);
+    console.log(`[QLP] Turnos: ${estatisticas.totalTurnos} diferentes`);
+    console.log('[QLP] ========== FIM ==========');
     
     return res.status(200).json({
       ok: true,
@@ -276,15 +277,15 @@ module.exports = async function handler(req, res) {
     });
     
   } catch (error) {
-    console.error('[QLP/QUADRO] ========== ERRO FATAL ==========');
-    console.error('[QLP/QUADRO] Tipo:', error.name);
-    console.error('[QLP/QUADRO] Mensagem:', error.message);
-    console.error('[QLP/QUADRO] Stack:', error.stack);
-    console.error('[QLP/QUADRO] =====================================');
+    console.error('[QLP] ========== ERRO FATAL ==========');
+    console.error('[QLP] Tipo:', error.name);
+    console.error('[QLP] Mensagem:', error.message);
+    console.error('[QLP] Stack:', error.stack);
+    console.error('[QLP] =====================================');
     
     return res.status(500).json({
       ok: false,
-      msg: 'Erro ao buscar dados do Quadro',
+      msg: 'Erro ao buscar dados do QLP',
       error: error.name,
       details: error.message,
       stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
