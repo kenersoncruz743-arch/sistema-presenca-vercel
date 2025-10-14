@@ -170,7 +170,7 @@
   
   .statusPresente { background-color: #c8e6c9; }
   .statusAusente { background-color: #ffcdd2; }
-  .statusAfastado { background-color: #ffcdd2; }
+  .statusAfastado { background-color: #ffab91; }
   .statusFerias { background-color: #ffe082; }
   .statusFolga { background-color: #b3e5fc; }
   .statusAbandono { background-color: #e1bee7; }
@@ -516,7 +516,7 @@
       "Afastado": "statusAfastado",
       "Férias": "statusFerias",
       "Folga": "statusFolga",
-      "Abandono": ""
+      "Abandono": "statusAbandono"
     };
     return classes[status] || "statusVazio";
   }
@@ -574,6 +574,7 @@
               <option value="" ${!c.status ? "selected" : ""}>-- Selecione --</option>
               <option value="Presente" ${c.status === "Presente" ? "selected" : ""}>✅ Presente</option>
               <option value="Ausente" ${c.status === "Ausente" ? "selected" : ""}>❌ Ausente</option>
+              <option value="Afastado" ${c.status === "Afastado" ? "selected" : ""}>🏥 Afastado</option>
               <option value="Férias" ${c.status === "Férias" ? "selected" : ""}>🏖️ Férias</option>
               <option value="Folga" ${c.status === "Folga" ? "selected" : ""}>😴 Folga</option>
               <option value="Abandono" ${c.status === "Abandono" ? "selected" : ""}>🚫 Abandono</option>
