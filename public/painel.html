@@ -170,6 +170,7 @@
   
   .statusPresente { background-color: #c8e6c9; }
   .statusAusente { background-color: #ffcdd2; }
+  .statusAfastado { background-color: #ffcdd2; }
   .statusFerias { background-color: #ffe082; }
   .statusFolga { background-color: #b3e5fc; }
   .statusAbandono { background-color: #e1bee7; }
@@ -511,10 +512,11 @@
   function statusToClass(status) {
     const classes = {
       "Presente": "statusPresente",
-      "Ausente": "statusAusente", 
+      "Ausente": "statusAusente",
+      "Afastado": "statusAfastado",
       "Férias": "statusFerias",
       "Folga": "statusFolga",
-      "Abandono": "statusAbandono"
+      "Abandono": ""
     };
     return classes[status] || "statusVazio";
   }
