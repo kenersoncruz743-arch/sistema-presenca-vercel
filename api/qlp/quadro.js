@@ -1,4 +1,4 @@
-// api/qlp/quadro.js - VERSÃO ROBUSTA COM TRATAMENTO COMPLETO DE ERROS
+// api/qlp/quadro.js - VERSÃO CORRIGIDA PARA ABA "QLP"
 const sheetsService = require('../../lib/sheets');
 
 module.exports = async function handler(req, res) {
@@ -20,7 +20,7 @@ module.exports = async function handler(req, res) {
 
   try {
     console.log('[QLP/QUADRO] ========== INÍCIO DA REQUISIÇÃO ==========');
-    console.log('[QLP/QUADRO] Iniciando busca na aba Quadro...');
+    console.log('[QLP/QUADRO] Iniciando busca na aba QLP...');
     
     // Inicializa conexão com Google Sheets
     let doc;
@@ -36,19 +36,19 @@ module.exports = async function handler(req, res) {
       });
     }
     
-    // Busca a aba Quadro
-    const sheetQuadro = doc.sheetsByTitle['Quadro'];
+    // Busca a aba QLP (CORRIGIDO)
+    const sheetQuadro = doc.sheetsByTitle['QLP'];
     if (!sheetQuadro) {
-      console.error('[QLP/QUADRO] ✗ Aba Quadro não encontrada');
+      console.error('[QLP/QUADRO] ✗ Aba QLP não encontrada');
       console.log('[QLP/QUADRO] Abas disponíveis:', Object.keys(doc.sheetsByTitle));
       return res.status(404).json({
         ok: false,
-        msg: 'Aba Quadro não encontrada na planilha',
+        msg: 'Aba QLP não encontrada na planilha',
         abasDisponiveis: Object.keys(doc.sheetsByTitle)
       });
     }
     
-    console.log(`[QLP/QUADRO] ✓ Aba Quadro encontrada`);
+    console.log(`[QLP/QUADRO] ✓ Aba QLP encontrada`);
     
     // Carrega todos os registros
     let rows;
@@ -120,15 +120,15 @@ module.exports = async function handler(req, res) {
           }
         };
         
-        // Lê as colunas
+        // Lê as colunas (ajuste conforme os nomes reais na sua planilha QLP)
         const filial = getCol('FILIAL');
         const bandeira = getCol('BANDEIRA');
-        const chapa = getCol('CHAPA1');
-        const dtAdmissao = getCol('DT_ADMISSAO');
-        const nome = getCol('NOME');
-        const funcao = getCol('FUNCAO');
-        const secao = getCol('SECAO');
-        const situacao = getCol('SITUACAO');
+        const chapa = getCol('CHAPA1') || getCol('CHAPA') || getCol('Chapa');
+        const dtAdmissao = getCol('DT_ADMISSAO') || getCol('Data Admissão');
+        const nome = getCol('NOME') || getCol('Nome');
+        const funcao = getCol('FUNCAO') || getCol('Função');
+        const secao = getCol('SECAO') || getCol('Seção');
+        const situacao = getCol('SITUACAO') || getCol('Situação');
         const supervisor = getCol('Supervisor');
         const turno = getCol('Turno');
         const gestao = getCol('Gestão');
@@ -158,14 +158,14 @@ module.exports = async function handler(req, res) {
         let turnoNormalizado = 'Não definido';
         if (turno && turno !== '') {
           const turnoLower = turno.toLowerCase();
-          if (turnoLower.includes('turno a') || turnoLower === 'turno a') {
+          if (turnoLower.includes('turno a') || turnoLower === 'turno a' || turnoLower === 'a') {
             turnoNormalizado = 'Turno A';
-          } else if (turnoLower.includes('turno b') || turnoLower === 'turno b') {
+          } else if (turnoLower.includes('turno b') || turnoLower === 'turno b' || turnoLower === 'b') {
             turnoNormalizado = 'Turno B';
-          } else if (turnoLower.includes('turno c') || turnoLower === 'turno c') {
+          } else if (turnoLower.includes('turno c') || turnoLower === 'turno c' || turnoLower === 'c') {
             turnoNormalizado = 'Turno C';
           } else if (!turnoLower.includes('não') && !turnoLower.includes('definido')) {
-            turnoNormalizado = turno; // Mantém o valor original se não for vazio
+            turnoNormalizado = turno;
           }
         }
         
@@ -292,7 +292,7 @@ module.exports = async function handler(req, res) {
     
     return res.status(500).json({
       ok: false,
-      msg: 'Erro ao buscar dados do Quadro',
+      msg: 'Erro ao buscar dados do QLP',
       error: error.name,
       details: error.message,
       stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
