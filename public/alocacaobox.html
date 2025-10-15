@@ -564,99 +564,161 @@
         // Estado dos boxes (número do box -> dados da carga alocada)
         let boxesState = {};
 
-        // Dados de cargas disponíveis (simulação - virá do Google Sheets)
-        let cargasDisponiveis = [
-            {
-                carga: "4265194",
-                descricao: "MS 0164 LJ 330 COMPER FORNEC. ITAMBE",
-                tipoLoja: "LJ COMPER",
-                segmento: "CROSS",
-                loja: "Loja 330",
-                m3: 5.5,
-                dataRot: "2025-10-10",
-                valor: "R$ 344,00",
-                box: null
-            },
-            {
-                carga: "4266123",
-                descricao: "MS 0164 LJ 072 COMPER FORNEC. NEWELL BRA",
-                tipoLoja: "LJ COMPER",
-                segmento: "CROSS",
-                loja: "Loja 72",
-                m3: 3.2,
-                dataRot: "2025-10-11",
-                valor: "R$ 157,00",
-                box: null
-            },
-            {
-                carga: "4265249",
-                descricao: "MS 0168 LJ 180 FORT ATAC FORNEC. COPOBRA",
-                tipoLoja: "LJ FORT",
-                segmento: "CROSS",
-                loja: "Loja 180",
-                m3: 12.0,
-                dataRot: "2025-10-10",
-                valor: "R$ 91,00",
-                box: null
-            },
-            {
-                carga: "4266051",
-                descricao: "MS 0164 LJ 134 COMPER FORNEC. REAL COMER",
-                tipoLoja: "LJ COMPER",
-                segmento: "CROSS",
-                loja: "Loja 134",
-                m3: 1.5,
-                dataRot: "2025-10-11",
-                valor: "R$ 346,00",
-                box: null
-            },
-            {
-                carga: "4266124",
-                descricao: "MS 0164 LJ 072 COMPER FORNEC. SWEDISH FI",
-                tipoLoja: "LJ COMPER",
-                segmento: "CROSS",
-                loja: "Loja 72",
-                m3: 5.0,
-                dataRot: "2025-10-11",
-                valor: "R$ 212,00",
-                box: null
-            },
-            {
-                carga: "4267417",
-                descricao: "MS 0164 LJ 330 COMPER FORNEC. BRINOX",
-                tipoLoja: "LJ COMPER",
-                segmento: "CROSS",
-                loja: "Loja 330",
-                m3: 6.0,
-                dataRot: "2025-10-13",
-                valor: "R$ 143,00",
-                box: null
-            },
-            {
-                carga: "4266201",
-                descricao: "MS 0168 LJ 180 FORT ATAC FORNEC. REAL CO",
-                tipoLoja: "LJ FORT",
-                segmento: "CROSS",
-                loja: "Loja 180",
-                m3: 1.0,
-                dataRot: "2025-10-11",
-                valor: "R$ 346,00",
-                box: null
-            },
-            {
-                carga: "4267446",
-                descricao: "MS 0164 LJ 067 COMPER FORNEC. BRINOX",
-                tipoLoja: "LJ COMPER",
-                segmento: "CROSS",
-                loja: "Loja 67",
-                m3: 1.0,
-                dataRot: "2025-10-13",
-                valor: "R$ 70,00",
-                box: null
-            }
-        ];
+        // Dados de cargas disponíveis (carregados da API)
+        let cargasDisponiveis = [];
 
         let sugestoesAtuais = [];
+        
+        // URL da API
+        const API_URL = '/api/alocacaobox';
+        
+        // Função para carregar cargas da API
+        async function carregarCargasAPI() {
+            try {
+                mostrarNotificacao('Carregando cargas...', 'info');
+                
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        action: 'listarCargas',
+                        filtros: {
+                            tipoLoja: ['LJ COMPER', 'LJ FORT']
+                        }
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.ok && data.cargas) {
+                    cargasDisponiveis = data.cargas.map(c => ({
+                        carga: c.carga || c.CARGA,
+                        descricao: c.descricao || c.DESCRICAO,
+                        tipoLoja: c.tipoLoja || c.TIPO_LOJA,
+                        segmento: c.segmento || c.SEGMENTO,
+                        loja: c.loja || c.LOJA,
+                        m3: parseFloat(c.m3 || c.M3 || 0),
+                        dataRot: c.dataRot || c.DATA_ROT,
+                        valor: c.valor || c.VALOR,
+                        box: c.box || c.BOX || null
+                    }));
+                    
+                    console.log('Cargas carregadas da API:', cargasDisponiveis.length);
+                    mostrarNotificacao(`${cargasDisponiveis.length} cargas carregadas!`, 'success');
+                    return true;
+                } else {
+                    console.error('Erro ao carregar cargas:', data.msg);
+                    mostrarNotificacao('Erro ao carregar cargas: ' + data.msg, 'error');
+                    return false;
+                }
+            } catch (error) {
+                console.error('Erro na requisição:', error);
+                mostrarNotificacao('Erro ao conectar com a API', 'error');
+                return false;
+            }
+        }
+        
+        // Função para carregar estado dos boxes da API
+        async function carregarBoxesAPI() {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'listarBoxes' })
+                });
+                
+                const data = await response.json();
+                
+                if (data.ok && data.boxes) {
+                    // Limpa estado atual
+                    boxesState = {};
+                    
+                    // Carrega boxes ocupados
+                    data.boxes.forEach(box => {
+                        const boxNum = parseInt(box.box || box.BOX);
+                        if (boxNum && boxesConfig[boxNum]) {
+                            boxesState[boxNum] = {
+                                carga: box.carga || box.CARGA,
+                                descricao: box.descricao || box.DESCRICAO,
+                                tipoLoja: box.tipoLoja || box.TIPO_LOJA,
+                                loja: box.loja || box.LOJA,
+                                m3: parseFloat(box.m3 || box.M3 || 0),
+                                dataRot: box.dataRot || box.DATA_ROT,
+                                valor: box.valor || box.VALOR
+                            };
+                        }
+                    });
+                    
+                    console.log('Estado dos boxes carregado:', Object.keys(boxesState).length, 'ocupados');
+                    return true;
+                } else {
+                    console.error('Erro ao carregar boxes:', data.msg);
+                    return false;
+                }
+            } catch (error) {
+                console.error('Erro ao carregar boxes:', error);
+                return false;
+            }
+        }
+        
+        // Função para alocar carga via API
+        async function alocarCargaAPI(boxNum, cargaId) {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        action: 'alocarBox',
+                        boxNum: boxNum,
+                        cargaId: cargaId
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.ok) {
+                    console.log('Carga alocada com sucesso via API');
+                    return true;
+                } else {
+                    console.error('Erro ao alocar carga:', data.msg);
+                    mostrarNotificacao('Erro ao alocar: ' + data.msg, 'error');
+                    return false;
+                }
+            } catch (error) {
+                console.error('Erro ao alocar carga:', error);
+                mostrarNotificacao('Erro ao conectar com a API', 'error');
+                return false;
+            }
+        }
+        
+        // Função para liberar box via API
+        async function liberarBoxAPI(boxNum) {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        action: 'liberarBox',
+                        boxNum: boxNum
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.ok) {
+                    console.log('BOX liberado com sucesso via API');
+                    return true;
+                } else {
+                    console.error('Erro ao liberar BOX:', data.msg);
+                    mostrarNotificacao('Erro ao liberar: ' + data.msg, 'error');
+                    return false;
+                }
+            } catch (error) {
+                console.error('Erro ao liberar BOX:', error);
+                mostrarNotificacao('Erro ao conectar com a API', 'error');
+                return false;
+            }
+        }
 
         function inicializarBoxes() {
             const grid = document.getElementById('boxesGrid');
@@ -718,16 +780,24 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner loading"></i> Processando...';
             
-            setTimeout(() => {
-                sugestoesAtuais = calcularSugestoesInteligentes();
-                renderizarSugestoes();
-                inicializarBoxes();
-                
-                btn.disabled = false;
-                btn.innerHTML = originalHTML;
-                
-                mostrarNotificacao('Sugestões geradas com sucesso!', 'success');
-            }, 1000);
+            // Recarrega cargas antes de gerar sugestões
+            carregarCargasAPI().then(success => {
+                if (success) {
+                    setTimeout(() => {
+                        sugestoesAtuais = calcularSugestoesInteligentes();
+                        renderizarSugestoes();
+                        inicializarBoxes();
+                        
+                        btn.disabled = false;
+                        btn.innerHTML = originalHTML;
+                        
+                        mostrarNotificacao('Sugestões geradas com sucesso!', 'success');
+                    }, 500);
+                } else {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHTML;
+                }
+            });
         }
 
         function calcularSugestoesInteligentes() {
@@ -829,18 +899,31 @@
             const sugestao = sugestoesAtuais[sugestaoIndex];
             
             if (confirm(`Confirma a alocação da carga ${sugestao.carga.carga} no BOX ${sugestao.boxSugerido}?`)) {
-                // Aloca no estado
-                boxesState[sugestao.boxSugerido] = sugestao.carga;
-                sugestao.carga.box = sugestao.boxSugerido;
+                const btn = event.target;
+                const originalHTML = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner loading"></i>';
                 
-                // Remove da lista de sugestões
-                sugestoesAtuais.splice(sugestaoIndex, 1);
-                
-                // Atualiza interface
-                renderizarSugestoes();
-                inicializarBoxes();
-                
-                mostrarNotificacao(`Carga alocada no BOX ${sugestao.boxSugerido} com sucesso!`, 'success');
+                // Aloca via API
+                alocarCargaAPI(sugestao.boxSugerido, sugestao.carga.carga).then(success => {
+                    if (success) {
+                        // Atualiza estado local
+                        boxesState[sugestao.boxSugerido] = sugestao.carga;
+                        sugestao.carga.box = sugestao.boxSugerido;
+                        
+                        // Remove da lista de sugestões
+                        sugestoesAtuais.splice(sugestaoIndex, 1);
+                        
+                        // Atualiza interface
+                        renderizarSugestoes();
+                        inicializarBoxes();
+                        
+                        mostrarNotificacao(`Carga alocada no BOX ${sugestao.boxSugerido} com sucesso!`, 'success');
+                    } else {
+                        btn.disabled = false;
+                        btn.innerHTML = originalHTML;
+                    }
+                });
             }
         }
 
@@ -1004,16 +1087,21 @@
 
         function liberarBox(boxNum) {
             if (confirm(`Deseja realmente liberar o BOX ${boxNum}?`)) {
-                const carga = boxesState[boxNum];
-                if (carga) {
-                    carga.box = null;
-                }
-                delete boxesState[boxNum];
-                
-                fecharModal();
-                inicializarBoxes();
-                
-                mostrarNotificacao(`BOX ${boxNum} liberado com sucesso!`, 'success');
+                // Libera via API
+                liberarBoxAPI(boxNum).then(success => {
+                    if (success) {
+                        const carga = boxesState[boxNum];
+                        if (carga) {
+                            carga.box = null;
+                        }
+                        delete boxesState[boxNum];
+                        
+                        fecharModal();
+                        inicializarBoxes();
+                        
+                        mostrarNotificacao(`BOX ${boxNum} liberado com sucesso!`, 'success');
+                    }
+                });
             }
         }
 
@@ -1117,7 +1205,7 @@
         document.head.appendChild(style);
 
         // Inicialização
-        window.onload = function() {
+        window.onload = async function() {
             const usuario = sessionStorage.getItem('usuario');
             
             if (!usuario) {
@@ -1126,12 +1214,24 @@
                 return;
             }
             
-            inicializarBoxes();
-            mostrarNotificacao('Sistema de alocação carregado! Use Ctrl+G para gerar sugestões.', 'info');
+            // Mostra loading
+            mostrarNotificacao('Inicializando sistema...', 'info');
             
-            console.log('Sistema de Alocação de BOX inicializado');
-            console.log('Boxes configurados:', Object.keys(boxesConfig).length);
-            console.log('Cargas disponíveis:', cargasDisponiveis.length);
+            // Carrega dados da API
+            const cargasOk = await carregarCargasAPI();
+            const boxesOk = await carregarBoxesAPI();
+            
+            if (cargasOk && boxesOk) {
+                inicializarBoxes();
+                mostrarNotificacao('Sistema carregado! Use Ctrl+G para gerar sugestões.', 'success');
+                
+                console.log('Sistema de Alocação de BOX inicializado');
+                console.log('Boxes configurados:', Object.keys(boxesConfig).length);
+                console.log('Cargas disponíveis:', cargasDisponiveis.length);
+                console.log('Boxes ocupados:', Object.keys(boxesState).length);
+            } else {
+                mostrarNotificacao('Erro ao carregar dados. Verifique a conexão.', 'error');
+            }
         };
     </script>
 </body>
