@@ -10,6 +10,11 @@ const nextConfig = {
         destination: '/index.html',
       },
       {
+        source: '/ferramentas',
+        destination: '/ferramentas.html',
+      },
+      
+      {
         source: '/menu',
         destination: '/menu.html',
       },
@@ -29,7 +34,13 @@ const nextConfig = {
       {
         source: '/mapacarga',
         destination: '/mapacarga.html',
+      },
+      
+      {
+        source: '/producao',
+        destination: '/producao.html',
       }
+      
     ];
   },
 }
