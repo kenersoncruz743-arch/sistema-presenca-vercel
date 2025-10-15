@@ -273,7 +273,8 @@
                 'Gestão': 'fas fa-users-cog',
                 'QLP': 'fas fa-chart-bar',
                 'Mapa de Carga': 'fas fa-truck-loading',
-                'default': 'fas fa-building'
+                'default': 'fas fa-building',
+                'Alocação BOX': 'fas fa-warehouse',
             };
             
             areasSelecionadas.forEach(area => {
@@ -343,6 +344,8 @@
                     window.location.href = '/qlp';
                 } else if (areaSelecionada.toLowerCase().includes('mapa de carga')) {
                     window.location.href = '/mapacarga';
+                } else if (areaSelecionada.toLowerCase().includes('alocação box')) {
+                    window.location.href = '/alocacaobox';
                 } else {
                     window.location.href = '/painel';
                 }
