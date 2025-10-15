@@ -265,6 +265,16 @@
                 grid.innerHTML = '<p style="color: #666; font-style: italic;">Nenhuma área disponível para este usuário</p>';
                 return;
             }
+
+            const icones = {
+                'PCP': 'fas fa-chart-line',
+                'WMS': 'fas fa-warehouse',
+                'Separação': 'fas fa-boxes',
+                'Gestão': 'fas fa-users-cog',
+                'QLP': 'fas fa-chart-bar',
+                'Mapa de Carga': 'fas fa-truck-loading', // NOVO
+                'default': 'fas fa-building'
+            };
             
             // MODIFICADO: Adicionado ícone para QLP
             const icones = {
