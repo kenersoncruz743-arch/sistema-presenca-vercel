@@ -1,26 +1,22 @@
-// next.config.js - Atualizado para incluir rota de coletores
+// next.config.js - Atualizado com rota de Mapa de Carga
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
   
   async rewrites() {
     return [
-      // Rota para login (página inicial)
       {
         source: '/',
         destination: '/index.html',
       },
-      // Rota para menu
       {
         source: '/menu',
         destination: '/menu.html',
       },
-      // Rota para painel de presença
       {
         source: '/painel',
         destination: '/painel.html',
       },
-      // NOVA ROTA: Rota para controle de coletores
       {
         source: '/coletores',
         destination: '/coletores.html',
@@ -28,6 +24,11 @@ const nextConfig = {
       {
         source: '/qlp',
         destination: '/qlp.html',
+      },
+      // NOVA ROTA: Mapa de Carga
+      {
+        source: '/mapacarga',
+        destination: '/mapacarga.html',
       }
     ];
   },
