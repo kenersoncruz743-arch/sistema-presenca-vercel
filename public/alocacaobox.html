@@ -582,37 +582,43 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         action: 'listarCargas',
-                        filtros: {
-                            tipoLoja: ['LJ COMPER', 'LJ FORT']
-                        }
+                        filtros: {}
                     })
                 });
                 
                 const data = await response.json();
                 
+                console.log('[DEBUG] Resposta da API:', data);
+                
                 if (data.ok && data.cargas) {
                     cargasDisponiveis = data.cargas.map(c => ({
-                        carga: c.carga || c.CARGA,
-                        descricao: c.descricao || c.DESCRICAO,
-                        tipoLoja: c.tipoLoja || c.TIPO_LOJA,
-                        segmento: c.segmento || c.SEGMENTO,
-                        loja: c.loja || c.LOJA,
-                        m3: parseFloat(c.m3 || c.M3 || 0),
-                        dataRot: c.dataRot || c.DATA_ROT,
-                        valor: c.valor || c.VALOR,
-                        box: c.box || c.BOX || null
+                        carga: c.carga,
+                        descricao: c.descricao,
+                        tipoLoja: c.tipoLoja,
+                        segmento: c.segmento,
+                        loja: c.loja,
+                        m3: typeof c.m3 === 'number' ? c.m3 : parseFloat(c.m3 || 0),
+                        dataRot: c.dataRot,
+                        valor: c.valor,
+                        statusSep: c.statusSep,
+                        statusConf: c.statusConf,
+                        visitasPendente: typeof c.visitasPendente === 'number' ? c.visitasPendente : parseInt(c.visitasPendente || 0),
+                        prioridade: c.prioridade,
+                        box: c.box || null
                     }));
                     
-                    console.log('Cargas carregadas da API:', cargasDisponiveis.length);
+                    console.log('[DEBUG] Cargas processadas:', cargasDisponiveis.length);
+                    console.log('[DEBUG] Exemplo de carga:', cargasDisponiveis[0]);
+                    
                     mostrarNotificacao(`${cargasDisponiveis.length} cargas carregadas!`, 'success');
                     return true;
                 } else {
-                    console.error('Erro ao carregar cargas:', data.msg);
+                    console.error('[DEBUG] Erro ao carregar cargas:', data.msg);
                     mostrarNotificacao('Erro ao carregar cargas: ' + data.msg, 'error');
                     return false;
                 }
             } catch (error) {
-                console.error('Erro na requisição:', error);
+                console.error('[DEBUG] Erro na requisição:', error);
                 mostrarNotificacao('Erro ao conectar com a API', 'error');
                 return false;
             }
@@ -629,34 +635,34 @@
                 
                 const data = await response.json();
                 
+                console.log('[DEBUG] Boxes da API:', data);
+                
                 if (data.ok && data.boxes) {
-                    // Limpa estado atual
                     boxesState = {};
                     
-                    // Carrega boxes ocupados
                     data.boxes.forEach(box => {
-                        const boxNum = parseInt(box.box || box.BOX);
+                        const boxNum = parseInt(box.box);
                         if (boxNum && boxesConfig[boxNum]) {
                             boxesState[boxNum] = {
-                                carga: box.carga || box.CARGA,
-                                descricao: box.descricao || box.DESCRICAO,
-                                tipoLoja: box.tipoLoja || box.TIPO_LOJA,
-                                loja: box.loja || box.LOJA,
-                                m3: parseFloat(box.m3 || box.M3 || 0),
-                                dataRot: box.dataRot || box.DATA_ROT,
-                                valor: box.valor || box.VALOR
+                                carga: box.carga,
+                                descricao: box.descricao,
+                                tipoLoja: box.tipoLoja,
+                                loja: box.loja,
+                                m3: typeof box.m3 === 'number' ? box.m3 : parseFloat(box.m3 || 0),
+                                dataRot: box.dataRot,
+                                valor: box.valor
                             };
                         }
                     });
                     
-                    console.log('Estado dos boxes carregado:', Object.keys(boxesState).length, 'ocupados');
+                    console.log('[DEBUG] Boxes ocupados:', Object.keys(boxesState).length);
                     return true;
                 } else {
-                    console.error('Erro ao carregar boxes:', data.msg);
+                    console.error('[DEBUG] Erro ao carregar boxes:', data.msg);
                     return false;
                 }
             } catch (error) {
-                console.error('Erro ao carregar boxes:', error);
+                console.error('[DEBUG] Erro ao carregar boxes:', error);
                 return false;
             }
         }
@@ -677,15 +683,15 @@
                 const data = await response.json();
                 
                 if (data.ok) {
-                    console.log('Carga alocada com sucesso via API');
+                    console.log('[DEBUG] Carga alocada com sucesso via API');
                     return true;
                 } else {
-                    console.error('Erro ao alocar carga:', data.msg);
+                    console.error('[DEBUG] Erro ao alocar carga:', data.msg);
                     mostrarNotificacao('Erro ao alocar: ' + data.msg, 'error');
                     return false;
                 }
             } catch (error) {
-                console.error('Erro ao alocar carga:', error);
+                console.error('[DEBUG] Erro ao alocar carga:', error);
                 mostrarNotificacao('Erro ao conectar com a API', 'error');
                 return false;
             }
@@ -706,15 +712,15 @@
                 const data = await response.json();
                 
                 if (data.ok) {
-                    console.log('BOX liberado com sucesso via API');
+                    console.log('[DEBUG] BOX liberado com sucesso via API');
                     return true;
                 } else {
-                    console.error('Erro ao liberar BOX:', data.msg);
+                    console.error('[DEBUG] Erro ao liberar BOX:', data.msg);
                     mostrarNotificacao('Erro ao liberar: ' + data.msg, 'error');
                     return false;
                 }
             } catch (error) {
-                console.error('Erro ao liberar BOX:', error);
+                console.error('[DEBUG] Erro ao liberar BOX:', error);
                 mostrarNotificacao('Erro ao conectar com a API', 'error');
                 return false;
             }
@@ -724,7 +730,6 @@
             const grid = document.getElementById('boxesGrid');
             grid.innerHTML = '';
             
-            // Ordena os boxes em ordem decrescente
             const boxNumbers = Object.keys(boxesConfig).map(Number).sort((a, b) => b - a);
             
             boxNumbers.forEach(boxNum => {
@@ -780,7 +785,6 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner loading"></i> Processando...';
             
-            // Recarrega cargas antes de gerar sugestões
             carregarCargasAPI().then(success => {
                 if (success) {
                     setTimeout(() => {
@@ -791,7 +795,7 @@
                         btn.disabled = false;
                         btn.innerHTML = originalHTML;
                         
-                        mostrarNotificacao('Sugestões geradas com sucesso!', 'success');
+                        mostrarNotificacao(`${sugestoesAtuais.length} sugestões geradas!`, 'success');
                     }, 500);
                 } else {
                     btn.disabled = false;
@@ -801,67 +805,111 @@
         }
 
         function calcularSugestoesInteligentes() {
+            console.log('[SUGESTÃO] Iniciando cálculo de sugestões...');
+            console.log('[SUGESTÃO] Cargas disponíveis:', cargasDisponiveis.length);
+            console.log('[SUGESTÃO] Boxes ocupados:', Object.keys(boxesState).length);
+            
             const sugestoes = [];
             
-            // 1. Filtra apenas LJ COMPER e LJ FORT
-            let cargasElegiveis = cargasDisponiveis.filter(c => 
-                (c.tipoLoja === 'LJ COMPER' || c.tipoLoja === 'LJ FORT') &&
-                !c.box // Não tem box alocado ainda
-            );
+            // 1. Filtra cargas elegíveis (sem BOX)
+            let cargasElegiveis = cargasDisponiveis.filter(c => !c.box);
             
-            // 2. Ordena por data (menor data primeiro)
-            cargasElegiveis.sort((a, b) => new Date(a.dataRot) - new Date(b.dataRot));
+            console.log('[SUGESTÃO] Cargas elegíveis (sem BOX):', cargasElegiveis.length);
             
-            // 3. Pega boxes vazios ordenados
+            if (cargasElegiveis.length === 0) {
+                console.log('[SUGESTÃO] Nenhuma carga elegível encontrada');
+                return [];
+            }
+            
+            // 2. Ordena cargas por critérios (data mais antiga primeiro, depois por m³)
+            cargasElegiveis.sort((a, b) => {
+                // Primeiro por data
+                const dateA = new Date(a.dataRot || '9999-12-31');
+                const dateB = new Date(b.dataRot || '9999-12-31');
+                if (dateA < dateB) return -1;
+                if (dateA > dateB) return 1;
+                // Se mesma data, por m³ (maior primeiro para otimizar espaço)
+                return b.m3 - a.m3;
+            });
+            
+            console.log('[SUGESTÃO] Cargas após ordenação:', cargasElegiveis.slice(0, 3));
+            
+            // 3. Pega boxes vazios ordenados por capacidade (maior primeiro)
             const boxesVazios = Object.keys(boxesConfig)
                 .map(Number)
                 .filter(boxNum => !boxesState[boxNum])
-                .sort((a, b) => b - a); // Ordena decrescente
+                .sort((a, b) => boxesConfig[b] - boxesConfig[a]);
             
-            // 4. Controla lojas já alocadas para evitar repetição
+            console.log('[SUGESTÃO] Boxes vazios:', boxesVazios.length);
+            console.log('[SUGESTÃO] Boxes disponíveis:', boxesVazios);
+            
+            // 4. Algoritmo de alocação melhorado
             const lojasAlocadas = new Set();
+            const cargasUsadas = new Set();
             
-            // 5. Algoritmo de alocação
             for (const box of boxesVazios) {
                 const capacidade = boxesConfig[box];
                 
-                // Busca carga adequada para este box
-                const cargaIndex = cargasElegiveis.findIndex(c => {
-                    const cabeMetragem = c.m3 <= capacidade;
+                // Busca melhor carga para este box
+                const cargaIndex = cargasElegiveis.findIndex((c, idx) => {
+                    // Já foi usada
+                    if (cargasUsadas.has(idx)) return false;
+                    
+                    // Verifica se cabe
+                    if (c.m3 > capacidade) return false;
+                    
+                    // Prioriza lojas não repetidas (mas permite se necessário)
                     const lojaNaoRepetida = !lojasAlocadas.has(c.loja);
-                    return cabeMetragem && (lojaNaoRepetida || cargasElegiveis.length <= boxesVazios.length);
+                    
+                    // Se tem poucas cargas restantes, aceita qualquer uma que caiba
+                    if (cargasElegiveis.length - cargasUsadas.size <= boxesVazios.length - sugestoes.length) {
+                        return true;
+                    }
+                    
+                    // Caso contrário, prioriza lojas não repetidas
+                    return lojaNaoRepetida;
                 });
                 
                 if (cargaIndex !== -1) {
                     const carga = cargasElegiveis[cargaIndex];
                     
-                    sugestoes.push({
+                    const sugestao = {
                         boxSugerido: box,
                         capacidadeBox: capacidade,
                         carga: carga,
-                        motivo: `BOX ${box} (≤${capacidade}m³) ideal para ${carga.loja} (${carga.m3}m³) - Data: ${formatarData(carga.dataRot)}`
-                    });
+                        ocupacao: ((carga.m3 / capacidade) * 100).toFixed(1),
+                        motivo: `BOX ${box} (${capacidade}m³) para ${carga.loja} (${carga.m3.toFixed(1)}m³) - ${formatarData(carga.dataRot)}`
+                    };
                     
+                    sugestoes.push(sugestao);
                     lojasAlocadas.add(carga.loja);
-                    cargasElegiveis.splice(cargaIndex, 1);
+                    cargasUsadas.add(cargaIndex);
                     
-                    // Para após gerar sugestões suficientes
-                    if (sugestoes.length >= 10) break;
+                    console.log('[SUGESTÃO] Adicionada:', sugestao);
+                    
+                    // Limita a 15 sugestões
+                    if (sugestoes.length >= 15) break;
                 }
             }
+            
+            console.log('[SUGESTÃO] Total de sugestões geradas:', sugestoes.length);
             
             return sugestoes;
         }
 
         function renderizarSugestoes() {
             const container = document.getElementById('sugestoesContainer');
-            document.getElementById('totalSugestoes').textContent = sugestoesAtuais.length;
+            const totalElement = document.getElementById('totalSugestoes');
+            
+            if (totalElement) {
+                totalElement.textContent = sugestoesAtuais.length;
+            }
             
             if (sugestoesAtuais.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-check-circle"></i>
-                        <p>Nenhuma sugestão disponível no momento</p>
+                        <p>Nenhuma sugestão disponível. Todas as cargas podem já estar alocadas.</p>
                     </div>
                 `;
                 return;
@@ -874,7 +922,11 @@
                         BOX ${sug.boxSugerido}
                     </div>
                     <div class="sugestao-loja">${sug.carga.loja}</div>
-                    <div class="sugestao-descricao">${sug.carga.descricao}</div>
+                    <div class="sugestao-descricao">
+                        <strong>${sug.carga.carga}</strong><br>
+                        ${sug.carga.descricao}<br>
+                        <small>Ocupação: ${sug.ocupacao}%</small>
+                    </div>
                     <div class="sugestao-m3">
                         <i class="fas fa-cube"></i><br>
                         ${sug.carga.m3.toFixed(1)} m³
@@ -899,26 +951,22 @@
             const sugestao = sugestoesAtuais[sugestaoIndex];
             
             if (confirm(`Confirma a alocação da carga ${sugestao.carga.carga} no BOX ${sugestao.boxSugerido}?`)) {
-                const btn = event.target;
+                const btn = event.target.closest('button');
                 const originalHTML = btn.innerHTML;
                 btn.disabled = true;
                 btn.innerHTML = '<i class="fas fa-spinner loading"></i>';
                 
-                // Aloca via API
                 alocarCargaAPI(sugestao.boxSugerido, sugestao.carga.carga).then(success => {
                     if (success) {
-                        // Atualiza estado local
                         boxesState[sugestao.boxSugerido] = sugestao.carga;
                         sugestao.carga.box = sugestao.boxSugerido;
                         
-                        // Remove da lista de sugestões
                         sugestoesAtuais.splice(sugestaoIndex, 1);
                         
-                        // Atualiza interface
                         renderizarSugestoes();
                         inicializarBoxes();
                         
-                        mostrarNotificacao(`Carga alocada no BOX ${sugestao.boxSugerido} com sucesso!`, 'success');
+                        mostrarNotificacao(`Carga ${sugestao.carga.carga} alocada no BOX ${sugestao.boxSugerido}!`, 'success');
                     } else {
                         btn.disabled = false;
                         btn.innerHTML = originalHTML;
@@ -932,7 +980,6 @@
                 boxesState = {};
                 sugestoesAtuais = [];
                 
-                // Limpa os boxes das cargas
                 cargasDisponiveis.forEach(c => c.box = null);
                 
                 renderizarSugestoes();
@@ -960,7 +1007,7 @@
                 <div class="detail-item">
                     <div class="detail-label">Status:</div>
                     <div class="detail-value">
-                        <span class="status-badge ${carga ? 'status-done' : 'status-pending'}">
+                        <span style="padding: 5px 10px; border-radius: 5px; background: ${carga ? '#dc3545' : '#28a745'}; color: white;">
                             ${carga ? 'Ocupado' : 'Disponível'}
                         </span>
                     </div>
@@ -1059,7 +1106,7 @@
                 </div>
                 <div class="detail-item">
                     <div class="detail-label">Ocupação:</div>
-                    <div class="detail-value">${((sugestao.carga.m3 / sugestao.capacidadeBox) * 100).toFixed(1)}% da capacidade</div>
+                    <div class="detail-value">${sugestao.ocupacao}% da capacidade</div>
                 </div>
                 <div class="detail-item">
                     <div class="detail-label">Data Roteirização:</div>
@@ -1087,7 +1134,6 @@
 
         function liberarBox(boxNum) {
             if (confirm(`Deseja realmente liberar o BOX ${boxNum}?`)) {
-                // Libera via API
                 liberarBoxAPI(boxNum).then(success => {
                     if (success) {
                         const carga = boxesState[boxNum];
@@ -1110,8 +1156,13 @@
         }
 
         function formatarData(dataStr) {
-            const data = new Date(dataStr + 'T00:00:00');
-            return data.toLocaleDateString('pt-BR');
+            if (!dataStr) return 'N/A';
+            try {
+                const data = new Date(dataStr + 'T00:00:00');
+                return data.toLocaleDateString('pt-BR');
+            } catch (e) {
+                return dataStr;
+            }
         }
 
         function mostrarNotificacao(mensagem, tipo = 'success') {
@@ -1154,7 +1205,7 @@
         }
 
         function voltarMenu() {
-            if (confirm('Deseja voltar ao menu? As alocações não salvas serão perdidas.')) {
+            if (confirm('Deseja voltar ao menu? As alterações não salvas serão perdidas.')) {
                 window.location.href = '/menu';
             }
         }
@@ -1214,10 +1265,8 @@
                 return;
             }
             
-            // Mostra loading
             mostrarNotificacao('Inicializando sistema...', 'info');
             
-            // Carrega dados da API
             const cargasOk = await carregarCargasAPI();
             const boxesOk = await carregarBoxesAPI();
             
@@ -1225,10 +1274,10 @@
                 inicializarBoxes();
                 mostrarNotificacao('Sistema carregado! Use Ctrl+G para gerar sugestões.', 'success');
                 
-                console.log('Sistema de Alocação de BOX inicializado');
-                console.log('Boxes configurados:', Object.keys(boxesConfig).length);
-                console.log('Cargas disponíveis:', cargasDisponiveis.length);
-                console.log('Boxes ocupados:', Object.keys(boxesState).length);
+                console.log('[INIT] Sistema inicializado');
+                console.log('[INIT] Boxes configurados:', Object.keys(boxesConfig).length);
+                console.log('[INIT] Cargas disponíveis:', cargasDisponiveis.length);
+                console.log('[INIT] Boxes ocupados:', Object.keys(boxesState).length);
             } else {
                 mostrarNotificacao('Erro ao carregar dados. Verifique a conexão.', 'error');
             }
