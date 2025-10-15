@@ -575,8 +575,8 @@
                 loja: "Loja 330",
                 ton: "0,02",
                 m3: "0",
-                rup: "1",
-                prioridade: ""
+                visitaPendente: "Sim",
+                prioridade: "Alta"
             },
             {
                 segmento: "CROSS",
@@ -592,7 +592,7 @@
                 loja: "Loja 180",
                 ton: "0,00",
                 m3: "0,12",
-                rup: "",
+                visitaPendente: "Não",
                 prioridade: ""
             },
             {
@@ -609,7 +609,7 @@
                 loja: "Loja 134",
                 ton: "0,00",
                 m3: "0,01",
-                rup: "",
+                visitaPendente: "Sim",
                 prioridade: ""
             },
             {
@@ -626,7 +626,7 @@
                 loja: "Loja 72",
                 ton: "0,00",
                 m3: "0,03",
-                rup: "",
+                visitaPendente: "Não",
                 prioridade: ""
             },
             {
@@ -643,7 +643,7 @@
                 loja: "Loja 72",
                 ton: "0,01",
                 m3: "0,05",
-                rup: "",
+                visitaPendente: "Não",
                 prioridade: ""
             },
             {
@@ -660,8 +660,8 @@
                 loja: "Loja 72",
                 ton: "0,00",
                 m3: "0,01",
-                rup: "",
-                prioridade: ""
+                visitaPendente: "Sim",
+                prioridade: "Alta"
             },
             {
                 segmento: "CROSS",
@@ -677,7 +677,7 @@
                 loja: "Loja 180",
                 ton: "0,00",
                 m3: "0,01",
-                rup: "",
+                visitaPendente: "Não",
                 prioridade: ""
             },
             {
@@ -694,7 +694,7 @@
                 loja: "Loja 330",
                 ton: "0,00",
                 m3: "0,06",
-                rup: "",
+                visitaPendente: "Sim",
                 prioridade: ""
             },
             {
@@ -711,7 +711,7 @@
                 loja: "Loja 67",
                 ton: "0,00",
                 m3: "0,01",
-                rup: "",
+                visitaPendente: "Não",
                 prioridade: ""
             }
         ];
@@ -865,6 +865,10 @@
                     <div class="detail-value">${item.m3}</div>
                 </div>
                 <div class="detail-item">
+                    <div class="detail-label">Visita Pendente:</div>
+                    <div class="detail-value"><strong style="color: ${item.visitaPendente === 'Sim' ? '#dc3545' : '#28a745'}">${item.visitaPendente}</strong></div>
+                </div>
+                <div class="detail-item">
                     <div class="detail-label">Valor:</div>
                     <div class="detail-value"><strong>${item.valor}</strong></div>
                 </div>
@@ -880,12 +884,6 @@
                     <div class="detail-label">Status Conferência:</div>
                     <div class="detail-value"><span class="status-badge ${getStatusClass(item.statusConf)}">${item.statusConf}</span></div>
                 </div>
-                ${item.rup ? `
-                <div class="detail-item">
-                    <div class="detail-label">RUP:</div>
-                    <div class="detail-value">${item.rup}</div>
-                </div>
-                ` : ''}
                 ${item.prioridade ? `
                 <div class="detail-item">
                     <div class="detail-label">Prioridade:</div>
