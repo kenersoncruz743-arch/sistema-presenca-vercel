@@ -272,17 +272,7 @@
                 'Separação': 'fas fa-boxes',
                 'Gestão': 'fas fa-users-cog',
                 'QLP': 'fas fa-chart-bar',
-                'Mapa de Carga': 'fas fa-truck-loading', // NOVO
-                'default': 'fas fa-building'
-            };
-            
-            // MODIFICADO: Adicionado ícone para QLP
-            const icones = {
-                'PCP': 'fas fa-chart-line',
-                'WMS': 'fas fa-warehouse',
-                'Separação': 'fas fa-boxes',
-                'Gestão': 'fas fa-users-cog',
-                'QLP': 'fas fa-chart-bar',
+                'Mapa de Carga': 'fas fa-truck-loading',
                 'default': 'fas fa-building'
             };
             
@@ -330,7 +320,6 @@
             }, 2000);
         }
 
-        // MODIFICADO: Função abrirPainel atualizada para redirecionar para QLP
         function abrirPainel() {
             if (!areaSelecionada) {
                 showStatus('<i class="fas fa-exclamation-triangle"></i> Selecione uma área primeiro', 'warning');
@@ -350,26 +339,16 @@
             sessionStorage.setItem('abaSelecionada', areaSelecionada);
             
             setTimeout(() => {
-                // NOVO: Redireciona para página específica se for QLP
-                if (areaSelecionada.toLowerCase().includes('qlp')) {
-                    window.location.href = '/qlp';
-                } else {
-                    window.location.href = '/painel';
-                }
-            }, 500);
-        }
-            setTimeout(() => {
                 if (areaSelecionada.toLowerCase().includes('qlp')) {
                     window.location.href = '/qlp';
                 } else if (areaSelecionada.toLowerCase().includes('mapa de carga')) {
-                    window.location.href = '/mapacarga'; // NOVO
+                    window.location.href = '/mapacarga';
                 } else {
                     window.location.href = '/painel';
                 }
             }, 500);
         }
 
-        
         function sair() {
             if (confirm('Tem certeza que deseja sair do sistema?')) {
                 sessionStorage.clear();
