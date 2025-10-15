@@ -604,7 +604,7 @@
                 volume: "1",
                 valor: "R$ 346,00",
                 dataRot: "11/10/2025",
-                statusSep: "Há iniciar separação",
+                statusSep: "Em separação",
                 statusConf: "Há iniciar separação",
                 loja: "Loja 134",
                 ton: "0,00",
@@ -621,8 +621,8 @@
                 volume: "1",
                 valor: "R$ 157,00",
                 dataRot: "11/10/2025",
-                statusSep: "Há iniciar separação",
-                statusConf: "Há iniciar separação",
+                statusSep: "Concluído",
+                statusConf: "Concluído",
                 loja: "Loja 72",
                 ton: "0,00",
                 m3: "0,03",
@@ -672,7 +672,7 @@
                 volume: "1",
                 valor: "R$ 346,00",
                 dataRot: "11/10/2025",
-                statusSep: "Há iniciar separação",
+                statusSep: "Em separação",
                 statusConf: "Há iniciar separação",
                 loja: "Loja 180",
                 ton: "0,00",
@@ -706,8 +706,8 @@
                 volume: "1",
                 valor: "R$ 70,00",
                 dataRot: "13/10/2025",
-                statusSep: "Há iniciar separação",
-                statusConf: "Há iniciar separação",
+                statusSep: "Concluído",
+                statusConf: "Concluído",
                 loja: "Loja 67",
                 ton: "0,00",
                 m3: "0,01",
@@ -746,7 +746,7 @@
             
             const valorTotal = dadosFiltrados.reduce((acc, d) => {
                 const valor = parseFloat(d.valor.replace('R$', '').replace('.', '').replace(',', '.').trim());
-                return acc + valor;
+                return acc + (isNaN(valor) ? 0 : valor);
             }, 0);
             
             document.getElementById('totalCargas').textContent = total;
@@ -755,6 +755,12 @@
             document.getElementById('valorTotal').textContent = 
                 'R$ ' + valorTotal.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
             document.getElementById('totalRegistros').textContent = total;
+        }
+
+        function getStatusClass(status) {
+            if (status === "Concluído") return "status-done";
+            if (status === "Em separação") return "status-progress";
+            return "status-pending";
         }
 
         function renderizarTabela() {
@@ -781,8 +787,8 @@
                     <td>${item.volume}</td>
                     <td><strong>${item.valor}</strong></td>
                     <td>${item.dataRot}</td>
-                    <td><span class="status-badge status-pending">${item.statusSep}</span></td>
-                    <td><span class="status-badge status-pending">${item.statusConf}</span></td>
+                    <td><span class="status-badge ${getStatusClass(item.statusSep)}">${item.statusSep}</span></td>
+                    <td><span class="status-badge ${getStatusClass(item.statusConf)}">${item.statusConf}</span></td>
                     <td>
                         <div class="action-btns">
                             <button class="btn-icon btn-info" onclick="verDetalhes(${index})" title="Ver detalhes">
@@ -868,9 +874,101 @@
                 </div>
                 <div class="detail-item">
                     <div class="detail-label">Status Separação:</div>
-                    <div class="detail-value"><span class="status-badge status-pending">${item.statusSep}</span></div>
+                    <div class="detail-value"><span class="status-badge ${getStatusClass(item.statusSep)}">${item.statusSep}</span></div>
                 </div>
                 <div class="detail-item">
                     <div class="detail-label">Status Conferência:</div>
-                    <div class="detail-value"><span class="status-badge status-pending">${item.statusConf}</span></div>
+                    <div class="detail-value"><span class="status-badge ${getStatusClass(item.statusConf)}">${item.statusConf}</span></div>
                 </div>
+                ${item.rup ? `
+                <div class="detail-item">
+                    <div class="detail-label">RUP:</div>
+                    <div class="detail-value">${item.rup}</div>
+                </div>
+                ` : ''}
+                ${item.prioridade ? `
+                <div class="detail-item">
+                    <div class="detail-label">Prioridade:</div>
+                    <div class="detail-value"><span class="priority-high">${item.prioridade}</span></div>
+                </div>
+                ` : ''}
+            `;
+            
+            modal.classList.add('active');
+        }
+
+        function fecharModal() {
+            const modal = document.getElementById('modalDetalhes');
+            modal.classList.remove('active');
+        }
+
+        function editarCarga(index) {
+            const item = dadosFiltrados[index];
+            alert(`Função de edição em desenvolvimento.\nCarga: ${item.carga}`);
+            // TODO: Implementar modal de edição
+        }
+
+        function atualizarDados() {
+            const btn = event.target.closest('button');
+            const originalHTML = btn.innerHTML;
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner loading"></i> Atualizando...';
+            
+            // Simula carregamento
+            setTimeout(() => {
+                carregarDados();
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+                
+                // Feedback visual
+                const stats = document.querySelector('.stats-panel');
+                stats.style.animation = 'pulse 0.5s';
+                setTimeout(() => {
+                    stats.style.animation = '';
+                }, 500);
+            }, 1000);
+        }
+
+        function voltarMenu() {
+            if (confirm('Deseja voltar ao menu principal?')) {
+                window.location.href = '/menu';
+            }
+        }
+
+        // Fechar modal ao clicar fora
+        document.getElementById('modalDetalhes').addEventListener('click', function(e) {
+            if (e.target === this) {
+                fecharModal();
+            }
+        });
+
+        // Aplicar filtros ao pressionar Enter
+        document.getElementById('filtroLoja').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') aplicarFiltros();
+        });
+
+        document.getElementById('filtroData').addEventListener('change', aplicarFiltros);
+
+        // Inicialização
+        window.onload = function() {
+            console.log('Mapa de Carga carregando...');
+            
+            if (carregarDadosUsuario()) {
+                carregarDados();
+                console.log('Mapa de Carga carregado com sucesso!');
+            }
+        };
+
+        // Animação de pulse
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes pulse {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.02); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
