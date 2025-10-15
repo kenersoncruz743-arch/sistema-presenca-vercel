@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ferramentas - Gestão Perlog</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            color: #667eea;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .user-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .user-badge i {
+            margin-right: 8px;
+        }
+        
+        .area-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 15px;
+            display: inline-block;
+        }
+        
+        .area-info strong {
+            color: #667eea;
+        }
+        
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .tool-card {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+        
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.3);
+        }
+        
+        .tool-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            color: white;
+            margin-bottom: 20px;
+        }
+        
+        .tool-card h3 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .tool-card p {
+            color: #666;
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .tool-features {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 20px;
+        }
+        
+        .tool-features li {
+            padding: 8px 0;
+            color: #555;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .tool-features li i {
+            color: #667eea;
+            font-size: 12px;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .actions-footer {
+            text-align: center;
+        }
+        
+        .btn-back {
+            background: #6c757d;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-back:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+        
+        .status-message {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .status-success { border-left: 4px solid #28a745; }
+        .status-error { border-left: 4px solid #dc3545; }
+        .status-warning { border-left: 4px solid #ffc107; }
+        
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .badge-new {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .badge-popular {
+            background: #cce5ff;
+            color: #004085;
+        }
+        
+        @media (max-width: 768px) {
+            .tools-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-tools"></i> Ferramentas Disponíveis</h1>
+            <div class="user-badge">
+                <i class="fas fa-user"></i>
+                <span id="userName">Carregando...</span>
+            </div>
+            <div class="area-info">
+                <strong>Área Selecionada:</strong> <span id="areaSelecionada">Carregando...</span>
+            </div>
+        </div>
+        
+        <div id="statusDiv"></div>
+        
+        <div class="tools-grid">
+            <!-- Painel de Presença -->
+            <div class="tool-card" onclick="abrirFerramenta('painel')">
+                <span class="badge badge-popular">Mais Usado</span>
+                <div class="tool-icon">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+                <h3>Painel de Presença</h3>
+                <p>Controle completo de presença dos colaboradores com marcação de status em tempo real.</p>
+                <ul class="tool-features">
+                    <li><i class="fas fa-check"></i> Busca de colaboradores</li>
+                    <li><i class="fas fa-check"></i> Marcação de status (Presente, Ausente, Férias, etc)</li>
+                    <li><i class="fas fa-check"></i> Agrupamento por função</li>
+                    <li><i class="fas fa-check"></i> Salvar automaticamente na Base</li>
+                </ul>
+                <button class="btn btn-primary">
+                    <i class="fas fa-arrow-right"></i> Abrir Painel
+                </button>
+            </div>
+            
+            <!-- Dashboard QLP -->
+            <div class="tool-card" onclick="abrirFerramenta('qlp')">
+                <span class="badge badge-popular">Análises</span>
+                <div class="tool-icon" style="background: linear-gradient(135deg, #f093fb, #f5576c);">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <h3>Dashboard QLP</h3>
+                <p>Visualização completa do quadro de colaboradores com estatísticas e análises detalhadas.</p>
+                <ul class="tool-features">
+                    <li><i class="fas fa-check"></i> Visualização de todos os colaboradores</li>
+                    <li><i class="fas fa-check"></i> Filtros avançados (Seção, Turno, Função)</li>
+                    <li><i class="fas fa-check"></i> Análises por Seção e Função</li>
+                    <li><i class="fas fa-check"></i> Exportação para CSV</li>
+                </ul>
+                <button class="btn btn-primary">
+                    <i class="fas fa-arrow-right"></i> Abrir Dashboard
+                </button>
+            </div>
+            
+            <!-- Calculadora de Produção -->
+            <div class="tool-card" onclick="abrirFerramenta('producao')">
+                <span class="badge badge-new">Novo</span>
+                <div class="tool-icon" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">
+                    <i class="fas fa-calculator"></i>
+                </div>
+                <h3>Calculadora de Produção</h3>
+                <p>Calcule capacidade, produtividade e gerencie a produção diária da equipe.</p>
+                <ul class="tool-features">
+                    <li><i class="fas fa-check"></i> Cruzamento automático QLP + Base</li>
+                    <li><i class="fas fa-check"></i> Cálculo de capacidade e desvios</li>
+                    <li><i class="fas fa-check"></i> Controle de produtividade</li>
+                    <li><i class="fas fa-check"></i> Envio para aba Produzido</li>
+                </ul>
+                <button class="btn btn-primary">
+                    <i class="fas fa-arrow-right"></i> Abrir Calculadora
+                </button>
+            </div>
+        </div>
+        
+        <div class="actions-footer">
+            <button class="btn-back" onclick="voltarMenu()">
+                <i class="fas fa-arrow-left"></i> Voltar ao Menu
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let usuario = '';
+        let area = '';
+
+        function showStatus(msg, type = 'info') {
+            const statusDiv = document.getElementById('statusDiv');
+            const icon = type === 'success' ? 'check-circle' : 
+                         type === 'error' ? 'exclamation-triangle' : 
+                         'info-circle';
+            
+            statusDiv.innerHTML = `
+                <div class="status-message status-${type}">
+                    <i class="fas fa-${icon}"></i>
+                    <span>${msg}</span>
+                </div>
+            `;
+            
+            setTimeout(() => {
+                statusDiv.innerHTML = '';
+            }, 5000);
+        }
+
+        function carregarDados() {
+            usuario = sessionStorage.getItem('usuario');
+            area = sessionStorage.getItem('abaSelecionada');
+            
+            console.log('Dados carregados:', { usuario, area });
+            
+            if (!usuario || !area) {
+                showStatus('Sessão expirada. Redirecionando para o menu...', 'error');
+                setTimeout(() => {
+                    window.location.href = '/menu';
+                }, 2000);
+                return false;
+            }
+            
+            document.getElementById('userName').textContent = usuario;
+            document.getElementById('areaSelecionada').textContent = area;
+            
+            return true;
+        }
+
+        function abrirFerramenta(ferramenta) {
+            console.log(`Abrindo ferramenta: ${ferramenta}`);
+            
+            // Garante que os dados estão salvos
+            sessionStorage.setItem('usuario', usuario);
+            sessionStorage.setItem('abaSelecionada', area);
+            
+            const destinos = {
+                'painel': '/painel',
+                'qlp': '/qlp',
+                'producao': '/producao'
+            };
+            
+            const mensagens = {
+                'painel': 'Abrindo Painel de Presença...',
+                'qlp': 'Abrindo Dashboard QLP...',
+                'producao': 'Abrindo Calculadora de Produção...'
+            };
+            
+            showStatus(mensagens[ferramenta], 'success');
+            
+            setTimeout(() => {
+                window.location.href = destinos[ferramenta];
+            }, 800);
+        }
+
+        function voltarMenu() {
+            window.location.href = '/menu';
+        }
+
+        // Inicialização
+        window.onload = function() {
+            console.log('Página de Ferramentas carregando...');
+            
+            if (carregarDados()) {
+                showStatus('Ferramentas carregadas com sucesso!', 'success');
+            }
+        };
+
+        // Debug
+        console.log('Ferramentas.html carregado');
+        console.log('SessionStorage:', {
+            usuario: sessionStorage.getItem('usuario'),
+            abaSelecionada: sessionStorage.getItem('abaSelecionada')
+        });
+    </script>
+</body>
+</html>
