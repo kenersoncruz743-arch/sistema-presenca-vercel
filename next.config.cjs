@@ -39,6 +39,10 @@ const nextConfig = {
       {
         source: '/producao',
         destination: '/producao.html',
+      },
+      {
+        source: '/alocacaobox',
+        destination: '/alocacaobox.html',
       }
       
     ];
