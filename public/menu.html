@@ -358,7 +358,18 @@
                 }
             }, 500);
         }
+            setTimeout(() => {
+                if (areaSelecionada.toLowerCase().includes('qlp')) {
+                    window.location.href = '/qlp';
+                } else if (areaSelecionada.toLowerCase().includes('mapa de carga')) {
+                    window.location.href = '/mapacarga'; // NOVO
+                } else {
+                    window.location.href = '/painel';
+                }
+            }, 500);
+        }
 
+        
         function sair() {
             if (confirm('Tem certeza que deseja sair do sistema?')) {
                 sessionStorage.clear();
