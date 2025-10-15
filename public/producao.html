@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Produção</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .header h1 { color: #667eea; font-size: 28px; }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn:hover { transform: translateY(-2px); }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-info { background: #17a2b8; color: white; }
+        .btn-warning { background: #ffc107; color: #212529; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        
+        .filters {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        .filters-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .filter-group { display: flex; flex-direction: column; gap: 5px; }
+        .filter-group label { font-size: 13px; font-weight: 600; color: #495057; }
+        .filter-group select, .filter-group input {
+            padding: 10px 12px;
+            border: 2px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .resumo-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .resumo-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .resumo-card h3 { font-size: 14px; opacity: 0.9; margin-bottom: 10px; }
+        .resumo-card .valor { font-size: 32px; font-weight: bold; }
+        
+        table { border-collapse: collapse; width: 100%; background: white; font-size: 13px; }
+        th, td { padding: 12px 8px; text-align: left; border-bottom: 1px solid #dee2e6; }
+        th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        tbody tr:hover { background-color: #f5f5f5; }
+        tbody tr:nth-child(even) { background-color: #fafafa; }
+        
+        .secao-header {
+            background: #e3f2fd !important;
+            font-weight: bold;
+            color: #1976d2 !important;
+        }
+        
+        input[type="number"] {
+            width: 80px;
+            padding: 5px 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .calculo-resultado {
+            background: #d4edda;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .status-presente { background-color: #c8e6c9; }
+        .status-ausente { background-color: #ffcdd2; }
+        .status-ferias { background-color: #ffe082; }
+        .status-folga { background-color: #b3e5fc; }
+        
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        .loading i {
+            font-size: 64px;
+            animation: spin 1s linear infinite;
+            color: #667eea;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .status-message {
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .status-success { background: #d4edda; color: #155724; }
+        .status-error { background: #f8d7da; color: #721c24; }
+        .status-info { background: #d1ecf1; color: #0c5460; }
+        
+        .configuracao-panel {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffc107;
+        }
+        .configuracao-panel h3 {
+            color: #856404;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            .header { flex-direction: column; }
+            table { font-size: 11px; }
+            th, td { padding: 8px 4px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-calculator"></i> Calculadora de Produção</h1>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="btn btn-success" onclick="calcularTudo()">
+                    <i class="fas fa-calculator"></i> Calcular Tudo
+                </button>
+                <button class="btn btn-primary" onclick="salvarProducao()">
+                    <i class="fas fa-save"></i> Salvar na Base
+                </button>
+                <button class="btn btn-info" onclick="exportarCSV()">
+                    <i class="fas fa-file-csv"></i> Exportar CSV
+                </button>
+                <button class="btn btn-warning" onclick="location.reload()">
+                    <i class="fas fa-sync-alt"></i> Atualizar
+                </button>
+                <button class="btn btn-secondary" onclick="window.location.href='/menu'">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </button>
+            </div>
+        </div>
+
+        <div class="configuracao-panel">
+            <h3><i class="fas fa-cog"></i> Configurações de Cálculo</h3>
+            <div class="config-grid">
+                <div class="filter-group">
+                    <label><i class="fas fa-clock"></i> Horas Trabalhadas</label>
+                    <input type="number" id="horasTrabalhadas" value="8" min="1" max="24" step="0.5">
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-chart-line"></i> Data de Referência</label>
+                    <input type="date" id="dataReferencia" value="">
+                </div>
+            </div>
+        </div>
+
+        <div class="filters">
+            <div class="filters-row">
+                <div class="filter-group">
+                    <label><i class="fas fa-layer-group"></i> Seção</label>
+                    <select id="filtroSecao"><option value="">Todas</option></select>
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-clock"></i> Turno</label>
+                    <select id="filtroTurno"><option value="">Todos</option></select>
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-user-tie"></i> Supervisor</label>
+                    <select id="filtroSupervisor"><option value="">Todos</option></select>
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="aplicarFiltros()">
+                <i class="fas fa-filter"></i> Filtrar
+            </button>
+            <button class="btn btn-secondary" onclick="limparFiltros()">
+                <i class="fas fa-eraser"></i> Limpar
+            </button>
+        </div>
+
+        <div class="resumo-cards" id="resumoCards"></div>
+
+        <div id="loadingDiv" class="loading">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Carregando dados...</p>
+        </div>
+
+        <div id="contentDiv" style="display: none;">
+            <div style="overflow-x: auto; max-height: 600px; overflow-y: auto; border-radius: 12px; border: 1px solid #e9ecef;">
+                <table id="producaoTable">
+                    <thead>
+                        <tr>
+                            <th>Seção</th>
+                            <th>Supervisor</th>
+                            <th>Turno</th>
+                            <th>QL</th>
+                            <th>Capacidade</th>
+                            <th>Presente</th>
+                            <th>Desvio Função</th>
+                            <th>Vagas Pendentes</th>
+                            <th>Afastado</th>
+                            <th>Subtotal Ausente</th>
+                            <th>Produtividade/Hora</th>
+                            <th>Realizado</th>
+                            <th>Produzido</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="statusDiv"></div>
+    </div>
+
+    <script>
+        let dadosQLP = [];
+        let dadosBase = [];
+        let dadosCruzados = [];
+        let horasTrabalhadas = 8;
+
+        function showStatus(msg, type = 'info') {
+            const el = document.getElementById('statusDiv');
+            const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle';
+            el.innerHTML = `<div class="status-message status-${type}"><i class="fas fa-${icon}"></i> ${msg}</div>`;
+            setTimeout(() => el.innerHTML = '', 5000);
+        }
+
+        async function carregarDados() {
+            try {
+                // Define data padrão como hoje
+                const hoje = new Date().toISOString().split('T')[0];
+                document.getElementById('dataReferencia').value = hoje;
+
+                // Carrega dados do QLP
+                console.log('Carregando QLP...');
+                const resQLP = await fetch('/api/qlp/quadro');
+                const resultQLP = await resQLP.json();
+                
+                if (!resultQLP.ok) throw new Error('Erro ao carregar QLP');
+                dadosQLP = resultQLP.colaboradores || [];
+                console.log(`QLP: ${dadosQLP.length} colaboradores`);
+
+                // Carrega dados da Base (presença do dia)
+                console.log('Carregando Base...');
+                const resBase = await fetch('/api/producao/base');
+                const resultBase = await resBase.json();
+                
+                if (!resultBase.ok) throw new Error('Erro ao carregar Base');
+                dadosBase = resultBase.dados || [];
+                console.log(`Base: ${dadosBase.length} registros`);
+
+                // Cruza os dados
+                cruzarDados();
+                preencherFiltros();
+                renderTabela();
+                atualizarResumo();
+
+                document.getElementById('loadingDiv').style.display = 'none';
+                document.getElementById('contentDiv').style.display = 'block';
+                showStatus(`Dados carregados: ${dadosQLP.length} do QLP, ${dadosBase.length} da Base`, 'success');
+
+            } catch (error) {
+                console.error('Erro:', error);
+                document.getElementById('loadingDiv').innerHTML = `
+                    <i class="fas fa-exclamation-triangle" style="color: #dc3545; font-size: 64px;"></i>
+                    <p style="color: #dc3545; margin-top: 20px;">Erro ao carregar dados</p>
+                    <p style="font-size: 14px; color: #6c757d;">${error.message}</p>
+                    <button class="btn btn-warning" onclick="location.reload()" style="margin-top: 20px;">
+                        <i class="fas fa-sync-alt"></i> Tentar Novamente
+                    </button>
+                `;
+                showStatus(error.message, 'error');
+            }
+        }
+
+        function cruzarDados() {
+            // Agrupa QLP por Seção + Turno + Supervisor
+            const gruposQLP = {};
+            
+            dadosQLP.forEach(d => {
+                if (!d.secao || !d.turno || !d.isAtivo) return;
+                
+                const chave = `${d.secao}|${d.turno}|${d.supervisor}`;
+                
+                if (!gruposQLP[chave]) {
+                    gruposQLP[chave] = {
+                        secao: d.secao,
+                        turno: d.turno,
+                        supervisor: d.supervisor,
+                        ql: 0,
+                        colaboradores: []
+                    };
+                }
+                
+                gruposQLP[chave].ql++;
+                gruposQLP[chave].colaboradores.push(d);
+            });
+
+            // Agrupa Base por Seção + Turno + Supervisor + Status
+            const gruposBase = {};
+            
+            dadosBase.forEach(d => {
+                const secao = d.secao || 'Sem Seção';
+                const turno = d.turno || 'Não definido';
+                const supervisor = d.supervisor || 'Sem supervisor';
+                const status = d.status || '';
+                
+                const chave = `${secao}|${turno}|${supervisor}`;
+                
+                if (!gruposBase[chave]) {
+                    gruposBase[chave] = {
+                        presente: 0,
+                        ausente: 0,
+                        ferias: 0,
+                        folga: 0,
+                        afastado: 0,
+                        total: 0
+                    };
+                }
+                
+                gruposBase[chave].total++;
+                
+                if (status === 'Presente') gruposBase[chave].presente++;
+                else if (status === 'Ausente') gruposBase[chave].ausente++;
+                else if (status === 'Férias') gruposBase[chave].ferias++;
+                else if (status === 'Folga') gruposBase[chave].folga++;
+                else if (status === 'Afastado') gruposBase[chave].afastado++;
+            });
+
+            // Cruza dados
+            dadosCruzados = [];
+            
+            Object.keys(gruposQLP).forEach(chave => {
+                const qlp = gruposQLP[chave];
+                const base = gruposBase[chave] || { presente: 0, ausente: 0, ferias: 0, folga: 0, afastado: 0, total: 0 };
+                
+                dadosCruzados.push({
+                    secao: qlp.secao,
+                    supervisor: qlp.supervisor,
+                    turno: qlp.turno,
+                    ql: qlp.ql,
+                    capacidade: 0, // Será preenchido manualmente
+                    presente: base.presente,
+                    desvioFuncao: 0, // Calculado
+                    vagasPendentes: 0, // Calculado
+                    afastado: base.afastado,
+                    subtotalAusente: 0, // Calculado
+                    produtividadeHora: 0, // Será preenchido manualmente
+                    realizado: 0, // Será preenchido manualmente
+                    produzido: 0 // Será preenchido manualmente
+                });
+            });
+
+            console.log('Dados cruzados:', dadosCruzados.length, 'grupos');
+        }
+
+        function preencherFiltros() {
+            const secoes = [...new Set(dadosCruzados.map(d => d.secao))].sort();
+            const turnos = [...new Set(dadosCruzados.map(d => d.turno))].sort();
+            const supervisores = [...new Set(dadosCruzados.map(d => d.supervisor))].sort();
+            
+            document.getElementById('filtroSecao').innerHTML = '<option value="">Todas</option>' +
+                secoes.map(s => `<option value="${s}">${s}</option>`).join('');
+            document.getElementById('filtroTurno').innerHTML = '<option value="">Todos</option>' +
+                turnos.map(t => `<option value="${t}">${t}</option>`).join('');
+            document.getElementById('filtroSupervisor').innerHTML = '<option value="">Todos</option>' +
+                supervisores.map(s => `<option value="${s}">${s}</option>`).join('');
+        }
+
+        function aplicarFiltros() {
+            renderTabela();
+        }
+
+        function limparFiltros() {
+            document.getElementById('filtroSecao').value = '';
+            document.getElementById('filtroTurno').value = '';
+            document.getElementById('filtroSupervisor').value = '';
+            renderTabela();
+        }
+
+        function renderTabela() {
+            const tbody = document.querySelector('#producaoTable tbody');
+            const secao = document.getElementById('filtroSecao').value;
+            const turno = document.getElementById('filtroTurno').value;
+            const supervisor = document.getElementById('filtroSupervisor').value;
+            
+            let filtrados = dadosCruzados.filter(d => {
+                return (!secao || d.secao === secao) &&
+                       (!turno || d.turno === turno) &&
+                       (!supervisor || d.supervisor === supervisor);
+            });
+            
+            // Agrupa por seção
+            const porSecao = {};
+            filtrados.forEach(d => {
+                if (!porSecao[d.secao]) porSecao[d.secao] = [];
+                porSecao[d.secao].push(d);
+            });
+            
+            tbody.innerHTML = '';
+            
+            Object.keys(porSecao).sort().forEach(secaoNome => {
+                // Header da seção
+                const trSecao = document.createElement('tr');
+                trSecao.className = 'secao-header';
+                trSecao.innerHTML = `<td colspan="13"><i class="fas fa-layer-group"></i> ${secaoNome}</td>`;
+                tbody.appendChild(trSecao);
+                
+                // Linhas da seção
+                porSecao[secaoNome].forEach((d, idx) => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td></td>
+                        <td>${d.supervisor}</td>
+                        <td>${d.turno}</td>
+                        <td class="calculo-resultado">${d.ql}</td>
+                        <td><input type="number" value="${d.capacidade}" onchange="atualizarCapacidade(${dadosCruzados.indexOf(d)}, this.value)" min="0"></td>
+                        <td class="calculo-resultado status-presente">${d.presente}</td>
+                        <td class="calculo-resultado">${d.desvioFuncao}</td>
+                        <td class="calculo-resultado">${d.vagasPendentes}</td>
+                        <td class="calculo-resultado">${d.afastado}</td>
+                        <td class="calculo-resultado status-ausente">${d.subtotalAusente}</td>
+                        <td><input type="number" value="${d.produtividadeHora}" onchange="atualizarProdutividade(${dadosCruzados.indexOf(d)}, this.value)" min="0" step="0.01"></td>
+                        <td><input type="number" value="${d.realizado}" onchange="atualizarRealizado(${dadosCruzados.indexOf(d)}, this.value)" min="0"></td>
+                        <td><input type="number" value="${d.produzido}" onchange="atualizarProduzido(${dadosCruzados.indexOf(d)}, this.value)" min="0"></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            });
+        }
+
+        function atualizarCapacidade(idx, valor) {
+            dadosCruzados[idx].capacidade = parseFloat(valor) || 0;
+            calcularLinha(idx);
+        }
+
+        function atualizarProdutividade(idx, valor) {
+            dadosCruzados[idx].produtividadeHora = parseFloat(valor) || 0;
+        }
+
+        function atualizarRealizado(idx, valor) {
+            dadosCruzados[idx].realizado = parseFloat(valor) || 0;
+        }
+
+        function atualizarProduzido(idx, valor) {
+            dadosCruzados[idx].produzido = parseFloat(valor) || 0;
+        }
+
+        function calcularLinha(idx) {
+            const d = dadosCruzados[idx];
+            
+            // Desvio Função = Capacidade - Presente
+            d.desvioFuncao = d.capacidade - d.presente;
+            
+            // Vagas Pendentes = QL - Capacidade
+            d.vagasPendentes = d.ql - d.capacidade;
+            
+            // Subtotal Ausente = Desvio Função + Afastado
+            d.subtotalAusente = d.desvioFuncao + d.afastado;
+            
+            renderTabela();
+        }
+
+        function calcularTudo() {
+            dadosCruzados.forEach((d, idx) => calcularLinha(idx));
+            atualizarResumo();
+            showStatus('Cálculos atualizados!', 'success');
+        }
+
+        function atualizarResumo() {
+            const totalQL = dadosCruzados.reduce((sum, d) => sum + d.ql, 0);
+            const totalCapacidade = dadosCruzados.reduce((sum, d) => sum + d.capacidade, 0);
+            const totalPresente = dadosCruzados.reduce((sum, d) => sum + d.presente, 0);
+            const totalAusente = dadosCruzados.reduce((sum, d) => sum + d.subtotalAusente, 0);
+            
+            document.getElementById('resumoCards').innerHTML = `
+                <div class="resumo-card" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                    <h3>QL Total</h3>
+                    <div class="valor">${totalQL}</div>
+                </div>
+                <div class="resumo-card" style="background: linear-gradient(135deg, #f093fb, #f5576c);">
+                    <h3>Capacidade</h3>
+                    <div class="valor">${totalCapacidade}</div>
+                </div>
+                <div class="resumo-card" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">
+                    <h3>Presente</h3>
+                    <div class="valor">${totalPresente}</div>
+                </div>
+                <div class="resumo-card" style="background: linear-gradient(135deg, #fa709a, #fee140);">
+                    <h3>Subtotal Ausente</h3>
+                    <div class="valor">${totalAusente}</div>
+                </div>
+            `;
+        }
+
+        async function salvarProducao() {
+            if (dadosCruzados.length === 0) {
+                showStatus('Nenhum dado para salvar', 'error');
+                return;
+            }
+
+            if (!confirm('Deseja salvar estes dados na aba Produzido?')) return;
+
+            try {
+                const dataRef = document.getElementById('dataReferencia').value;
+                const horas = document.getElementById('horasTrabalhadas').value;
+
+                const response = await fetch('/api/producao/salvar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        dados: dadosCruzados,
+                        dataReferencia: dataRef,
+                        horasTrabalhadas: horas
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.ok) {
+                    showStatus(result.msg, 'success');
+                } else {
+                    throw new Error(result.msg);
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showStatus('Erro ao salvar: ' + error.message, 'error');
+            }
+        }
+
+        function exportarCSV() {
+            const headers = ['Seção', 'Supervisor', 'Turno', 'QL', 'Capacidade', 'Presente', 'Desvio Função', 
+                           'Vagas Pendentes', 'Afastado', 'Subtotal Ausente', 'Produtividade/Hora', 'Realizado', 'Produzido'];
+            let csv = headers.join(',') + '\n';
+            
+            dadosCruzados.forEach(d => {
+                csv += [d.secao, d.supervisor, d.turno, d.ql, d.capacidade, d.presente, d.desvioFuncao,
+                       d.vagasPendentes, d.afastado, d.subtotalAusente, d.produtividadeHora, d.realizado, d.produzido]
+                       .map(v => `"${v}"`).join(',') + '\n';
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `Producao_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            showStatus('CSV exportado!', 'success');
+        }
+
+        document.getElementById('horasTrabalhadas').addEventListener('change', (e) => {
+            horasTrabalhadas = parseFloat(e.target.value) || 8;
+        });
+
+        window.onload = function() {
+            const usuario = sessionStorage.getItem('usuario');
+            if (!usuario) {
+                showStatus('Sessão expirada', 'error');
+                setTimeout(() => window.location.href = '/', 2000);
+                return;
+            }
+            carregarDados();
+        };
+    </script>
+</body>
+</html>
