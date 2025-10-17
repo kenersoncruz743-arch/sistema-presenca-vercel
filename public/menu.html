@@ -210,7 +210,7 @@
         
         <div class="actions">
             <button class="btn btn-primary" id="abrirBtn" disabled onclick="abrirPainel()">
-                <i class="fas fa-clipboard-list"></i> Abrir Painel
+                <i class="fas fa-arrow-right"></i> Continuar
             </button>
             <button class="btn btn-secondary" onclick="sair()">
                 <i class="fas fa-sign-out-alt"></i> Sair
@@ -273,8 +273,8 @@
                 'Gestão': 'fas fa-users-cog',
                 'QLP': 'fas fa-chart-bar',
                 'Mapa de Carga': 'fas fa-truck-loading',
-                'default': 'fas fa-building',
                 'Alocação BOX': 'fas fa-warehouse',
+                'default': 'fas fa-building'
             };
             
             areasSelecionadas.forEach(area => {
@@ -329,25 +329,37 @@
             
             const abrirBtn = document.getElementById('abrirBtn');
             abrirBtn.disabled = true;
-            abrirBtn.innerHTML = '<i class="fas fa-spinner loading"></i> Abrindo painel...';
+            abrirBtn.innerHTML = '<i class="fas fa-spinner loading"></i> Abrindo...';
             
-            console.log('Redirecionando para painel com:', {
-                usuario: usuarioLogado,
-                area: areaSelecionada
-            });
+            console.log('Redirecionando para área:', areaSelecionada);
             
+            // Salva dados na sessão
             sessionStorage.setItem('usuario', usuarioLogado);
             sessionStorage.setItem('abaSelecionada', areaSelecionada);
             
             setTimeout(() => {
-                if (areaSelecionada.toLowerCase().includes('qlp')) {
+                const areaLower = areaSelecionada.toLowerCase();
+                
+                // Áreas com acesso direto (ferramentas específicas)
+                if (areaLower.includes('qlp')) {
                     window.location.href = '/qlp';
-                } else if (areaSelecionada.toLowerCase().includes('mapa de carga')) {
+                } else if (areaLower.includes('mapa de carga')) {
                     window.location.href = '/mapacarga';
-                } else if (areaSelecionada.toLowerCase().includes('alocação box')) {
+                } else if (areaLower.includes('alocação box') || areaLower.includes('alocacao box')) {
                     window.location.href = '/alocacaobox';
-                } else {
-                    window.location.href = '/painel';
+                } 
+                // Áreas com múltiplas ferramentas
+                else {
+                    const areasComFerramentas = ['pcp', 'separação', 'separacao', 'gestão', 'gestao', 'wms'];
+                    const temFerramentas = areasComFerramentas.some(area => areaLower.includes(area));
+                    
+                    if (temFerramentas) {
+                        // Vai para página de seleção de ferramentas
+                        window.location.href = '/ferramentas';
+                    } else {
+                        // Vai direto para o painel de presença
+                        window.location.href = '/painel';
+                    }
                 }
             }, 500);
         }
