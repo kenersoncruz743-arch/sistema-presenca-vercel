@@ -1,23 +1,27 @@
-// next.config.js - Atualizado com rota de Mapa de Carga
+// next.config.js - Configuração completa de rotas
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
   
   async rewrites() {
     return [
+      // Página inicial
       {
         source: '/',
         destination: '/index.html',
+      },
+      
+      // Menu e ferramentas
+      {
+        source: '/menu',
+        destination: '/menu.html',
       },
       {
         source: '/ferramentas',
         destination: '/ferramentas.html',
       },
       
-      {
-        source: '/menu',
-        destination: '/menu.html',
-      },
+      // Ferramentas principais
       {
         source: '/painel',
         destination: '/painel.html',
@@ -26,25 +30,32 @@ const nextConfig = {
         source: '/coletores',
         destination: '/coletores.html',
       },
+      
+      // QLP e análises
       {
         source: '/qlp',
         destination: '/qlp.html',
       },
-      // NOVA ROTA: Mapa de Carga
-      {
-        source: '/mapacarga',
-        destination: '/mapacarga.html',
-      },
       
+      // Produção
       {
         source: '/producao',
         destination: '/producao.html',
       },
       {
+        source: '/resumo-base',
+        destination: '/resumo-base.html',
+      },
+      
+      // Logística
+      {
+        source: '/mapacarga',
+        destination: '/mapacarga.html',
+      },
+      {
         source: '/alocacaobox',
         destination: '/alocacaobox.html',
       }
-      
     ];
   },
 }
