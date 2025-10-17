@@ -43,6 +43,7 @@
             border-radius: 25px;
             font-size: 14px;
             font-weight: 600;
+            margin-bottom: 10px;
         }
         
         .user-badge i {
@@ -105,6 +106,11 @@
             font-size: 36px;
             color: white;
             margin-bottom: 20px;
+            transition: transform 0.3s;
+        }
+        
+        .tool-card:hover .tool-icon {
+            transform: scale(1.1);
         }
         
         .tool-card h3 {
@@ -198,11 +204,18 @@
             align-items: center;
             gap: 10px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
         
         .status-success { border-left: 4px solid #28a745; }
         .status-error { border-left: 4px solid #dc3545; }
         .status-warning { border-left: 4px solid #ffc107; }
+        .status-info { border-left: 4px solid #17a2b8; }
         
         .badge {
             display: inline-block;
@@ -222,6 +235,11 @@
             background: #cce5ff;
             color: #004085;
         }
+
+        .badge-analysis {
+            background: #f8d7da;
+            color: #721c24;
+        }
         
         @media (max-width: 768px) {
             .tools-grid {
@@ -231,6 +249,49 @@
             .header h1 {
                 font-size: 24px;
             }
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        .loading-content {
+            background: white;
+            padding: 30px 40px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .loading-content i {
+            font-size: 48px;
+            color: #667eea;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-content p {
+            margin-top: 15px;
+            color: #333;
+            font-size: 16px;
+            font-weight: 600;
         }
     </style>
 </head>
@@ -271,7 +332,7 @@
             
             <!-- Dashboard QLP -->
             <div class="tool-card" onclick="abrirFerramenta('qlp')">
-                <span class="badge badge-popular">Análises</span>
+                <span class="badge badge-popular">Dashboard</span>
                 <div class="tool-icon" style="background: linear-gradient(135deg, #f093fb, #f5576c);">
                     <i class="fas fa-chart-bar"></i>
                 </div>
@@ -306,12 +367,96 @@
                     <i class="fas fa-arrow-right"></i> Abrir Calculadora
                 </button>
             </div>
+
+            <!-- Resumo Base - NOVO -->
+            <div class="tool-card" onclick="abrirFerramenta('resumo-base')">
+                <span class="badge badge-analysis">Análise</span>
+                <div class="tool-icon" style="background: linear-gradient(135deg, #fa709a, #fee140);">
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                <h3>Resumo Base</h3>
+                <p>Análise completa de presença por Supervisor e Função com estatísticas detalhadas.</p>
+                <ul class="tool-features">
+                    <li><i class="fas fa-check"></i> Resumo por Supervisor</li>
+                    <li><i class="fas fa-check"></i> Resumo por Função</li>
+                    <li><i class="fas fa-check"></i> Estatísticas de presença/ausência</li>
+                    <li><i class="fas fa-check"></i> Exportação de relatórios</li>
+                </ul>
+                <button class="btn btn-primary">
+                    <i class="fas fa-arrow-right"></i> Abrir Resumo
+                </button>
+            </div>
+
+            <!-- Mapa de Carga -->
+            <div class="tool-card" onclick="abrirFerramenta('mapacarga')">
+                <span class="badge badge-popular">Logística</span>
+                <div class="tool-icon" style="background: linear-gradient(135deg, #30cfd0, #330867);">
+                    <i class="fas fa-truck-loading"></i>
+                </div>
+                <h3>Mapa de Carga</h3>
+                <p>Visualização e gerenciamento completo das cargas com filtros avançados.</p>
+                <ul class="tool-features">
+                    <li><i class="fas fa-check"></i> Visualização de todas as cargas</li>
+                    <li><i class="fas fa-check"></i> Filtros por loja, tipo, segmento</li>
+                    <li><i class="fas fa-check"></i> Atualização de status</li>
+                    <li><i class="fas fa-check"></i> Exportação de dados</li>
+                </ul>
+                <button class="btn btn-primary">
+                    <i class="fas fa-arrow-right"></i> Abrir Mapa
+                </button>
+            </div>
+
+            <!-- Alocação BOX -->
+            <div class="tool-card" onclick="abrirFerramenta('alocacaobox')">
+                <span class="badge badge-new">Novo</span>
+                <div class="tool-icon" style="background: linear-gradient(135deg, #a8edea, #fed6e3);">
+                    <i class="fas fa-warehouse"></i>
+                </div>
+                <h3>Alocação BOX</h3>
+                <p>Gerenciamento visual de alocação de cargas nos boxes do armazém.</p>
+                <ul class="tool-features">
+                    <li><i class="fas fa-check"></i> Visualização de boxes ocupados</li>
+                    <li><i class="fas fa-check"></i> Alocação drag & drop</li>
+                    <li><i class="fas fa-check"></i> Liberação automática de boxes</li>
+                    <li><i class="fas fa-check"></i> Priorização de cargas</li>
+                </ul>
+                <button class="btn btn-primary">
+                    <i class="fas fa-arrow-right"></i> Abrir Alocação
+                </button>
+            </div>
+
+            <!-- Coletores -->
+            <div class="tool-card" onclick="abrirFerramenta('coletores')">
+                <span class="badge badge-popular">Operacional</span>
+                <div class="tool-icon" style="background: linear-gradient(135deg, #ff9a9e, #fecfef);">
+                    <i class="fas fa-barcode"></i>
+                </div>
+                <h3>Coletores</h3>
+                <p>Gestão de coletores de código de barras e dispositivos operacionais.</p>
+                <ul class="tool-features">
+                    <li><i class="fas fa-check"></i> Controle de empréstimos</li>
+                    <li><i class="fas fa-check"></i> Status de dispositivos</li>
+                    <li><i class="fas fa-check"></i> Histórico de uso</li>
+                    <li><i class="fas fa-check"></i> Manutenção preventiva</li>
+                </ul>
+                <button class="btn btn-primary">
+                    <i class="fas fa-arrow-right"></i> Abrir Coletores
+                </button>
+            </div>
         </div>
         
         <div class="actions-footer">
             <button class="btn-back" onclick="voltarMenu()">
                 <i class="fas fa-arrow-left"></i> Voltar ao Menu
             </button>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p id="loadingText">Abrindo ferramenta...</p>
         </div>
     </div>
 
@@ -323,6 +468,7 @@
             const statusDiv = document.getElementById('statusDiv');
             const icon = type === 'success' ? 'check-circle' : 
                          type === 'error' ? 'exclamation-triangle' : 
+                         type === 'warning' ? 'exclamation-circle' :
                          'info-circle';
             
             statusDiv.innerHTML = `
@@ -335,6 +481,15 @@
             setTimeout(() => {
                 statusDiv.innerHTML = '';
             }, 5000);
+        }
+
+        function showLoading(message = 'Abrindo ferramenta...') {
+            document.getElementById('loadingText').textContent = message;
+            document.getElementById('loadingOverlay').classList.add('show');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.remove('show');
         }
 
         function carregarDados() {
@@ -367,25 +522,78 @@
             const destinos = {
                 'painel': '/painel',
                 'qlp': '/qlp',
-                'producao': '/producao'
+                'producao': '/producao',
+                'resumo-base': '/resumo-base',
+                'mapacarga': '/mapacarga',
+                'alocacaobox': '/alocacaobox',
+                'coletores': '/coletores'
             };
             
             const mensagens = {
                 'painel': 'Abrindo Painel de Presença...',
                 'qlp': 'Abrindo Dashboard QLP...',
-                'producao': 'Abrindo Calculadora de Produção...'
+                'producao': 'Abrindo Calculadora de Produção...',
+                'resumo-base': 'Abrindo Resumo Base...',
+                'mapacarga': 'Abrindo Mapa de Carga...',
+                'alocacaobox': 'Abrindo Alocação BOX...',
+                'coletores': 'Abrindo Gestão de Coletores...'
+            };
+
+            const nomesFerramenta = {
+                'painel': 'Painel de Presença',
+                'qlp': 'Dashboard QLP',
+                'producao': 'Calculadora de Produção',
+                'resumo-base': 'Resumo Base',
+                'mapacarga': 'Mapa de Carga',
+                'alocacaobox': 'Alocação BOX',
+                'coletores': 'Coletores'
             };
             
+            if (!destinos[ferramenta]) {
+                showStatus(`Ferramenta "${ferramenta}" não encontrada`, 'error');
+                return;
+            }
+
             showStatus(mensagens[ferramenta], 'success');
+            showLoading(mensagens[ferramenta]);
             
+            // Pequeno delay para feedback visual
             setTimeout(() => {
-                window.location.href = destinos[ferramenta];
+                try {
+                    window.location.href = destinos[ferramenta];
+                } catch (error) {
+                    console.error('Erro ao redirecionar:', error);
+                    hideLoading();
+                    showStatus(`Erro ao abrir ${nomesFerramenta[ferramenta]}`, 'error');
+                }
             }, 800);
         }
 
         function voltarMenu() {
-            window.location.href = '/menu';
+            showLoading('Voltando ao menu...');
+            sessionStorage.setItem('usuario', usuario);
+            sessionStorage.setItem('abas', sessionStorage.getItem('abas'));
+            
+            setTimeout(() => {
+                window.location.href = '/menu';
+            }, 500);
         }
+
+        // Previne múltiplos cliques
+        let clickTimeout = null;
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.tool-card') && clickTimeout) {
+                e.stopPropagation();
+                e.preventDefault();
+                return false;
+            }
+            
+            if (e.target.closest('.tool-card')) {
+                clickTimeout = setTimeout(() => {
+                    clickTimeout = null;
+                }, 1000);
+            }
+        }, true);
 
         // Inicialização
         window.onload = function() {
@@ -396,11 +604,21 @@
             }
         };
 
+        // Previne navegação acidental
+        window.addEventListener('beforeunload', function(e) {
+            // Salva dados antes de sair
+            if (usuario && area) {
+                sessionStorage.setItem('usuario', usuario);
+                sessionStorage.setItem('abaSelecionada', area);
+            }
+        });
+
         // Debug
         console.log('Ferramentas.html carregado');
         console.log('SessionStorage:', {
             usuario: sessionStorage.getItem('usuario'),
-            abaSelecionada: sessionStorage.getItem('abaSelecionada')
+            abaSelecionada: sessionStorage.getItem('abaSelecionada'),
+            abas: sessionStorage.getItem('abas')
         });
     </script>
 </body>
