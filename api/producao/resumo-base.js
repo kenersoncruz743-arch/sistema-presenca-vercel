@@ -1,4 +1,4 @@
-// api/producao/resumo-base.js - Resumo por Supervisor e Função
+// api/producao/resumo-base.js - CORRIGIDO
 const sheetsService = require('../../lib/sheets');
 
 module.exports = async function handler(req, res) {
@@ -34,9 +34,19 @@ module.exports = async function handler(req, res) {
     const rows = await sheetBase.getRows();
     console.log(`[RESUMO-BASE] ${rows.length} registros na Base`);
     
-    const hoje = new Date().toLocaleDateString('pt-BR');
-    const { data } = req.query; // Permite filtrar por data específica
-    const dataFiltro = data || hoje;
+    // ===== CORREÇÃO DO FORMATO DE DATA =====
+    // Obtém data do query ou usa hoje
+    let dataFiltro;
+    if (req.query.data) {
+      // Se vier no formato YYYY-MM-DD (do input date), converte para DD/MM/YYYY
+      const [ano, mes, dia] = req.query.data.split('-');
+      dataFiltro = `${dia}/${mes}/${ano}`;
+    } else {
+      // Usa hoje no formato DD/MM/YYYY
+      dataFiltro = new Date().toLocaleDateString('pt-BR');
+    }
+    
+    console.log(`[RESUMO-BASE] Filtrando por data: ${dataFiltro}`);
     
     // Estruturas para armazenar resumos
     const resumoPorSupervisor = {};
@@ -51,12 +61,21 @@ module.exports = async function handler(req, res) {
       outros: 0
     };
     
+    let registrosFiltrados = 0;
+    
     // Processa cada registro
     rows.forEach(row => {
       const dataRegistro = String(row.get('Data') || '').trim();
       
+      // Debug: mostra as primeiras 5 datas para verificar formato
+      if (registrosFiltrados < 5) {
+        console.log(`[RESUMO-BASE] Data encontrada: "${dataRegistro}"`);
+      }
+      
       // Filtra pela data
       if (dataRegistro !== dataFiltro) return;
+      
+      registrosFiltrados++;
       
       const supervisor = String(row.get('Supervisor') || 'Sem supervisor').trim();
       const funcao = String(row.get('Função') || 'Não informada').trim();
@@ -191,6 +210,8 @@ module.exports = async function handler(req, res) {
         resumoGeral.outros++;
       }
     });
+    
+    console.log(`[RESUMO-BASE] Registros filtrados para data ${dataFiltro}: ${registrosFiltrados}`);
     
     // Converte objetos em arrays e ordena
     const supervisores = Object.values(resumoPorSupervisor)
