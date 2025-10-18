@@ -526,6 +526,7 @@
                                 <th>Férias</th>
                                 <th>Folga</th>
                                 <th>Afastado</th>
+                                <th>Desvio</th>
                                 <th>Outros</th>
                                 <th>Taxa Presença</th>
                                 <th>Colaboradores</th>
@@ -553,9 +554,33 @@
                                 <th>Férias</th>
                                 <th>Folga</th>
                                 <th>Afastado</th>
+                                <th>Desvio</th>
                                 <th>Outros</th>
                                 <th>Taxa Presença</th>
                                 <th>Colaboradores</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="secao">
+                <div class="secao-header">
+                    <h2><i class="fas fa-exclamation-triangle"></i> Detalhamento de Desvios</h2>
+                    <span class="badge badge-danger" id="totalDesvios">0 desvios</span>
+                </div>
+                <div class="tabela-container">
+                    <table id="tabelaDesvios">
+                        <thead>
+                            <tr>
+                                <th>Colaborador</th>
+                                <th>Matrícula</th>
+                                <th>Função</th>
+                                <th>Supervisor</th>
+                                <th>Turno</th>
+                                <th>Status</th>
+                                <th>Observações</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -716,9 +741,10 @@
                     ferias: colabs.filter(c => c.status.toLowerCase().includes('férias') || c.status.toLowerCase().includes('ferias')).length,
                     folga: colabs.filter(c => c.status.toLowerCase() === 'folga').length,
                     afastado: colabs.filter(c => c.status.toLowerCase() === 'afastado').length,
+                    desvio: colabs.filter(c => c.status.toLowerCase() === 'desvio').length,
                     outros: colabs.filter(c => {
                         const st = c.status.toLowerCase();
-                        return st !== 'presente' && st !== 'ausente' && st !== 'atestado' && !st.includes('férias') && !st.includes('ferias') && st !== 'folga' && st !== 'afastado';
+                        return st !== 'presente' && st !== 'ausente' && st !== 'atestado' && !st.includes('férias') && !st.includes('ferias') && st !== 'folga' && st !== 'afastado' && st !== 'desvio';
                     }).length
                 };
             }).filter(sup => sup.total > 0);
@@ -734,9 +760,10 @@
                     ferias: colabs.filter(c => c.status.toLowerCase().includes('férias') || c.status.toLowerCase().includes('ferias')).length,
                     folga: colabs.filter(c => c.status.toLowerCase() === 'folga').length,
                     afastado: colabs.filter(c => c.status.toLowerCase() === 'afastado').length,
+                    desvio: colabs.filter(c => c.status.toLowerCase() === 'desvio').length,
                     outros: colabs.filter(c => {
                         const st = c.status.toLowerCase();
-                        return st !== 'presente' && st !== 'ausente' && st !== 'atestado' && !st.includes('férias') && !st.includes('ferias') && st !== 'folga' && st !== 'afastado';
+                        return st !== 'presente' && st !== 'ausente' && st !== 'atestado' && !st.includes('férias') && !st.includes('ferias') && st !== 'folga' && st !== 'afastado' && st !== 'desvio';
                     }).length
                 };
             }).filter(func => func.total > 0);
@@ -748,6 +775,7 @@
             let feriasGeral = 0;
             let folgaGeral = 0;
             let afastadoGeral = 0;
+            let desvioGeral = 0;
             let outrosGeral = 0;
 
             dadosResumo.porSupervisor.forEach(sup => {
@@ -758,6 +786,7 @@
                 feriasGeral += sup.ferias;
                 folgaGeral += sup.folga;
                 afastadoGeral += sup.afastado;
+                desvioGeral += sup.desvio;
                 outrosGeral += sup.outros;
             });
 
@@ -769,6 +798,7 @@
                 ferias: feriasGeral,
                 folga: folgaGeral,
                 afastado: afastadoGeral,
+                desvio: desvioGeral,
                 outros: outrosGeral,
                 percentualPresente: totalGeral > 0 ? ((presenteGeral / totalGeral) * 100).toFixed(1) : 0,
                 percentualAusente: totalGeral > 0 ? (((totalGeral - presenteGeral) / totalGeral) * 100).toFixed(1) : 0
@@ -872,10 +902,15 @@
                     <h3>Afastados</h3>
                     <div class="valor">${geral.afastado}</div>
                 </div>
+                <div class="card-resumo danger">
+                    <h3>Desvios</h3>
+                    <div class="valor">${geral.desvio || 0}</div>
+                </div>
             `;
 
             renderTabelaSupervisores();
             renderTabelaFuncoes();
+            renderTabelaDesvios();
         }
 
         function renderTabelaSupervisores() {
@@ -899,6 +934,7 @@
                     <td style="color: #ffc107;">${sup.ferias}</td>
                     <td style="color: #17a2b8;">${sup.folga}</td>
                     <td>${sup.afastado}</td>
+                    <td style="color: #dc3545; font-weight: 600;">${sup.desvio || 0}</td>
                     <td>${sup.outros}</td>
                     <td>
                         <div class="barra-progresso">
@@ -915,7 +951,7 @@
                             ${sup.colaboradores.map(c => `
                                 <div class="colaborador-item">
                                     <strong>${c.nome}</strong> (${c.matricula}) - <strong>${c.funcao}</strong> - Turno: ${c.turno} - 
-                                    <span style="color: ${c.status === 'Presente' ? '#28a745' : '#dc3545'};">
+                                    <span style="color: ${c.status === 'Presente' ? '#28a745' : c.status === 'Desvio' ? '#dc3545' : '#6c757d'};">
                                         ${c.status}
                                     </span>
                                 </div>
@@ -948,6 +984,7 @@
                     <td style="color: #ffc107;">${func.ferias}</td>
                     <td style="color: #17a2b8;">${func.folga}</td>
                     <td>${func.afastado}</td>
+                    <td style="color: #dc3545; font-weight: 600;">${func.desvio || 0}</td>
                     <td>${func.outros}</td>
                     <td>
                         <div class="barra-progresso">
@@ -964,13 +1001,59 @@
                             ${func.colaboradores.map(c => `
                                 <div class="colaborador-item">
                                     <strong>${c.nome}</strong> (${c.matricula}) - ${c.supervisor} - Turno: ${c.turno} - 
-                                    <span style="color: ${c.status === 'Presente' ? '#28a745' : '#dc3545'};">
+                                    <span style="color: ${c.status === 'Presente' ? '#28a745' : c.status === 'Desvio' ? '#dc3545' : '#6c757d'};">
                                         ${c.status}
                                     </span>
                                 </div>
                             `).join('')}
                         </div>
                     </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderTabelaDesvios() {
+            const tbody = document.querySelector('#tabelaDesvios tbody');
+            tbody.innerHTML = '';
+            
+            const desvios = [];
+            
+            dadosResumo.porSupervisor.forEach(sup => {
+                sup.colaboradores.forEach(colab => {
+                    if (colab.status.toLowerCase() === 'desvio') {
+                        desvios.push({
+                            ...colab,
+                            supervisor: sup.supervisor
+                        });
+                    }
+                });
+            });
+
+            document.getElementById('totalDesvios').textContent = `${desvios.length} desvios`;
+
+            if (desvios.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 30px; color: #28a745;">
+                            <i class="fas fa-check-circle" style="font-size: 32px; margin-bottom: 10px;"></i>
+                            <p style="font-size: 16px; font-weight: 600;">Nenhum desvio encontrado para esta data!</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            desvios.forEach(desvio => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${desvio.nome}</strong></td>
+                    <td>${desvio.matricula}</td>
+                    <td>${desvio.funcao}</td>
+                    <td>${desvio.supervisor}</td>
+                    <td>${desvio.turno}</td>
+                    <td><span style="color: #dc3545; font-weight: 600;">${desvio.status}</span></td>
+                    <td>${desvio.observacao || '-'}</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -987,18 +1070,29 @@
                 return;
             }
 
-            let csv = 'Tipo,Nome,Total,Presente,Ausente,Atestado,Férias,Folga,Afastado,Outros,Taxa Presença\n';
+            let csv = 'Tipo,Nome,Total,Presente,Ausente,Atestado,Férias,Folga,Afastado,Desvio,Outros,Taxa Presença\n';
             
             dadosResumo.porSupervisor.forEach(sup => {
                 const taxa = sup.total > 0 ? ((sup.presente / sup.total) * 100).toFixed(1) : 0;
-                csv += `Supervisor,"${sup.supervisor}",${sup.total},${sup.presente},${sup.ausente},${sup.atestado || 0},${sup.ferias},${sup.folga},${sup.afastado},${sup.outros},${taxa}%\n`;
+                csv += `Supervisor,"${sup.supervisor}",${sup.total},${sup.presente},${sup.ausente},${sup.atestado || 0},${sup.ferias},${sup.folga},${sup.afastado},${sup.desvio || 0},${sup.outros},${taxa}%\n`;
             });
 
             csv += '\n';
 
             dadosResumo.porFuncao.forEach(func => {
                 const taxa = func.total > 0 ? ((func.presente / func.total) * 100).toFixed(1) : 0;
-                csv += `Função,"${func.funcao}",${func.total},${func.presente},${func.ausente},${func.atestado || 0},${func.ferias},${func.folga},${func.afastado},${func.outros},${taxa}%\n`;
+                csv += `Função,"${func.funcao}",${func.total},${func.presente},${func.ausente},${func.atestado || 0},${func.ferias},${func.folga},${func.afastado},${func.desvio || 0},${func.outros},${taxa}%\n`;
+            });
+
+            csv += '\n\nDetalhamento de Desvios\n';
+            csv += 'Colaborador,Matrícula,Função,Supervisor,Turno,Status,Observações\n';
+
+            dadosResumo.porSupervisor.forEach(sup => {
+                sup.colaboradores.forEach(colab => {
+                    if (colab.status.toLowerCase() === 'desvio') {
+                        csv += `"${colab.nome}",${colab.matricula},"${colab.funcao}","${sup.supervisor}","${colab.turno}","${colab.status}","${colab.observacao || '-'}"\n`;
+                    }
+                });
             });
 
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -1027,4 +1121,4 @@
         console.log('Resumo Base carregado');
     </script>
 </body>
-</html
+</html>
