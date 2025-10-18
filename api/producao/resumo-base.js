@@ -80,6 +80,7 @@ module.exports = async function handler(req, res) {
       const supervisor = String(row.get('Supervisor') || 'Sem supervisor').trim();
       const aba = String(row.get('Aba') || '').trim(); // Seção/Turno (ex: Separação TA-1)
       const funcao = String(row.get('Função') || 'Não informada').trim(); // Função real (ex: AUX. DE ARMAZEM)
+      const turno = String(row.get('Turno') || 'Não informado').trim(); // Turno (coluna 8)
       const status = String(row.get('Status') || 'Outro').trim();
       const nome = String(row.get('Nome') || '').trim();
       const matricula = String(row.get('Matricula') || '').trim();
@@ -118,6 +119,7 @@ module.exports = async function handler(req, res) {
         nome,
         matricula,
         funcao,
+        turno,
         status
       });
       
@@ -173,6 +175,7 @@ module.exports = async function handler(req, res) {
         nome,
         matricula,
         supervisor,
+        turno,
         status
       });
       
