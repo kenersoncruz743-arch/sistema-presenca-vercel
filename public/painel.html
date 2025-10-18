@@ -171,6 +171,7 @@
   .statusPresente { background-color: #c8e6c9; }
   .statusAusente { background-color: #ffcdd2; }
   .statusAfastado { background-color: #ffab91; }
+  .statusAtestado { background-color: #fff9c4; }
   .statusFerias { background-color: #ffe082; }
   .statusFolga { background-color: #b3e5fc; }
   .statusAbandono { background-color: #e1bee7; }
@@ -278,13 +279,11 @@
 </div>
 
 <script>
-  // Variáveis globais
   let supervisor = '';
   let aba = '';
   let adicionando = {};
   let salvando = false;
 
-  // Inicializa as variáveis com dados do sessionStorage
   function initializeData() {
     supervisor = sessionStorage.getItem('usuario') || '';
     aba = sessionStorage.getItem('abaSelecionada') || '';
@@ -302,7 +301,6 @@
     return supervisor && aba;
   }
 
-  // Função para fazer requisições à API
   async function apiCall(endpoint, method = 'GET', data = null) {
     try {
       const options = {
@@ -329,7 +327,6 @@
     }
   }
 
-  // Função de busca
   async function buscar() {
     const filtro = document.getElementById("filtro").value.trim();
     
@@ -380,7 +377,6 @@
       return;
     }
 
-    // Agrupa por função
     const grupos = {};
     lista.forEach(c => {
       const f = c.funcao || "Sem Função";
@@ -388,7 +384,6 @@
       grupos[f].push(c);
     });
 
-    // Ordena colaboradores dentro de cada grupo
     Object.keys(grupos).forEach(f => 
       grupos[f].sort((a,b) => a.nome.localeCompare(b.nome, 'pt-BR'))
     );
@@ -431,7 +426,6 @@
     if (adicionando[matricula]) return;
     adicionando[matricula] = true;
 
-    // Feedback visual no botão
     const buttons = document.querySelectorAll(`button[onclick*="${matricula}"]`);
     buttons.forEach(btn => {
       btn.innerHTML = '<i class="fas fa-spinner loading-spinner"></i> Adicionando...';
@@ -453,7 +447,6 @@
       const result = await response.json();
 
       if (result.ok) {
-        // Feedback de sucesso
         buttons.forEach(btn => {
           btn.innerHTML = '<i class="fas fa-check"></i> Adicionado!';
           btn.style.background = '#4caf50';
@@ -473,7 +466,6 @@
       console.error('Erro ao adicionar:', error);
       showStatus('Erro ao adicionar colaborador', 'error');
       
-      // Restaura botões em caso de erro
       buttons.forEach(btn => {
         btn.innerHTML = '<i class="fas fa-plus"></i> Adicionar';
         btn.disabled = false;
@@ -514,6 +506,7 @@
       "Presente": "statusPresente",
       "Ausente": "statusAusente",
       "Afastado": "statusAfastado",
+      "Atestado": "statusAtestado",
       "Férias": "statusFerias",
       "Folga": "statusFolga",
       "Abandono": "statusAbandono"
@@ -535,7 +528,6 @@
       return;
     }
 
-    // Agrupa por função
     const grupos = {};
     lista.forEach(c => {
       const f = c.funcao || "Sem Função";
@@ -548,7 +540,6 @@
     );
 
     funcoesOrdenadas.forEach(funcao => {
-      // Header da função
       const trFuncao = document.createElement("tr");
       trFuncao.className = "funcao-header";
       trFuncao.innerHTML = `
@@ -557,7 +548,6 @@
         </td>`;
       tbody.appendChild(trFuncao);
 
-      // Ordena colaboradores por nome
       grupos[funcao].sort((a,b) => a.nome.localeCompare(b.nome, 'pt-BR'));
 
       grupos[funcao].forEach(c => {
@@ -574,6 +564,7 @@
               <option value="" ${!c.status ? "selected" : ""}>-- Selecione --</option>
               <option value="Presente" ${c.status === "Presente" ? "selected" : ""}>✅ Presente</option>
               <option value="Ausente" ${c.status === "Ausente" ? "selected" : ""}>❌ Ausente</option>
+              <option value="Atestado" ${c.status === "Atestado" ? "selected" : ""}>📄 Atestado</option>
               <option value="Afastado" ${c.status === "Afastado" ? "selected" : ""}>🏥 Afastado</option>
               <option value="Férias" ${c.status === "Férias" ? "selected" : ""}>🏖️ Férias</option>
               <option value="Folga" ${c.status === "Folga" ? "selected" : ""}>😴 Folga</option>
@@ -595,7 +586,6 @@
     const novoStatus = selectEl.value;
     const tr = document.getElementById(`linha_${matricula}`);
     
-    // Atualiza classe visual imediatamente
     if (tr) tr.className = statusToClass(novoStatus);
 
     try {
@@ -643,7 +633,6 @@
         
         showStatus('Colaborador removido com sucesso', 'success');
         
-        // Verifica se ainda tem itens
         setTimeout(() => {
           const tbody = document.querySelector("#tabelaBuffer tbody");
           const dataRows = tbody.querySelectorAll('tr[id^="linha_"]');
@@ -726,7 +715,6 @@
       btnSalvar.innerHTML = originalText;
       btnSalvar.disabled = false;
       
-      // Limpa mensagem após 5 segundos
       setTimeout(() => {
         statusEl.innerHTML = '';
         statusEl.className = 'status-message';
@@ -740,19 +728,14 @@
     }
   }
 
-  // Funções auxiliares para status
   function showStatus(message, type) {
     console.log(`Status [${type}]: ${message}`);
-    // Você pode implementar uma notificação toast aqui se quiser
   }
 
   function clearStatus() {
-    // Limpa qualquer status ativo
   }
 
-  // Event listeners
   document.addEventListener('DOMContentLoaded', function() {
-    // Permite buscar com Enter
     document.getElementById('filtro').addEventListener('keypress', function(e) {
       if (e.key === 'Enter') {
         buscar();
@@ -760,7 +743,6 @@
     });
   });
 
-  // Inicialização
   window.onload = function() {
     console.log('Painel carregando...');
     
@@ -776,7 +758,6 @@
     console.log('Painel carregado com sucesso!');
   };
 
-  // Debug
   console.log('Painel.html carregado');
   console.log('SessionStorage atual:', {
     usuario: sessionStorage.getItem('usuario'),
