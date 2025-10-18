@@ -522,6 +522,7 @@
                                 <th>Total</th>
                                 <th>Presente</th>
                                 <th>Ausente</th>
+                                <th>Atestado</th>
                                 <th>Férias</th>
                                 <th>Folga</th>
                                 <th>Afastado</th>
@@ -548,6 +549,7 @@
                                 <th>Total</th>
                                 <th>Presente</th>
                                 <th>Ausente</th>
+                                <th>Atestado</th>
                                 <th>Férias</th>
                                 <th>Folga</th>
                                 <th>Afastado</th>
@@ -565,7 +567,7 @@
 
     <script>
         let dadosResumo = null;
-        let dadosOriginais = null; // Armazena dados sem filtro
+        let dadosOriginais = null;
 
         function showStatus(msg, type = 'info') {
             const div = document.getElementById('statusDiv');
@@ -607,7 +609,7 @@
                     throw new Error(result.msg || 'Erro ao carregar resumo');
                 }
 
-                dadosOriginais = JSON.parse(JSON.stringify(result)); // Clone profundo
+                dadosOriginais = JSON.parse(JSON.stringify(result));
                 dadosResumo = result;
                 
                 preencherFiltros();
@@ -635,17 +637,14 @@
         function preencherFiltros() {
             if (!dadosOriginais) return;
 
-            // Extrai supervisores únicos
             const supervisores = [...new Set(dadosOriginais.porSupervisor.map(s => s.supervisor))].sort();
             const selectSup = document.getElementById('filtroSupervisor');
             selectSup.innerHTML = supervisores.map(s => `<option value="${s}">${s}</option>`).join('');
 
-            // Extrai funções únicas
             const funcoes = [...new Set(dadosOriginais.porFuncao.map(f => f.funcao))].sort();
             const selectFunc = document.getElementById('filtroFuncao');
             selectFunc.innerHTML = funcoes.map(f => `<option value="${f}">${f}</option>`).join('');
 
-            // Extrai turnos únicos de todos os colaboradores
             const turnos = new Set();
             dadosOriginais.porSupervisor.forEach(sup => {
                 sup.colaboradores.forEach(colab => {
@@ -668,13 +667,10 @@
 
             console.log('Filtros aplicados:', { supervisoresSelecionados, funcoesSelecionadas, turnosSelecionados });
 
-            // Atualiza tags de filtros ativos
             atualizarTagsFiltros(supervisoresSelecionados, funcoesSelecionadas, turnosSelecionados);
 
-            // Clone dos dados originais
             dadosResumo = JSON.parse(JSON.stringify(dadosOriginais));
 
-            // Filtra colaboradores por turno primeiro (se selecionado)
             if (turnosSelecionados.length > 0) {
                 dadosResumo.porSupervisor = dadosResumo.porSupervisor.map(sup => ({
                     ...sup,
@@ -687,7 +683,6 @@
                 }));
             }
 
-            // Filtra colaboradores por função (se selecionado)
             if (funcoesSelecionadas.length > 0) {
                 dadosResumo.porSupervisor = dadosResumo.porSupervisor.map(sup => ({
                     ...sup,
@@ -699,7 +694,6 @@
                 );
             }
 
-            // Filtra por supervisor (se selecionado)
             if (supervisoresSelecionados.length > 0) {
                 dadosResumo.porSupervisor = dadosResumo.porSupervisor.filter(sup => 
                     supervisoresSelecionados.includes(sup.supervisor)
@@ -711,7 +705,6 @@
                 }));
             }
 
-            // Recalcula totais para supervisores
             dadosResumo.porSupervisor = dadosResumo.porSupervisor.map(sup => {
                 const colabs = sup.colaboradores;
                 return {
@@ -719,17 +712,17 @@
                     total: colabs.length,
                     presente: colabs.filter(c => c.status.toLowerCase() === 'presente').length,
                     ausente: colabs.filter(c => c.status.toLowerCase() === 'ausente').length,
+                    atestado: colabs.filter(c => c.status.toLowerCase() === 'atestado').length,
                     ferias: colabs.filter(c => c.status.toLowerCase().includes('férias') || c.status.toLowerCase().includes('ferias')).length,
                     folga: colabs.filter(c => c.status.toLowerCase() === 'folga').length,
                     afastado: colabs.filter(c => c.status.toLowerCase() === 'afastado').length,
                     outros: colabs.filter(c => {
                         const st = c.status.toLowerCase();
-                        return st !== 'presente' && st !== 'ausente' && !st.includes('férias') && !st.includes('ferias') && st !== 'folga' && st !== 'afastado';
+                        return st !== 'presente' && st !== 'ausente' && st !== 'atestado' && !st.includes('férias') && !st.includes('ferias') && st !== 'folga' && st !== 'afastado';
                     }).length
                 };
             }).filter(sup => sup.total > 0);
 
-            // Recalcula totais para funções
             dadosResumo.porFuncao = dadosResumo.porFuncao.map(func => {
                 const colabs = func.colaboradores;
                 return {
@@ -737,20 +730,21 @@
                     total: colabs.length,
                     presente: colabs.filter(c => c.status.toLowerCase() === 'presente').length,
                     ausente: colabs.filter(c => c.status.toLowerCase() === 'ausente').length,
+                    atestado: colabs.filter(c => c.status.toLowerCase() === 'atestado').length,
                     ferias: colabs.filter(c => c.status.toLowerCase().includes('férias') || c.status.toLowerCase().includes('ferias')).length,
                     folga: colabs.filter(c => c.status.toLowerCase() === 'folga').length,
                     afastado: colabs.filter(c => c.status.toLowerCase() === 'afastado').length,
                     outros: colabs.filter(c => {
                         const st = c.status.toLowerCase();
-                        return st !== 'presente' && st !== 'ausente' && !st.includes('férias') && !st.includes('ferias') && st !== 'folga' && st !== 'afastado';
+                        return st !== 'presente' && st !== 'ausente' && st !== 'atestado' && !st.includes('férias') && !st.includes('ferias') && st !== 'folga' && st !== 'afastado';
                     }).length
                 };
             }).filter(func => func.total > 0);
 
-            // Recalcula resumo geral baseado nos dados filtrados
             let totalGeral = 0;
             let presenteGeral = 0;
             let ausenteGeral = 0;
+            let atestadoGeral = 0;
             let feriasGeral = 0;
             let folgaGeral = 0;
             let afastadoGeral = 0;
@@ -760,6 +754,7 @@
                 totalGeral += sup.total;
                 presenteGeral += sup.presente;
                 ausenteGeral += sup.ausente;
+                atestadoGeral += sup.atestado;
                 feriasGeral += sup.ferias;
                 folgaGeral += sup.folga;
                 afastadoGeral += sup.afastado;
@@ -770,6 +765,7 @@
                 total: totalGeral,
                 presente: presenteGeral,
                 ausente: ausenteGeral,
+                atestado: atestadoGeral,
                 ferias: feriasGeral,
                 folga: folgaGeral,
                 afastado: afastadoGeral,
@@ -795,234 +791,3 @@
 
             funcoes.forEach(func => {
                 tags += `<div class="filtro-tag">
-                    <span><i class="fas fa-briefcase"></i> ${func}</span>
-                    <i class="fas fa-times" onclick="removerFiltro('funcao', '${func}')"></i>
-                </div>`;
-            });
-
-            turnos.forEach(turno => {
-                tags += `<div class="filtro-tag">
-                    <span><i class="fas fa-clock"></i> ${turno}</span>
-                    <i class="fas fa-times" onclick="removerFiltro('turno', '${turno}')"></i>
-                </div>`;
-            });
-
-            container.innerHTML = tags;
-        }
-
-        function removerFiltro(tipo, valor) {
-            const selects = {
-                'supervisor': document.getElementById('filtroSupervisor'),
-                'funcao': document.getElementById('filtroFuncao'),
-                'turno': document.getElementById('filtroTurno')
-            };
-
-            const select = selects[tipo];
-            if (select) {
-                Array.from(select.options).forEach(option => {
-                    if (option.value === valor) {
-                        option.selected = false;
-                    }
-                });
-            }
-
-            aplicarFiltros();
-        }
-
-        function limparFiltros() {
-            document.getElementById('filtroSupervisor').selectedIndex = -1;
-            document.getElementById('filtroFuncao').selectedIndex = -1;
-            document.getElementById('filtroTurno').selectedIndex = -1;
-            document.getElementById('filtrosAtivos').innerHTML = '';
-            
-            if (dadosOriginais) {
-                dadosResumo = JSON.parse(JSON.stringify(dadosOriginais));
-                renderResumo();
-                showStatus('Todos os filtros foram removidos!', 'info');
-            }
-        }
-
-        function renderResumo() {
-            if (!dadosResumo) return;
-
-            const geral = dadosResumo.resumoGeral;
-            document.getElementById('resumoGeralCards').innerHTML = `
-                <div class="card-resumo">
-                    <h3>Total Colaboradores</h3>
-                    <div class="valor">${geral.total}</div>
-                </div>
-                <div class="card-resumo success">
-                    <h3>Presentes</h3>
-                    <div class="valor">${geral.presente}</div>
-                    <div class="percentual">${geral.percentualPresente || 0}%</div>
-                </div>
-                <div class="card-resumo danger">
-                    <h3>Ausentes</h3>
-                    <div class="valor">${geral.ausente}</div>
-                </div>
-                <div class="card-resumo warning">
-                    <h3>Férias</h3>
-                    <div class="valor">${geral.ferias}</div>
-                </div>
-                <div class="card-resumo">
-                    <h3>Folga</h3>
-                    <div class="valor">${geral.folga}</div>
-                </div>
-                <div class="card-resumo">
-                    <h3>Afastados</h3>
-                    <div class="valor">${geral.afastado}</div>
-                </div>
-            `;
-
-            renderTabelaSupervisores();
-            renderTabelaFuncoes();
-        }
-
-        function renderTabelaSupervisores() {
-            const tbody = document.querySelector('#tabelaSupervisores tbody');
-            const supervisores = dadosResumo.porSupervisor || [];
-
-            document.getElementById('totalSupervisores').textContent = `${supervisores.length} supervisores`;
-
-            tbody.innerHTML = '';
-
-            supervisores.forEach((sup, idx) => {
-                const taxaPresenca = sup.total > 0 ? ((sup.presente / sup.total) * 100).toFixed(1) : 0;
-                
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><strong>${sup.supervisor}</strong></td>
-                    <td>${sup.total}</td>
-                    <td style="color: #28a745; font-weight: 600;">${sup.presente}</td>
-                    <td style="color: #dc3545;">${sup.ausente}</td>
-                    <td style="color: #ffc107;">${sup.ferias}</td>
-                    <td style="color: #17a2b8;">${sup.folga}</td>
-                    <td>${sup.afastado}</td>
-                    <td>${sup.outros}</td>
-                    <td>
-                        <div class="barra-progresso">
-                            <div class="barra-fill" style="width: ${taxaPresenca}%">
-                                ${taxaPresenca}%
-                            </div>
-                        </div>
-                    </td>
-                    <td>
-                        <span class="colab-toggle" onclick="toggleColaboradores('sup-${idx}')">
-                            <i class="fas fa-users"></i> Ver ${sup.colaboradores.length}
-                        </span>
-                        <div id="sup-${idx}" class="colaboradores-lista">
-                            ${sup.colaboradores.map(c => `
-                                <div class="colaborador-item">
-                                    <strong>${c.nome}</strong> (${c.matricula}) - <strong>${c.funcao}</strong> - Turno: ${c.turno} - 
-                                    <span style="color: ${c.status === 'Presente' ? '#28a745' : '#dc3545'};">
-                                        ${c.status}
-                                    </span>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function renderTabelaFuncoes() {
-            const tbody = document.querySelector('#tabelaFuncoes tbody');
-            const funcoes = dadosResumo.porFuncao || [];
-
-            document.getElementById('totalFuncoes').textContent = `${funcoes.length} funções`;
-
-            tbody.innerHTML = '';
-
-            funcoes.forEach((func, idx) => {
-                const taxaPresenca = func.total > 0 ? ((func.presente / func.total) * 100).toFixed(1) : 0;
-                
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><strong>${func.funcao}</strong></td>
-                    <td>${func.total}</td>
-                    <td style="color: #28a745; font-weight: 600;">${func.presente}</td>
-                    <td style="color: #dc3545;">${func.ausente}</td>
-                    <td style="color: #ffc107;">${func.ferias}</td>
-                    <td style="color: #17a2b8;">${func.folga}</td>
-                    <td>${func.afastado}</td>
-                    <td>${func.outros}</td>
-                    <td>
-                        <div class="barra-progresso">
-                            <div class="barra-fill" style="width: ${taxaPresenca}%">
-                                ${taxaPresenca}%
-                            </div>
-                        </div>
-                    </td>
-                    <td>
-                        <span class="colab-toggle" onclick="toggleColaboradores('func-${idx}')">
-                            <i class="fas fa-users"></i> Ver ${func.colaboradores.length}
-                        </span>
-                        <div id="func-${idx}" class="colaboradores-lista">
-                            ${func.colaboradores.map(c => `
-                                <div class="colaborador-item">
-                                    <strong>${c.nome}</strong> (${c.matricula}) - ${c.supervisor} - Turno: ${c.turno} - 
-                                    <span style="color: ${c.status === 'Presente' ? '#28a745' : '#dc3545'};">
-                                        ${c.status}
-                                    </span>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function toggleColaboradores(id) {
-            const div = document.getElementById(id);
-            div.classList.toggle('show');
-        }
-
-        function exportarResumo() {
-            if (!dadosResumo) {
-                showStatus('Carregue os dados primeiro', 'error');
-                return;
-            }
-
-            let csv = 'Tipo,Nome,Total,Presente,Ausente,Férias,Folga,Afastado,Outros,Taxa Presença\n';
-            
-            dadosResumo.porSupervisor.forEach(sup => {
-                const taxa = sup.total > 0 ? ((sup.presente / sup.total) * 100).toFixed(1) : 0;
-                csv += `Supervisor,"${sup.supervisor}",${sup.total},${sup.presente},${sup.ausente},${sup.ferias},${sup.folga},${sup.afastado},${sup.outros},${taxa}%\n`;
-            });
-
-            csv += '\n';
-
-            dadosResumo.porFuncao.forEach(func => {
-                const taxa = func.total > 0 ? ((func.presente / func.total) * 100).toFixed(1) : 0;
-                csv += `Função,"${func.funcao}",${func.total},${func.presente},${func.ausente},${func.ferias},${func.folga},${func.afastado},${func.outros},${taxa}%\n`;
-            });
-
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `Resumo_Base_${dadosResumo.dataReferencia || 'hoje'}.csv`;
-            link.click();
-
-            showStatus('Resumo exportado com sucesso!', 'success');
-        }
-
-        window.onload = function() {
-            const usuario = sessionStorage.getItem('usuario');
-            if (!usuario) {
-                showStatus('Sessão expirada', 'error');
-                setTimeout(() => window.location.href = '/', 2000);
-                return;
-            }
-
-            const hoje = new Date().toISOString().split('T')[0];
-            document.getElementById('filtroData').value = hoje;
-
-            carregarResumo();
-        };
-
-        console.log('Resumo Base carregado');
-    </script>
-</body>
-</html>
