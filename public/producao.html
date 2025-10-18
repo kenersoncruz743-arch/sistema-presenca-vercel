@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Análise de Produção por Função</title>
+    <title>Resumo Base - Análise de Presença</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -16,7 +16,7 @@
         }
         
         .container {
-            max-width: 1800px;
+            max-width: 1600px;
             margin: 0 auto;
         }
         
@@ -60,14 +60,14 @@
             gap: 8px;
         }
         
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .btn:hover { transform: translateY(-2px); }
         .btn-primary { background: #667eea; color: white; }
         .btn-success { background: #28a745; color: white; }
         .btn-info { background: #17a2b8; color: white; }
         .btn-warning { background: #ffc107; color: #212529; }
         .btn-secondary { background: #6c757d; color: white; }
         
-        .config-panel {
+        .filtros {
             background: white;
             padding: 25px;
             border-radius: 15px;
@@ -75,8 +75,8 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
         
-        .config-panel h3 {
-            color: #667eea;
+        .filtros h3 {
+            color: #333;
             margin-bottom: 20px;
             display: flex;
             align-items: center;
@@ -84,19 +84,20 @@
             font-size: 18px;
         }
         
-        .config-grid {
+        .filtro-row {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: 250px 1fr 1fr 1fr;
             gap: 20px;
+            margin-bottom: 20px;
         }
         
-        .filter-group {
+        .filtro-group {
             display: flex;
             flex-direction: column;
             gap: 8px;
         }
         
-        .filter-group label {
+        .filtro-group label {
             font-size: 13px;
             font-weight: 600;
             color: #495057;
@@ -105,7 +106,7 @@
             gap: 8px;
         }
         
-        .filter-group input, .filter-group select {
+        .filtro-group input, .filtro-group select {
             padding: 10px 12px;
             border: 2px solid #e9ecef;
             border-radius: 8px;
@@ -113,50 +114,86 @@
             transition: border-color 0.3s;
         }
         
-        .filter-group select[multiple] {
-            min-height: 120px;
+        .filtro-group select[multiple] {
+            min-height: 140px;
             background: #f8f9fa;
         }
         
-        .filter-group select[multiple] option {
+        .filtro-group select[multiple] option {
             padding: 8px 10px;
             border-radius: 4px;
             margin: 2px 0;
         }
         
-        .filter-group select[multiple] option:checked {
+        .filtro-group select[multiple] option:checked {
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             font-weight: 600;
         }
         
-        .filter-group input:focus, .filter-group select:focus {
+        .filtro-group input:focus, .filtro-group select:focus {
             outline: none;
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
         
-        .filter-hint {
+        .filtro-hint {
             font-size: 11px;
             color: #6c757d;
             font-style: italic;
+            margin-top: 3px;
+        }
+        
+        .filtros-ativos {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+            min-height: 30px;
+        }
+        
+        .filtro-tag {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            animation: fadeIn 0.3s;
+        }
+        
+        .filtro-tag i {
+            cursor: pointer;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+        
+        .filtro-tag i:hover {
+            opacity: 1;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
         }
         
         .btn-group {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
-            margin-top: 15px;
         }
         
-        .resumo-cards {
+        .resumo-geral {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
         }
         
-        .resumo-card {
+        .card-resumo {
             background: white;
             padding: 25px;
             border-radius: 15px;
@@ -166,7 +203,7 @@
             overflow: hidden;
         }
         
-        .resumo-card::before {
+        .card-resumo::before {
             content: '';
             position: absolute;
             top: 0;
@@ -176,7 +213,7 @@
             background: linear-gradient(90deg, #667eea, #764ba2);
         }
         
-        .resumo-card h3 {
+        .card-resumo h3 {
             font-size: 14px;
             color: #6c757d;
             margin-bottom: 10px;
@@ -184,21 +221,22 @@
             letter-spacing: 0.5px;
         }
         
-        .resumo-card .valor {
+        .card-resumo .valor {
             font-size: 36px;
             font-weight: bold;
             color: #667eea;
             margin-bottom: 8px;
         }
         
-        .resumo-card .subtexto {
-            font-size: 13px;
-            color: #6c757d;
+        .card-resumo .percentual {
+            font-size: 16px;
+            color: #28a745;
+            font-weight: 600;
         }
         
-        .resumo-card.success .valor { color: #28a745; }
-        .resumo-card.warning .valor { color: #ffc107; }
-        .resumo-card.danger .valor { color: #dc3545; }
+        .card-resumo.warning .valor { color: #ffc107; }
+        .card-resumo.danger .valor { color: #dc3545; }
+        .card-resumo.success .valor { color: #28a745; }
         
         .secao {
             background: white;
@@ -236,6 +274,9 @@
         }
         
         .badge-primary { background: #e3f2fd; color: #1976d2; }
+        .badge-success { background: #d4edda; color: #155724; }
+        .badge-warning { background: #fff3cd; color: #856404; }
+        .badge-danger { background: #f8d7da; color: #721c24; }
         
         .tabela-container {
             overflow-x: auto;
@@ -272,27 +313,40 @@
             background-color: #fafafa;
         }
         
-        input[type="number"].input-calculo {
-            width: 90px;
-            padding: 6px 10px;
-            border: 2px solid #ced4da;
+        .colab-toggle {
+            cursor: pointer;
+            color: #667eea;
+            font-size: 12px;
+            text-decoration: underline;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .colab-toggle:hover {
+            color: #5a6fd8;
+        }
+        
+        .colaboradores-lista {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
             border-radius: 6px;
-            text-align: center;
-            font-size: 14px;
-            font-weight: 600;
+            font-size: 12px;
         }
         
-        input[type="number"].input-calculo:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        .colaboradores-lista.show {
+            display: block;
         }
         
-        .valor-calculado {
-            background: #e3f2fd;
-            font-weight: bold;
-            text-align: center;
-            color: #1976d2;
+        .colaborador-item {
+            padding: 6px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .colaborador-item:last-child {
+            border-bottom: none;
         }
         
         .loading {
@@ -330,6 +384,27 @@
         .status-error { background: #f8d7da; color: #721c24; }
         .status-info { background: #d1ecf1; color: #0c5460; }
         
+        .barra-progresso {
+            height: 25px;
+            background: #e9ecef;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .barra-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
         @media (max-width: 768px) {
             .header {
                 flex-direction: column;
@@ -340,11 +415,11 @@
                 font-size: 22px;
             }
             
-            .config-grid {
+            .filtro-row {
                 grid-template-columns: 1fr;
             }
             
-            .resumo-cards {
+            .resumo-geral {
                 grid-template-columns: repeat(2, 1fr);
             }
             
@@ -362,21 +437,15 @@
     <div class="container">
         <div class="header">
             <h1>
-                <i class="fas fa-chart-line"></i>
-                Análise de Produção por Função
+                <i class="fas fa-chart-pie"></i>
+                Resumo Base - Análise de Presença
             </h1>
             <div class="header-actions">
-                <button class="btn btn-success" onclick="calcularTudo()">
-                    <i class="fas fa-calculator"></i> Calcular
-                </button>
-                <button class="btn btn-primary" onclick="salvarProducao()">
-                    <i class="fas fa-save"></i> Salvar
-                </button>
-                <button class="btn btn-info" onclick="exportarCSV()">
-                    <i class="fas fa-file-csv"></i> Exportar
-                </button>
-                <button class="btn btn-warning" onclick="location.reload()">
+                <button class="btn btn-success" onclick="carregarResumo()">
                     <i class="fas fa-sync-alt"></i> Atualizar
+                </button>
+                <button class="btn btn-info" onclick="exportarResumo()">
+                    <i class="fas fa-file-excel"></i> Exportar
                 </button>
                 <button class="btn btn-secondary" onclick="window.location.href='/ferramentas'">
                     <i class="fas fa-arrow-left"></i> Voltar
@@ -384,43 +453,48 @@
             </div>
         </div>
 
-        <div class="config-panel">
-            <h3><i class="fas fa-cogs"></i> Configurações e Filtros</h3>
+        <div class="filtros">
+            <h3><i class="fas fa-filter"></i> Filtros Gerenciais</h3>
             
-            <div class="config-grid">
-                <div class="filter-group">
+            <div class="filtros-ativos" id="filtrosAtivos"></div>
+            
+            <div class="filtro-row">
+                <div class="filtro-group">
                     <label><i class="fas fa-calendar-alt"></i> Data de Referência</label>
-                    <input type="date" id="dataReferencia" value="">
+                    <input type="date" id="filtroData" value="">
                 </div>
-                
-                <div class="filter-group">
-                    <label><i class="fas fa-clock"></i> Horas Trabalhadas</label>
-                    <input type="number" id="horasTrabalhadas" value="8" min="1" max="24" step="0.5">
+                <div class="filtro-group">
+                    <label><i class="fas fa-user-tie"></i> Supervisores</label>
+                    <select id="filtroSupervisor" multiple>
+                        <option value="">Carregando...</option>
+                    </select>
+                    <span class="filtro-hint">Segure Ctrl para selecionar múltiplos</span>
                 </div>
-                
-                <div class="filter-group">
+                <div class="filtro-group">
                     <label><i class="fas fa-briefcase"></i> Funções</label>
-                    <select id="filtroFuncoes" multiple>
+                    <select id="filtroFuncao" multiple>
                         <option value="">Carregando...</option>
                     </select>
-                    <span class="filter-hint">Segure Ctrl para múltiplas seleções</span>
+                    <span class="filtro-hint">Segure Ctrl para selecionar múltiplos</span>
                 </div>
-                
-                <div class="filter-group">
+                <div class="filtro-group">
                     <label><i class="fas fa-clock"></i> Turnos</label>
-                    <select id="filtroTurnos" multiple>
+                    <select id="filtroTurno" multiple>
                         <option value="">Carregando...</option>
                     </select>
-                    <span class="filter-hint">Segure Ctrl para múltiplas seleções</span>
+                    <span class="filtro-hint">Segure Ctrl para selecionar múltiplos</span>
                 </div>
             </div>
             
             <div class="btn-group">
                 <button class="btn btn-primary" onclick="aplicarFiltros()">
-                    <i class="fas fa-filter"></i> Aplicar Filtros
+                    <i class="fas fa-search"></i> Aplicar Filtros
                 </button>
                 <button class="btn btn-secondary" onclick="limparFiltros()">
-                    <i class="fas fa-eraser"></i> Limpar Filtros
+                    <i class="fas fa-eraser"></i> Limpar Todos
+                </button>
+                <button class="btn btn-info" onclick="carregarResumo()">
+                    <i class="fas fa-sync-alt"></i> Recarregar Dados
                 </button>
             </div>
         </div>
@@ -429,33 +503,84 @@
 
         <div id="loadingDiv" class="loading">
             <i class="fas fa-spinner fa-spin"></i>
-            <p style="margin-top: 20px; font-size: 18px;">Carregando dados da Base...</p>
+            <p style="margin-top: 20px; font-size: 18px;">Carregando resumo...</p>
         </div>
 
         <div id="contentDiv" style="display: none;">
-            <div class="resumo-cards" id="resumoCards"></div>
+            <div class="resumo-geral" id="resumoGeralCards"></div>
 
             <div class="secao">
                 <div class="secao-header">
-                    <h2><i class="fas fa-table"></i> Análise por Função</h2>
+                    <h2><i class="fas fa-user-tie"></i> Resumo por Supervisor</h2>
+                    <span class="badge badge-primary" id="totalSupervisores">0 supervisores</span>
+                </div>
+                <div class="tabela-container">
+                    <table id="tabelaSupervisores">
+                        <thead>
+                            <tr>
+                                <th>Supervisor</th>
+                                <th>Total</th>
+                                <th>Presente</th>
+                                <th>Ausente</th>
+                                <th>Atestado</th>
+                                <th>Férias</th>
+                                <th>Folga</th>
+                                <th>Afastado</th>
+                                <th>Desvio</th>
+                                <th>Outros</th>
+                                <th>Taxa Presença</th>
+                                <th>Colaboradores</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="secao">
+                <div class="secao-header">
+                    <h2><i class="fas fa-briefcase"></i> Resumo por Função</h2>
                     <span class="badge badge-primary" id="totalFuncoes">0 funções</span>
                 </div>
                 <div class="tabela-container">
-                    <table id="tabelaProducao">
+                    <table id="tabelaFuncoes">
                         <thead>
                             <tr>
                                 <th>Função</th>
-                                <th>QL Total</th>
+                                <th>Total</th>
                                 <th>Presente</th>
-                                <th>Desvio</th>
-                                <th>Afastado</th>
                                 <th>Ausente</th>
-                                <th>Férias/Folga</th>
-                                <th>Deficit</th>
-                                <th>Produtividade/Hora</th>
-                                <th>Horas Turno</th>
-                                <th>Capacidade</th>
-                                <th>Realizado</th>
+                                <th>Atestado</th>
+                                <th>Férias</th>
+                                <th>Folga</th>
+                                <th>Afastado</th>
+                                <th>Desvio</th>
+                                <th>Outros</th>
+                                <th>Taxa Presença</th>
+                                <th>Colaboradores</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="secao">
+                <div class="secao-header">
+                    <h2><i class="fas fa-exclamation-triangle"></i> Detalhamento de Desvios</h2>
+                    <span class="badge badge-danger" id="totalDesvios">0 desvios</span>
+                </div>
+                <div class="tabela-container">
+                    <table id="tabelaDesvios">
+                        <thead>
+                            <tr>
+                                <th>Colaborador</th>
+                                <th>Matrícula</th>
+                                <th>Função</th>
+                                <th>Supervisor</th>
+                                <th>Turno</th>
+                                <th>Status</th>
+                                <th>Observações</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -466,11 +591,8 @@
     </div>
 
     <script>
-        let dadosBase = [];
-        let dadosQLP = [];
-        let dadosProducao = [];
-        let dadosMeta = {};
-        let funcoesFiltradas = [];
+        let dadosResumo = null;
+        let dadosOriginais = null;
 
         function showStatus(msg, type = 'info') {
             const div = document.getElementById('statusDiv');
@@ -489,73 +611,47 @@
             }, 5000);
         }
 
-        async function carregarDados() {
+        async function carregarResumo() {
             try {
                 document.getElementById('loadingDiv').style.display = 'block';
                 document.getElementById('contentDiv').style.display = 'none';
 
-                const hoje = new Date().toISOString().split('T')[0];
-                document.getElementById('dataReferencia').value = hoje;
-
-                // Carrega Meta de Produtividade
-                console.log('Carregando Meta de Produtividade...');
-                const resMeta = await fetch('/api/producao/meta');
-                const resultMeta = await resMeta.json();
+                const dataInput = document.getElementById('filtroData').value;
                 
-                if (resultMeta.ok && resultMeta.dados) {
-                    resultMeta.dados.forEach(m => {
-                        if (m.data && m.meta && m.produtividadeHora) {
-                            dadosMeta[m.data] = {
-                                meta: parseFloat(m.meta) || 0,
-                                produtividadeHora: parseFloat(m.produtividadeHora) || 0
-                            };
-                        }
-                    });
-                    console.log(`Meta carregada para ${Object.keys(dadosMeta).length} datas`);
-                } else {
-                    console.warn('Aba Meta não encontrada ou vazia');
+                let url = '/api/producao/resumo-base';
+                if (dataInput) {
+                    url += `?data=${dataInput}`;
                 }
 
-                console.log('Carregando dados da Base...');
-                const resBase = await fetch('/api/producao/base');
-                const resultBase = await resBase.json();
-                
-                if (!resultBase.ok) {
-                    throw new Error(resultBase.msg || 'Erro ao carregar Base');
-                }
-                
-                dadosBase = resultBase.dados || [];
-                console.log(`Base carregada: ${dadosBase.length} registros`);
+                console.log('Buscando resumo:', url);
 
-                console.log('Carregando QLP...');
-                const resQLP = await fetch('/api/qlp/quadro');
-                const resultQLP = await resQLP.json();
-                
-                if (!resultQLP.ok) {
-                    throw new Error('Erro ao carregar QLP');
-                }
-                
-                dadosQLP = resultQLP.colaboradores || [];
-                console.log(`QLP carregado: ${dadosQLP.length} colaboradores`);
+                const response = await fetch(url);
+                const result = await response.json();
 
-                processarDados();
+                console.log('Resposta recebida:', result);
+
+                if (!result.ok) {
+                    throw new Error(result.msg || 'Erro ao carregar resumo');
+                }
+
+                dadosOriginais = JSON.parse(JSON.stringify(result));
+                dadosResumo = result;
+                
                 preencherFiltros();
-                calcularTudo();
-                renderTabela();
-                atualizarResumo();
+                renderResumo();
 
                 document.getElementById('loadingDiv').style.display = 'none';
                 document.getElementById('contentDiv').style.display = 'block';
 
-                showStatus(`Dados carregados: ${dadosBase.length} registros da Base`, 'success');
+                showStatus(`Resumo carregado: ${dadosResumo.resumoGeral.total} colaboradores`, 'success');
 
             } catch (error) {
                 console.error('Erro:', error);
                 document.getElementById('loadingDiv').innerHTML = `
                     <i class="fas fa-exclamation-triangle" style="color: #dc3545;"></i>
-                    <p style="margin-top: 20px; color: #dc3545;">Erro ao carregar dados</p>
+                    <p style="margin-top: 20px; color: #dc3545;">Erro ao carregar resumo</p>
                     <p style="font-size: 14px; color: white; margin-top: 10px;">${error.message}</p>
-                    <button class="btn btn-warning" onclick="location.reload()" style="margin-top: 20px;">
+                    <button class="btn btn-warning" onclick="carregarResumo()" style="margin-top: 20px;">
                         <i class="fas fa-sync-alt"></i> Tentar Novamente
                     </button>
                 `;
@@ -563,461 +659,449 @@
             }
         }
 
-        function processarDados() {
-            console.log('Processando dados...');
-            
-            // Agrupa QLP por função (somente ativos)
-            const qlpPorFuncao = {};
-            dadosQLP.forEach(d => {
-                if (!d.funcao || !d.isAtivo) return;
-                
-                const funcao = d.funcao.trim();
-                if (!qlpPorFuncao[funcao]) {
-                    qlpPorFuncao[funcao] = {
-                        funcao: funcao,
-                        qlTotal: 0,
-                        colaboradores: []
-                    };
-                }
-                
-                qlpPorFuncao[funcao].qlTotal++;
-                qlpPorFuncao[funcao].colaboradores.push(d);
-            });
+        function preencherFiltros() {
+            if (!dadosOriginais) return;
 
-            // Agrupa Base por função e status (SEM separar por turno)
-            const basePorFuncao = {};
-            dadosBase.forEach(d => {
-                const funcao = (d.funcao || 'Sem Função').trim();
-                const status = (d.status || '').trim();
-                const turno = (d.turno || '').trim();
-                
-                if (!basePorFuncao[funcao]) {
-                    basePorFuncao[funcao] = {
-                        funcao: funcao,
-                        presente: 0,
-                        desvio: 0,
-                        ausente: 0,
-                        atestado: 0,
-                        ferias: 0,
-                        folga: 0,
-                        afastado: 0,
-                        total: 0,
-                        turnos: { A: 0, B: 0, C: 0 }
-                    };
-                }
-                
-                basePorFuncao[funcao].total++;
-                
-                // Conta turnos para calcular horas médias
-                if (turno.toUpperCase().includes('A')) basePorFuncao[funcao].turnos.A++;
-                else if (turno.toUpperCase().includes('B')) basePorFuncao[funcao].turnos.B++;
-                else if (turno.toUpperCase().includes('C')) basePorFuncao[funcao].turnos.C++;
-                
-                const statusLower = status.toLowerCase();
-                if (statusLower === 'presente') basePorFuncao[funcao].presente++;
-                else if (statusLower === 'desvio') basePorFuncao[funcao].desvio++;
-                else if (statusLower === 'ausente') basePorFuncao[funcao].ausente++;
-                else if (statusLower === 'atestado') basePorFuncao[funcao].atestado++;
-                else if (statusLower.includes('férias') || statusLower.includes('ferias')) basePorFuncao[funcao].ferias++;
-                else if (statusLower === 'folga') basePorFuncao[funcao].folga++;
-                else if (statusLower === 'afastado') basePorFuncao[funcao].afastado++;
-            });
+            const supervisores = [...new Set(dadosOriginais.porSupervisor.map(s => s.supervisor))].sort();
+            const selectSup = document.getElementById('filtroSupervisor');
+            selectSup.innerHTML = supervisores.map(s => `<option value="${s}">${s}</option>`).join('');
 
-            // Cruza dados por função (sem turno)
-            dadosProducao = [];
-            
-            // Adiciona todas as funções que têm QL ou dados na Base
-            const todasFuncoes = new Set([
-                ...Object.keys(qlpPorFuncao),
-                ...Object.keys(basePorFuncao)
-            ]);
-            
-            todasFuncoes.forEach(funcao => {
-                const qlp = qlpPorFuncao[funcao] || { qlTotal: 0 };
-                const base = basePorFuncao[funcao] || { 
-                    presente: 0, desvio: 0, ausente: 0, atestado: 0, 
-                    ferias: 0, folga: 0, afastado: 0, total: 0,
-                    turnos: { A: 0, B: 0, C: 0 }
-                };
-                
-                dadosProducao.push({
-                    funcao: funcao,
-                    qlTotal: qlp.qlTotal,
-                    presente: base.presente,
-                    desvio: base.desvio,
-                    afastado: base.afastado,
-                    ausente: base.ausente + base.atestado,
-                    feriasFolga: base.ferias + base.folga,
-                    produtividadeHora: 0,
-                    horasTurno: 0,
-                    capacidade: 0,
-                    meta: 0,
-                    deficit: 0,
-                    realizado: 0,
-                    turnos: base.turnos
+            const funcoes = [...new Set(dadosOriginais.porFuncao.map(f => f.funcao))].sort();
+            const selectFunc = document.getElementById('filtroFuncao');
+            selectFunc.innerHTML = funcoes.map(f => `<option value="${f}">${f}</option>`).join('');
+
+            const turnos = new Set();
+            dadosOriginais.porSupervisor.forEach(sup => {
+                sup.colaboradores.forEach(colab => {
+                    if (colab.turno && colab.turno !== 'Não informado') {
+                        turnos.add(colab.turno);
+                    }
                 });
             });
-
-            dadosProducao.sort((a, b) => a.funcao.localeCompare(b.funcao));
-            
-            console.log(`Dados processados: ${dadosProducao.length} funções`);
-        }
-
-        function preencherFiltros() {
-            const funcoes = [...new Set(dadosProducao.map(d => d.funcao))].sort();
-            const selectFuncoes = document.getElementById('filtroFuncoes');
-            selectFuncoes.innerHTML = funcoes.map(f => `<option value="${f}">${f}</option>`).join('');
-
-            const turnos = [...new Set(dadosBase.map(d => d.turno).filter(t => t))].sort();
-            const selectTurnos = document.getElementById('filtroTurnos');
-            selectTurnos.innerHTML = turnos.map(t => `<option value="${t}">${t}</option>`).join('');
+            const turnosArray = [...turnos].sort();
+            const selectTurno = document.getElementById('filtroTurno');
+            selectTurno.innerHTML = turnosArray.map(t => `<option value="${t}">${t}</option>`).join('');
         }
 
         function aplicarFiltros() {
-            const funcoesSelecionadas = Array.from(document.getElementById('filtroFuncoes').selectedOptions).map(o => o.value);
-            const turnosSelecionados = Array.from(document.getElementById('filtroTurnos').selectedOptions).map(o => o.value);
+            if (!dadosOriginais) return;
+
+            const supervisoresSelecionados = Array.from(document.getElementById('filtroSupervisor').selectedOptions).map(o => o.value);
+            const funcoesSelecionadas = Array.from(document.getElementById('filtroFuncao').selectedOptions).map(o => o.value);
+            const turnosSelecionados = Array.from(document.getElementById('filtroTurno').selectedOptions).map(o => o.value);
+
+            console.log('Filtros aplicados:', { supervisoresSelecionados, funcoesSelecionadas, turnosSelecionados });
+
+            atualizarTagsFiltros(supervisoresSelecionados, funcoesSelecionadas, turnosSelecionados);
+
+            dadosResumo = JSON.parse(JSON.stringify(dadosOriginais));
 
             if (turnosSelecionados.length > 0) {
-                const basesFiltradas = dadosBase.filter(d => turnosSelecionados.includes(d.turno));
-                
-                const basePorFuncao = {};
-                basesFiltradas.forEach(d => {
-                    const funcao = (d.funcao || 'Sem Função').trim();
-                    const status = (d.status || '').trim().toLowerCase();
-                    
-                    if (!basePorFuncao[funcao]) {
-                        basePorFuncao[funcao] = {
-                            presente: 0,
-                            desvio: 0,
-                            ausente: 0,
-                            atestado: 0,
-                            ferias: 0,
-                            folga: 0,
-                            afastado: 0
-                        };
-                    }
-                    
-                    if (status === 'presente') basePorFuncao[funcao].presente++;
-                    else if (status === 'desvio') basePorFuncao[funcao].desvio++;
-                    else if (status === 'ausente') basePorFuncao[funcao].ausente++;
-                    else if (status === 'atestado') basePorFuncao[funcao].atestado++;
-                    else if (status.includes('férias') || status.includes('ferias')) basePorFuncao[funcao].ferias++;
-                    else if (status === 'folga') basePorFuncao[funcao].folga++;
-                    else if (status === 'afastado') basePorFuncao[funcao].afastado++;
-                });
+                dadosResumo.porSupervisor = dadosResumo.porSupervisor.map(sup => ({
+                    ...sup,
+                    colaboradores: sup.colaboradores.filter(c => turnosSelecionados.includes(c.turno))
+                }));
 
-                dadosProducao.forEach(d => {
-                    const base = basePorFuncao[d.funcao] || { presente: 0, desvio: 0, ausente: 0, atestado: 0, ferias: 0, folga: 0, afastado: 0 };
-                    d.presente = base.presente;
-                    d.desvio = base.desvio;
-                    d.afastado = base.afastado;
-                    d.ausente = base.ausente + base.atestado;
-                    d.feriasFolga = base.ferias + base.folga;
-                });
+                dadosResumo.porFuncao = dadosResumo.porFuncao.map(func => ({
+                    ...func,
+                    colaboradores: func.colaboradores.filter(c => turnosSelecionados.includes(c.turno))
+                }));
             }
 
             if (funcoesSelecionadas.length > 0) {
-                funcoesFiltradas = funcoesSelecionadas;
-            } else {
-                funcoesFiltradas = [];
+                dadosResumo.porSupervisor = dadosResumo.porSupervisor.map(sup => ({
+                    ...sup,
+                    colaboradores: sup.colaboradores.filter(c => funcoesSelecionadas.includes(c.funcao))
+                }));
+
+                dadosResumo.porFuncao = dadosResumo.porFuncao.filter(func => 
+                    funcoesSelecionadas.includes(func.funcao)
+                );
             }
 
-            renderTabela();
-            atualizarResumo();
-            showStatus('Filtros aplicados!', 'success');
+            if (supervisoresSelecionados.length > 0) {
+                dadosResumo.porSupervisor = dadosResumo.porSupervisor.filter(sup => 
+                    supervisoresSelecionados.includes(sup.supervisor)
+                );
+
+                dadosResumo.porFuncao = dadosResumo.porFuncao.map(func => ({
+                    ...func,
+                    colaboradores: func.colaboradores.filter(c => supervisoresSelecionados.includes(c.supervisor))
+                }));
+            }
+
+            dadosResumo.porSupervisor = dadosResumo.porSupervisor.map(sup => {
+                const colabs = sup.colaboradores;
+                return {
+                    ...sup,
+                    total: colabs.length,
+                    presente: colabs.filter(c => c.status.toLowerCase() === 'presente').length,
+                    ausente: colabs.filter(c => c.status.toLowerCase() === 'ausente').length,
+                    atestado: colabs.filter(c => c.status.toLowerCase() === 'atestado').length,
+                    ferias: colabs.filter(c => c.status.toLowerCase().includes('férias') || c.status.toLowerCase().includes('ferias')).length,
+                    folga: colabs.filter(c => c.status.toLowerCase() === 'folga').length,
+                    afastado: colabs.filter(c => c.status.toLowerCase() === 'afastado').length,
+                    desvio: colabs.filter(c => c.status.toLowerCase() === 'desvio').length,
+                    outros: colabs.filter(c => {
+                        const st = c.status.toLowerCase();
+                        return st !== 'presente' && st !== 'ausente' && st !== 'atestado' && !st.includes('férias') && !st.includes('ferias') && st !== 'folga' && st !== 'afastado' && st !== 'desvio';
+                    }).length
+                };
+            }).filter(sup => sup.total > 0);
+
+            dadosResumo.porFuncao = dadosResumo.porFuncao.map(func => {
+                const colabs = func.colaboradores;
+                return {
+                    ...func,
+                    total: colabs.length,
+                    presente: colabs.filter(c => c.status.toLowerCase() === 'presente').length,
+                    ausente: colabs.filter(c => c.status.toLowerCase() === 'ausente').length,
+                    atestado: colabs.filter(c => c.status.toLowerCase() === 'atestado').length,
+                    ferias: colabs.filter(c => c.status.toLowerCase().includes('férias') || c.status.toLowerCase().includes('ferias')).length,
+                    folga: colabs.filter(c => c.status.toLowerCase() === 'folga').length,
+                    afastado: colabs.filter(c => c.status.toLowerCase() === 'afastado').length,
+                    desvio: colabs.filter(c => c.status.toLowerCase() === 'desvio').length,
+                    outros: colabs.filter(c => {
+                        const st = c.status.toLowerCase();
+                        return st !== 'presente' && st !== 'ausente' && st !== 'atestado' && !st.includes('férias') && !st.includes('ferias') && st !== 'folga' && st !== 'afastado' && st !== 'desvio';
+                    }).length
+                };
+            }).filter(func => func.total > 0);
+
+            let totalGeral = 0;
+            let presenteGeral = 0;
+            let ausenteGeral = 0;
+            let atestadoGeral = 0;
+            let feriasGeral = 0;
+            let folgaGeral = 0;
+            let afastadoGeral = 0;
+            let desvioGeral = 0;
+            let outrosGeral = 0;
+
+            dadosResumo.porSupervisor.forEach(sup => {
+                totalGeral += sup.total;
+                presenteGeral += sup.presente;
+                ausenteGeral += sup.ausente;
+                atestadoGeral += sup.atestado;
+                feriasGeral += sup.ferias;
+                folgaGeral += sup.folga;
+                afastadoGeral += sup.afastado;
+                desvioGeral += sup.desvio;
+                outrosGeral += sup.outros;
+            });
+
+            dadosResumo.resumoGeral = {
+                total: totalGeral,
+                presente: presenteGeral,
+                ausente: ausenteGeral,
+                atestado: atestadoGeral,
+                ferias: feriasGeral,
+                folga: folgaGeral,
+                afastado: afastadoGeral,
+                desvio: desvioGeral,
+                outros: outrosGeral,
+                percentualPresente: totalGeral > 0 ? ((presenteGeral / totalGeral) * 100).toFixed(1) : 0,
+                percentualAusente: totalGeral > 0 ? (((totalGeral - presenteGeral) / totalGeral) * 100).toFixed(1) : 0
+            };
+
+            renderResumo();
+            showStatus(`Filtros aplicados: ${totalGeral} colaboradores encontrados`, 'success');
+        }
+
+        function atualizarTagsFiltros(supervisores, funcoes, turnos) {
+            const container = document.getElementById('filtrosAtivos');
+            let tags = '';
+
+            supervisores.forEach(sup => {
+                tags += `<div class="filtro-tag">
+                    <span><i class="fas fa-user-tie"></i> ${sup}</span>
+                    <i class="fas fa-times" onclick="removerFiltro('supervisor', '${sup}')"></i>
+                </div>`;
+            });
+
+            funcoes.forEach(func => {
+                tags += `<div class="filtro-tag">
+                    <span><i class="fas fa-briefcase"></i> ${func}</span>
+                    <i class="fas fa-times" onclick="removerFiltro('funcao', '${func}')"></i>
+                </div>`;
+            });
+
+            turnos.forEach(turno => {
+                tags += `<div class="filtro-tag">
+                    <span><i class="fas fa-clock"></i> ${turno}</span>
+                    <i class="fas fa-times" onclick="removerFiltro('turno', '${turno}')"></i>
+                </div>`;
+            });
+
+            container.innerHTML = tags;
+        }
+
+        function removerFiltro(tipo, valor) {
+            const selects = {
+                'supervisor': document.getElementById('filtroSupervisor'),
+                'funcao': document.getElementById('filtroFuncao'),
+                'turno': document.getElementById('filtroTurno')
+            };
+
+            const select = selects[tipo];
+            if (select) {
+                Array.from(select.options).forEach(option => {
+                    if (option.value === valor) {
+                        option.selected = false;
+                    }
+                });
+            }
+
+            aplicarFiltros();
         }
 
         function limparFiltros() {
-            document.getElementById('filtroFuncoes').selectedIndex = -1;
-            document.getElementById('filtroTurnos').selectedIndex = -1;
-            funcoesFiltradas = [];
+            document.getElementById('filtroSupervisor').selectedIndex = -1;
+            document.getElementById('filtroFuncao').selectedIndex = -1;
+            document.getElementById('filtroTurno').selectedIndex = -1;
+            document.getElementById('filtrosAtivos').innerHTML = '';
             
-            processarDados();
-            renderTabela();
-            atualizarResumo();
-            showStatus('Filtros removidos!', 'info');
+            if (dadosOriginais) {
+                dadosResumo = JSON.parse(JSON.stringify(dadosOriginais));
+                renderResumo();
+                showStatus('Todos os filtros foram removidos!', 'info');
+            }
         }
 
-        function renderTabela() {
-            const tbody = document.querySelector('#tabelaProducao tbody');
+        function renderResumo() {
+            if (!dadosResumo) return;
+
+            const geral = dadosResumo.resumoGeral;
+            document.getElementById('resumoGeralCards').innerHTML = `
+                <div class="card-resumo">
+                    <h3>Total Colaboradores</h3>
+                    <div class="valor">${geral.total}</div>
+                </div>
+                <div class="card-resumo success">
+                    <h3>Presentes</h3>
+                    <div class="valor">${geral.presente}</div>
+                    <div class="percentual">${geral.percentualPresente || 0}%</div>
+                </div>
+                <div class="card-resumo danger">
+                    <h3>Ausentes</h3>
+                    <div class="valor">${geral.ausente}</div>
+                </div>
+                <div class="card-resumo warning">
+                    <h3>Atestado</h3>
+                    <div class="valor">${geral.atestado || 0}</div>
+                </div>
+                <div class="card-resumo warning">
+                    <h3>Férias</h3>
+                    <div class="valor">${geral.ferias}</div>
+                </div>
+                <div class="card-resumo">
+                    <h3>Folga</h3>
+                    <div class="valor">${geral.folga}</div>
+                </div>
+                <div class="card-resumo">
+                    <h3>Afastados</h3>
+                    <div class="valor">${geral.afastado}</div>
+                </div>
+                <div class="card-resumo danger">
+                    <h3>Desvios</h3>
+                    <div class="valor">${geral.desvio || 0}</div>
+                </div>
+            `;
+
+            renderTabelaSupervisores();
+            renderTabelaFuncoes();
+            renderTabelaDesvios();
+        }
+
+        function renderTabelaSupervisores() {
+            const tbody = document.querySelector('#tabelaSupervisores tbody');
+            const supervisores = dadosResumo.porSupervisor || [];
+
+            document.getElementById('totalSupervisores').textContent = `${supervisores.length} supervisores`;
+
             tbody.innerHTML = '';
 
-            let dados = dadosProducao;
-            if (funcoesFiltradas.length > 0) {
-                dados = dadosProducao.filter(d => funcoesFiltradas.includes(d.funcao));
-            }
-
-            document.getElementById('totalFuncoes').textContent = `${dados.length} funções`;
-
-            dados.forEach((d, idx) => {
+            supervisores.forEach((sup, idx) => {
+                const taxaPresenca = sup.total > 0 ? ((sup.presente / sup.total) * 100).toFixed(1) : 0;
+                
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><strong>${d.funcao}</strong></td>
-                    <td class="valor-calculado">${d.qlTotal}</td>
-                    <td class="valor-calculado" style="background: #c8e6c9; color: #2e7d32; font-weight: 600;">${d.presente}</td>
-                    <td class="valor-calculado" style="background: #ffcdd2; color: #c62828; font-weight: 600;">${d.desvio}</td>
-                    <td class="valor-calculado">${d.afastado}</td>
-                    <td class="valor-calculado">${d.ausente}</td>
-                    <td class="valor-calculado">${d.feriasFolga}</td>
-                    <td class="valor-calculado" style="background: #fff3cd; color: #856404; font-weight: 600;">${d.deficit}</td>
-                    <td class="valor-calculado" style="background: #e1f5fe; color: #0277bd;">${d.produtividadeHora.toFixed(2)}</td>
-                    <td class="valor-calculado" style="background: #f3e5f5; color: #6a1b9a;">${d.horasTurno.toFixed(2)}</td>
-                    <td class="valor-calculado" style="background: #e8f5e9; color: #2e7d32; font-weight: 600; font-size: 15px;">${d.capacidade.toFixed(2)}</td>
-                    <td><input type="number" class="input-calculo" value="${d.realizado}" onchange="atualizarRealizado(${idx}, this.value)" min="0" step="0.01"></td>
+                    <td><strong>${sup.supervisor}</strong></td>
+                    <td>${sup.total}</td>
+                    <td style="color: #28a745; font-weight: 600;">${sup.presente}</td>
+                    <td style="color: #dc3545;">${sup.ausente}</td>
+                    <td style="color: #ffc107;">${sup.atestado || 0}</td>
+                    <td style="color: #ffc107;">${sup.ferias}</td>
+                    <td style="color: #17a2b8;">${sup.folga}</td>
+                    <td>${sup.afastado}</td>
+                    <td style="color: #dc3545; font-weight: 600;">${sup.desvio || 0}</td>
+                    <td>${sup.outros}</td>
+                    <td>
+                        <div class="barra-progresso">
+                            <div class="barra-fill" style="width: ${taxaPresenca}%">
+                                ${taxaPresenca}%
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="colab-toggle" onclick="toggleColaboradores('sup-${idx}')">
+                            <i class="fas fa-users"></i> Ver ${sup.colaboradores.length}
+                        </span>
+                        <div id="sup-${idx}" class="colaboradores-lista">
+                            ${sup.colaboradores.map(c => `
+                                <div class="colaborador-item">
+                                    <strong>${c.nome}</strong> (${c.matricula}) - <strong>${c.funcao}</strong> - Turno: ${c.turno} - 
+                                    <span style="color: ${c.status === 'Presente' ? '#28a745' : c.status === 'Desvio' ? '#dc3545' : '#6c757d'};">
+                                        ${c.status}
+                                    </span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        function atualizarRealizado(idx, valor) {
-            let dados = funcoesFiltradas.length > 0 
-                ? dadosProducao.filter(d => funcoesFiltradas.includes(d.funcao)) 
-                : dadosProducao;
-            
-            dados[idx].realizado = parseFloat(valor) || 0;
+        function renderTabelaFuncoes() {
+            const tbody = document.querySelector('#tabelaFuncoes tbody');
+            const funcoes = dadosResumo.porFuncao || [];
+
+            document.getElementById('totalFuncoes').textContent = `${funcoes.length} funções`;
+
+            tbody.innerHTML = '';
+
+            funcoes.forEach((func, idx) => {
+                const taxaPresenca = func.total > 0 ? ((func.presente / func.total) * 100).toFixed(1) : 0;
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${func.funcao}</strong></td>
+                    <td>${func.total}</td>
+                    <td style="color: #28a745; font-weight: 600;">${func.presente}</td>
+                    <td style="color: #dc3545;">${func.ausente}</td>
+                    <td style="color: #ffc107;">${func.atestado || 0}</td>
+                    <td style="color: #ffc107;">${func.ferias}</td>
+                    <td style="color: #17a2b8;">${func.folga}</td>
+                    <td>${func.afastado}</td>
+                    <td style="color: #dc3545; font-weight: 600;">${func.desvio || 0}</td>
+                    <td>${func.outros}</td>
+                    <td>
+                        <div class="barra-progresso">
+                            <div class="barra-fill" style="width: ${taxaPresenca}%">
+                                ${taxaPresenca}%
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="colab-toggle" onclick="toggleColaboradores('func-${idx}')">
+                            <i class="fas fa-users"></i> Ver ${func.colaboradores.length}
+                        </span>
+                        <div id="func-${idx}" class="colaboradores-lista">
+                            ${func.colaboradores.map(c => `
+                                <div class="colaborador-item">
+                                    <strong>${c.nome}</strong> (${c.matricula}) - ${c.supervisor} - Turno: ${c.turno} - 
+                                    <span style="color: ${c.status === 'Presente' ? '#28a745' : c.status === 'Desvio' ? '#dc3545' : '#6c757d'};">
+                                        ${c.status}
+                                    </span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
         }
 
-        function calcularLinha(idx) {
-            let dados = funcoesFiltradas.length > 0 
-                ? dadosProducao.filter(d => funcoesFiltradas.includes(d.funcao)) 
-                : dadosProducao;
+        function renderTabelaDesvios() {
+            const tbody = document.querySelector('#tabelaDesvios tbody');
+            tbody.innerHTML = '';
             
-            const d = dados[idx];
+            const desvios = [];
             
-            // Busca produtividade/hora da aba Meta para a data selecionada
-            const dataRef = document.getElementById('dataReferencia').value;
-            const dataFormatada = formatarDataParaBR(dataRef);
-            
-            if (dadosMeta[dataFormatada]) {
-                d.produtividadeHora = dadosMeta[dataFormatada].produtividadeHora;
-            } else {
-                console.warn(`Meta não encontrada para ${dataFormatada}`);
-            }
-            
-            // Calcula horas médias baseado na distribuição de turnos
-            const dataSelecionada = new Date(dataRef + 'T00:00:00');
-            const diaSemana = dataSelecionada.getDay();
-            const ehSabado = diaSemana === 6;
-            
-            let horasTotal = 0;
-            let totalPessoas = d.turnos.A + d.turnos.B + d.turnos.C;
-            
-            if (totalPessoas > 0) {
-                horasTotal += d.turnos.A * 6.05;
-                horasTotal += d.turnos.B * (ehSabado ? 4 : 7.05);
-                horasTotal += d.turnos.C * 7.05;
-                d.horasTurno = horasTotal / totalPessoas;
-            } else {
-                d.horasTurno = 8; // Padrão
-            }
-            
-            // Capacidade = Presente × Produtividade/Hora × Horas Médias
-            d.capacidade = d.presente * d.produtividadeHora * d.horasTurno;
-            
-            // Meta = mesma fórmula da capacidade
-            d.meta = d.capacidade;
-            
-            // Deficit = Se tem presente, mostra desvio; senão mostra QL Total
-            d.deficit = d.presente > 0 ? d.desvio : d.qlTotal;
-            
-            renderTabela();
-        }
-
-        function formatarDataParaBR(dataISO) {
-            if (!dataISO) return '';
-            const partes = dataISO.split('-');
-            return `${partes[2]}/${partes[1]}/${partes[0]}`;
-        }
-
-        function calcularTudo() {
-            let dados = funcoesFiltradas.length > 0 
-                ? dadosProducao.filter(d => funcoesFiltradas.includes(d.funcao)) 
-                : dadosProducao;
-            
-            dados.forEach((d, idx) => calcularLinha(idx));
-            atualizarResumo();
-            showStatus('Cálculos atualizados para todas as funções!', 'success');
-        }
-
-        // Adiciona listener para recalcular ao mudar a data
-        document.addEventListener('DOMContentLoaded', () => {
-            const inputData = document.getElementById('dataReferencia');
-            if (inputData) {
-                inputData.addEventListener('change', () => {
-                    calcularTudo();
+            dadosResumo.porSupervisor.forEach(sup => {
+                sup.colaboradores.forEach(colab => {
+                    if (colab.status.toLowerCase() === 'desvio') {
+                        desvios.push({
+                            ...colab,
+                            supervisor: sup.supervisor
+                        });
+                    }
                 });
-            }
-        });
+            });
 
-        function atualizarResumo() {
-            let dados = funcoesFiltradas.length > 0 
-                ? dadosProducao.filter(d => funcoesFiltradas.includes(d.funcao)) 
-                : dadosProducao;
-            
-            const totalQL = dados.reduce((sum, d) => sum + d.qlTotal, 0);
-            const totalCapacidade = dados.reduce((sum, d) => sum + d.capacidade, 0);
-            const totalPresente = dados.reduce((sum, d) => sum + d.presente, 0);
-            const totalDesvio = dados.reduce((sum, d) => sum + d.desvio, 0);
-            const totalAfastado = dados.reduce((sum, d) => sum + d.afastado, 0);
-            const totalAusente = dados.reduce((sum, d) => sum + d.ausente, 0);
-            const totalDeficit = dados.reduce((sum, d) => sum + d.deficit, 0);
-            const totalMeta = dados.reduce((sum, d) => sum + d.meta, 0);
-            const totalRealizado = dados.reduce((sum, d) => sum + d.realizado, 0);
-            
-            const percentualAtingido = totalCapacidade > 0 ? ((totalRealizado / totalCapacidade) * 100).toFixed(1) : 0;
-            
-            document.getElementById('resumoCards').innerHTML = `
-                <div class="resumo-card">
-                    <h3>QL Total</h3>
-                    <div class="valor">${totalQL}</div>
-                    <div class="subtexto">Quadro de Lotação</div>
-                </div>
-                <div class="resumo-card">
-                    <h3>Capacidade</h3>
-                    <div class="valor">${totalCapacidade.toFixed(0)}</div>
-                    <div class="subtexto">Configurada</div>
-                </div>
-                <div class="resumo-card success">
-                    <h3>Presente</h3>
-                    <div class="valor">${totalPresente}</div>
-                    <div class="subtexto">Trabalhando</div>
-                </div>
-                <div class="resumo-card danger">
-                    <h3>Desvio</h3>
-                    <div class="valor">${totalDesvio}</div>
-                    <div class="subtexto">Função Incorreta</div>
-                </div>
-                <div class="resumo-card warning">
-                    <h3>Deficit</h3>
-                    <div class="valor">${totalDeficit}</div>
-                    <div class="subtexto">Falta de Pessoal</div>
-                </div>
-                <div class="resumo-card">
-                    <h3>Afastado</h3>
-                    <div class="valor">${totalAfastado}</div>
-                    <div class="subtexto">Afastamentos</div>
-                </div>
-                <div class="resumo-card">
-                    <h3>Meta Total</h3>
-                    <div class="valor">${totalMeta.toFixed(0)}</div>
-                    <div class="subtexto">Esperado</div>
-                </div>
-                <div class="resumo-card ${percentualAtingido >= 100 ? 'success' : percentualAtingido >= 80 ? 'warning' : 'danger'}">
-                    <h3>Realizado</h3>
-                    <div class="valor">${totalRealizado.toFixed(0)}</div>
-                    <div class="subtexto">${percentualAtingido}% da Meta</div>
-                </div>
-            `;
-        }
+            document.getElementById('totalDesvios').textContent = `${desvios.length} desvios`;
 
-        async function salvarProducao() {
-            if (dadosProducao.length === 0) {
-                showStatus('Nenhum dado para salvar', 'error');
+            if (desvios.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 30px; color: #28a745;">
+                            <i class="fas fa-check-circle" style="font-size: 32px; margin-bottom: 10px;"></i>
+                            <p style="font-size: 16px; font-weight: 600;">Nenhum desvio encontrado para esta data!</p>
+                        </td>
+                    </tr>
+                `;
                 return;
             }
 
-            if (!confirm('Deseja salvar os dados de produção na aba Produzido?')) return;
-
-            try {
-                const dataRef = document.getElementById('dataReferencia').value;
-                const horas = parseFloat(document.getElementById('horasTrabalhadas').value) || 8;
-
-                const dadosParaSalvar = dadosProducao.map(d => ({
-                    funcao: d.funcao,
-                    qlTotal: d.qlTotal,
-                    capacidade: d.capacidade,
-                    presente: d.presente,
-                    desvio: d.desvio,
-                    afastado: d.afastado,
-                    ausente: d.ausente,
-                    feriasFolga: d.feriasFolga,
-                    deficit: d.deficit,
-                    produtividadeHora: d.produtividadeHora,
-                    horasTurno: d.horasTurno,
-                    meta: d.meta,
-                    realizado: d.realizado
-                }));
-
-                const response = await fetch('/api/producao/salvar', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        dados: dadosParaSalvar,
-                        dataReferencia: dataRef,
-                        horasTrabalhadas: horas
-                    })
-                });
-
-                const result = await response.json();
-
-                if (result.ok) {
-                    showStatus(result.msg || 'Dados salvos com sucesso!', 'success');
-                } else {
-                    throw new Error(result.msg || 'Erro ao salvar');
-                }
-            } catch (error) {
-                console.error('Erro:', error);
-                showStatus('Erro ao salvar: ' + error.message, 'error');
-            }
+            desvios.forEach(desvio => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${desvio.nome}</strong></td>
+                    <td>${desvio.matricula}</td>
+                    <td>${desvio.funcao}</td>
+                    <td>${desvio.supervisor}</td>
+                    <td>${desvio.turno}</td>
+                    <td><span style="color: #dc3545; font-weight: 600;">${desvio.status}</span></td>
+                    <td>${desvio.observacao || '-'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
         }
 
-        function exportarCSV() {
-            let dados = funcoesFiltradas.length > 0 
-                ? dadosProducao.filter(d => funcoesFiltradas.includes(d.funcao)) 
-                : dadosProducao;
-            
-            if (dados.length === 0) {
-                showStatus('Nenhum dado para exportar', 'error');
+        function toggleColaboradores(id) {
+            const div = document.getElementById(id);
+            div.classList.toggle('show');
+        }
+
+        function exportarResumo() {
+            if (!dadosResumo) {
+                showStatus('Carregue os dados primeiro', 'error');
                 return;
             }
 
-            const headers = [
-                'Função', 'QL Total', 'Capacidade', 'Presente', 'Desvio', 'Afastado', 
-                'Ausente', 'Férias/Folga', 'Deficit', 'Produtividade/Hora', 'Horas Turno', 'Meta', 'Realizado'
-            ];
+            let csv = 'Tipo,Nome,Total,Presente,Ausente,Atestado,Férias,Folga,Afastado,Desvio,Outros,Taxa Presença\n';
             
-            let csv = headers.join(',') + '\n';
-            
-            dados.forEach(d => {
-                csv += [
-                    `"${d.funcao}"`,
-                    d.qlTotal,
-                    d.capacidade.toFixed(2),
-                    d.presente,
-                    d.desvio,
-                    d.afastado,
-                    d.ausente,
-                    d.feriasFolga,
-                    d.deficit,
-                    d.produtividadeHora.toFixed(2),
-                    d.horasTurno.toFixed(2),
-                    d.meta.toFixed(2),
-                    d.realizado.toFixed(2)
-                ].join(',') + '\n';
+            dadosResumo.porSupervisor.forEach(sup => {
+                const taxa = sup.total > 0 ? ((sup.presente / sup.total) * 100).toFixed(1) : 0;
+                csv += `Supervisor,"${sup.supervisor}",${sup.total},${sup.presente},${sup.ausente},${sup.atestado || 0},${sup.ferias},${sup.folga},${sup.afastado},${sup.desvio || 0},${sup.outros},${taxa}%\n`;
             });
 
             csv += '\n';
-            csv += 'RESUMO\n';
-            const totalQL = dados.reduce((sum, d) => sum + d.qlTotal, 0);
-            const totalCapacidade = dados.reduce((sum, d) => sum + d.capacidade, 0);
-            const totalPresente = dados.reduce((sum, d) => sum + d.presente, 0);
-            const totalDesvio = dados.reduce((sum, d) => sum + d.desvio, 0);
-            const totalAfastado = dados.reduce((sum, d) => sum + d.afastado, 0);
-            const totalAusente = dados.reduce((sum, d) => sum + d.ausente, 0);
-            const totalDeficit = dados.reduce((sum, d) => sum + d.deficit, 0);
-            const totalMeta = dados.reduce((sum, d) => sum + d.meta, 0);
-            const totalRealizado = dados.reduce((sum, d) => sum + d.realizado, 0);
-            
-            csv += `"TOTAL",${totalQL},${totalCapacidade.toFixed(2)},${totalPresente},${totalDesvio},${totalAfastado},${totalAusente},,${totalDeficit},,,${totalMeta.toFixed(2)},${totalRealizado.toFixed(2)}\n`;
-            
+
+            dadosResumo.porFuncao.forEach(func => {
+                const taxa = func.total > 0 ? ((func.presente / func.total) * 100).toFixed(1) : 0;
+                csv += `Função,"${func.funcao}",${func.total},${func.presente},${func.ausente},${func.atestado || 0},${func.ferias},${func.folga},${func.afastado},${func.desvio || 0},${func.outros},${taxa}%\n`;
+            });
+
+            csv += '\n\nDetalhamento de Desvios\n';
+            csv += 'Colaborador,Matrícula,Função,Supervisor,Turno,Status,Observações\n';
+
+            dadosResumo.porSupervisor.forEach(sup => {
+                sup.colaboradores.forEach(colab => {
+                    if (colab.status.toLowerCase() === 'desvio') {
+                        csv += `"${colab.nome}",${colab.matricula},"${colab.funcao}","${sup.supervisor}","${colab.turno}","${colab.status}","${colab.observacao || '-'}"\n`;
+                    }
+                });
+            });
+
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            const dataRef = document.getElementById('dataReferencia').value || 'hoje';
-            link.download = `Producao_por_Funcao_${dataRef}.csv`;
+            link.download = `Resumo_Base_${dadosResumo.dataReferencia || 'hoje'}.csv`;
             link.click();
-            
-            showStatus('CSV exportado com sucesso!', 'success');
+
+            showStatus('Resumo exportado com sucesso!', 'success');
         }
 
         window.onload = function() {
@@ -1028,10 +1112,13 @@
                 return;
             }
 
-            carregarDados();
+            const hoje = new Date().toISOString().split('T')[0];
+            document.getElementById('filtroData').value = hoje;
+
+            carregarResumo();
         };
 
-        console.log('Análise de Produção por Função carregada');
+        console.log('Resumo Base carregado');
     </script>
 </body>
 </html>
