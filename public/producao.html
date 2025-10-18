@@ -3,39 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Produção</title>
+    <title>Análise de Produção por Função</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body {
-            font-family: 'Segoe UI', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
         }
+        
         .container {
             max-width: 1800px;
             margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
         }
+        
         .header {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            margin-bottom: 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #e9ecef;
             flex-wrap: wrap;
             gap: 15px;
         }
-        .header h1 { color: #667eea; font-size: 28px; }
+        
+        .header h1 {
+            color: #667eea;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
         .btn {
-            padding: 10px 20px;
+            padding: 12px 24px;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
@@ -44,53 +59,202 @@
             align-items: center;
             gap: 8px;
         }
-        .btn:hover { transform: translateY(-2px); }
+        
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
         .btn-primary { background: #667eea; color: white; }
         .btn-success { background: #28a745; color: white; }
         .btn-info { background: #17a2b8; color: white; }
         .btn-warning { background: #ffc107; color: #212529; }
         .btn-secondary { background: #6c757d; color: white; }
-        .btn-danger { background: #dc3545; color: white; }
         
-        .filters {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 12px;
+        .config-panel {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .config-panel h3 {
+            color: #667eea;
             margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
         }
-        .filters-row {
+        
+        .config-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
         }
-        .filter-group { display: flex; flex-direction: column; gap: 5px; }
-        .filter-group label { font-size: 13px; font-weight: 600; color: #495057; }
-        .filter-group select, .filter-group input {
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .filter-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #495057;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .filter-group input, .filter-group select {
             padding: 10px 12px;
-            border: 2px solid #ced4da;
-            border-radius: 6px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
             font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .filter-group select[multiple] {
+            min-height: 120px;
+            background: #f8f9fa;
+        }
+        
+        .filter-group select[multiple] option {
+            padding: 8px 10px;
+            border-radius: 4px;
+            margin: 2px 0;
+        }
+        
+        .filter-group select[multiple] option:checked {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-weight: 600;
+        }
+        
+        .filter-group input:focus, .filter-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .filter-hint {
+            font-size: 11px;
+            color: #6c757d;
+            font-style: italic;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
         }
         
         .resumo-cards {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
+            gap: 20px;
+            margin-bottom: 30px;
         }
-        .resumo-card {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
-        }
-        .resumo-card h3 { font-size: 14px; opacity: 0.9; margin-bottom: 10px; }
-        .resumo-card .valor { font-size: 32px; font-weight: bold; }
         
-        table { border-collapse: collapse; width: 100%; background: white; font-size: 13px; }
-        th, td { padding: 12px 8px; text-align: left; border-bottom: 1px solid #dee2e6; }
+        .resumo-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .resumo-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+        
+        .resumo-card h3 {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .resumo-card .valor {
+            font-size: 36px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+        
+        .resumo-card .subtexto {
+            font-size: 13px;
+            color: #6c757d;
+        }
+        
+        .resumo-card.success .valor { color: #28a745; }
+        .resumo-card.warning .valor { color: #ffc107; }
+        .resumo-card.danger .valor { color: #dc3545; }
+        
+        .secao {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .secao-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .secao-header h2 {
+            color: #667eea;
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-primary { background: #e3f2fd; color: #1976d2; }
+        
+        .tabela-container {
+            overflow-x: auto;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
         th {
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
@@ -99,237 +263,277 @@
             top: 0;
             z-index: 10;
         }
-        tbody tr:hover { background-color: #f5f5f5; }
-        tbody tr:nth-child(even) { background-color: #fafafa; }
         
-        .secao-header {
-            background: #e3f2fd !important;
-            font-weight: bold;
-            color: #1976d2 !important;
+        tbody tr:hover {
+            background-color: #f8f9fa;
         }
         
-        input[type="number"] {
-            width: 80px;
-            padding: 5px 8px;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
+        tbody tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+        
+        input[type="number"].input-calculo {
+            width: 90px;
+            padding: 6px 10px;
+            border: 2px solid #ced4da;
+            border-radius: 6px;
             text-align: center;
+            font-size: 14px;
+            font-weight: 600;
         }
         
-        .calculo-resultado {
-            background: #d4edda;
+        input[type="number"].input-calculo:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .valor-calculado {
+            background: #e3f2fd;
             font-weight: bold;
             text-align: center;
+            color: #1976d2;
         }
-        
-        .status-presente { background-color: #c8e6c9; }
-        .status-ausente { background-color: #ffcdd2; }
-        .status-ferias { background-color: #ffe082; }
-        .status-folga { background-color: #b3e5fc; }
         
         .loading {
             text-align: center;
-            padding: 60px 20px;
-            color: #6c757d;
+            padding: 80px 20px;
+            color: white;
         }
+        
         .loading i {
             font-size: 64px;
             animation: spin 1s linear infinite;
-            color: #667eea;
         }
+        
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
         
         .status-message {
-            padding: 12px 20px;
-            border-radius: 8px;
-            margin: 15px 0;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
             gap: 10px;
+            animation: slideIn 0.3s ease-out;
         }
+        
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
         .status-success { background: #d4edda; color: #155724; }
         .status-error { background: #f8d7da; color: #721c24; }
         .status-info { background: #d1ecf1; color: #0c5460; }
         
-        .configuracao-panel {
-            background: #fff3cd;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            border-left: 4px solid #ffc107;
-        }
-        .configuracao-panel h3 {
-            color: #856404;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .config-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 15px;
-        }
-        
         @media (max-width: 768px) {
-            .container { padding: 15px; }
-            .header { flex-direction: column; }
-            table { font-size: 11px; }
-            th, td { padding: 8px 4px; }
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .header h1 {
+                font-size: 22px;
+            }
+            
+            .config-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .resumo-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            table {
+                font-size: 12px;
+            }
+            
+            th, td {
+                padding: 8px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1><i class="fas fa-calculator"></i> Calculadora de Produção</h1>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <h1>
+                <i class="fas fa-chart-line"></i>
+                Análise de Produção por Função
+            </h1>
+            <div class="header-actions">
                 <button class="btn btn-success" onclick="calcularTudo()">
-                    <i class="fas fa-calculator"></i> Calcular Tudo
+                    <i class="fas fa-calculator"></i> Calcular
                 </button>
                 <button class="btn btn-primary" onclick="salvarProducao()">
-                    <i class="fas fa-save"></i> Salvar na Base
+                    <i class="fas fa-save"></i> Salvar
                 </button>
                 <button class="btn btn-info" onclick="exportarCSV()">
-                    <i class="fas fa-file-csv"></i> Exportar CSV
+                    <i class="fas fa-file-csv"></i> Exportar
                 </button>
                 <button class="btn btn-warning" onclick="location.reload()">
                     <i class="fas fa-sync-alt"></i> Atualizar
                 </button>
-                <button class="btn btn-secondary" onclick="window.location.href='/menu'">
+                <button class="btn btn-secondary" onclick="window.location.href='/ferramentas'">
                     <i class="fas fa-arrow-left"></i> Voltar
                 </button>
             </div>
         </div>
 
-        <div class="configuracao-panel">
-            <h3><i class="fas fa-cog"></i> Configurações de Cálculo</h3>
+        <div class="config-panel">
+            <h3><i class="fas fa-cogs"></i> Configurações e Filtros</h3>
+            
             <div class="config-grid">
+                <div class="filter-group">
+                    <label><i class="fas fa-calendar-alt"></i> Data de Referência</label>
+                    <input type="date" id="dataReferencia" value="">
+                </div>
+                
                 <div class="filter-group">
                     <label><i class="fas fa-clock"></i> Horas Trabalhadas</label>
                     <input type="number" id="horasTrabalhadas" value="8" min="1" max="24" step="0.5">
                 </div>
+                
                 <div class="filter-group">
-                    <label><i class="fas fa-chart-line"></i> Data de Referência</label>
-                    <input type="date" id="dataReferencia" value="">
+                    <label><i class="fas fa-briefcase"></i> Funções</label>
+                    <select id="filtroFuncoes" multiple>
+                        <option value="">Carregando...</option>
+                    </select>
+                    <span class="filter-hint">Segure Ctrl para múltiplas seleções</span>
+                </div>
+                
+                <div class="filter-group">
+                    <label><i class="fas fa-clock"></i> Turnos</label>
+                    <select id="filtroTurnos" multiple>
+                        <option value="">Carregando...</option>
+                    </select>
+                    <span class="filter-hint">Segure Ctrl para múltiplas seleções</span>
                 </div>
             </div>
-        </div>
-
-        <div class="filters">
-            <div class="filters-row">
-                <div class="filter-group">
-                    <label><i class="fas fa-layer-group"></i> Seção</label>
-                    <select id="filtroSecao"><option value="">Todas</option></select>
-                </div>
-                <div class="filter-group">
-                    <label><i class="fas fa-clock"></i> Turno</label>
-                    <select id="filtroTurno"><option value="">Todos</option></select>
-                </div>
-                <div class="filter-group">
-                    <label><i class="fas fa-user-tie"></i> Supervisor</label>
-                    <select id="filtroSupervisor"><option value="">Todos</option></select>
-                </div>
-            </div>
-            <button class="btn btn-primary" onclick="aplicarFiltros()">
-                <i class="fas fa-filter"></i> Filtrar
-            </button>
-            <button class="btn btn-secondary" onclick="limparFiltros()">
-                <i class="fas fa-eraser"></i> Limpar
-            </button>
-        </div>
-
-        <div class="resumo-cards" id="resumoCards"></div>
-
-        <div id="loadingDiv" class="loading">
-            <i class="fas fa-spinner fa-spin"></i>
-            <p>Carregando dados...</p>
-        </div>
-
-        <div id="contentDiv" style="display: none;">
-            <div style="overflow-x: auto; max-height: 600px; overflow-y: auto; border-radius: 12px; border: 1px solid #e9ecef;">
-                <table id="producaoTable">
-                    <thead>
-                        <tr>
-                            <th>Seção</th>
-                            <th>Supervisor</th>
-                            <th>Turno</th>
-                            <th>QL</th>
-                            <th>Capacidade</th>
-                            <th>Presente</th>
-                            <th>Desvio Função</th>
-                            <th>Vagas Pendentes</th>
-                            <th>Afastado</th>
-                            <th>Subtotal Ausente</th>
-                            <th>Produtividade/Hora</th>
-                            <th>Realizado</th>
-                            <th>Produzido</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+            
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="aplicarFiltros()">
+                    <i class="fas fa-filter"></i> Aplicar Filtros
+                </button>
+                <button class="btn btn-secondary" onclick="limparFiltros()">
+                    <i class="fas fa-eraser"></i> Limpar Filtros
+                </button>
             </div>
         </div>
 
         <div id="statusDiv"></div>
+
+        <div id="loadingDiv" class="loading">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p style="margin-top: 20px; font-size: 18px;">Carregando dados da Base...</p>
+        </div>
+
+        <div id="contentDiv" style="display: none;">
+            <div class="resumo-cards" id="resumoCards"></div>
+
+            <div class="secao">
+                <div class="secao-header">
+                    <h2><i class="fas fa-table"></i> Análise por Função</h2>
+                    <span class="badge badge-primary" id="totalFuncoes">0 funções</span>
+                </div>
+                <div class="tabela-container">
+                    <table id="tabelaProducao">
+                        <thead>
+                            <tr>
+                                <th>Função</th>
+                                <th>QL Total</th>
+                                <th>Capacidade</th>
+                                <th>Presente</th>
+                                <th>Desvio</th>
+                                <th>Afastado</th>
+                                <th>Ausente</th>
+                                <th>Férias/Folga</th>
+                                <th>Deficit</th>
+                                <th>Produtividade/Hora</th>
+                                <th>Meta (8h)</th>
+                                <th>Realizado</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
-        let dadosQLP = [];
         let dadosBase = [];
-        let dadosCruzados = [];
-        let horasTrabalhadas = 8;
+        let dadosQLP = [];
+        let dadosProducao = [];
+        let funcoesFiltradas = [];
 
         function showStatus(msg, type = 'info') {
-            const el = document.getElementById('statusDiv');
-            const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle';
-            el.innerHTML = `<div class="status-message status-${type}"><i class="fas fa-${icon}"></i> ${msg}</div>`;
-            setTimeout(() => el.innerHTML = '', 5000);
+            const div = document.getElementById('statusDiv');
+            const icon = type === 'success' ? 'check-circle' : 
+                         type === 'error' ? 'exclamation-triangle' : 'info-circle';
+            
+            div.innerHTML = `
+                <div class="status-message status-${type}">
+                    <i class="fas fa-${icon}"></i>
+                    <span>${msg}</span>
+                </div>
+            `;
+            
+            setTimeout(() => {
+                div.innerHTML = '';
+            }, 5000);
         }
 
         async function carregarDados() {
             try {
-                // Define data padrão como hoje
+                document.getElementById('loadingDiv').style.display = 'block';
+                document.getElementById('contentDiv').style.display = 'none';
+
                 const hoje = new Date().toISOString().split('T')[0];
                 document.getElementById('dataReferencia').value = hoje;
 
-                // Carrega dados do QLP
+                console.log('Carregando dados da Base...');
+                const resBase = await fetch('/api/producao/base');
+                const resultBase = await resBase.json();
+                
+                if (!resultBase.ok) {
+                    throw new Error(resultBase.msg || 'Erro ao carregar Base');
+                }
+                
+                dadosBase = resultBase.dados || [];
+                console.log(`Base carregada: ${dadosBase.length} registros`);
+
                 console.log('Carregando QLP...');
                 const resQLP = await fetch('/api/qlp/quadro');
                 const resultQLP = await resQLP.json();
                 
-                if (!resultQLP.ok) throw new Error('Erro ao carregar QLP');
-                dadosQLP = resultQLP.colaboradores || [];
-                console.log(`QLP: ${dadosQLP.length} colaboradores`);
-
-                // Carrega dados da Base (presença do dia)
-                console.log('Carregando Base...');
-                const resBase = await fetch('/api/producao/base');
-                const resultBase = await resBase.json();
+                if (!resultQLP.ok) {
+                    throw new Error('Erro ao carregar QLP');
+                }
                 
-                if (!resultBase.ok) throw new Error('Erro ao carregar Base');
-                dadosBase = resultBase.dados || [];
-                console.log(`Base: ${dadosBase.length} registros`);
+                dadosQLP = resultQLP.colaboradores || [];
+                console.log(`QLP carregado: ${dadosQLP.length} colaboradores`);
 
-                // Cruza os dados
-                cruzarDados();
+                processarDados();
                 preencherFiltros();
                 renderTabela();
                 atualizarResumo();
 
                 document.getElementById('loadingDiv').style.display = 'none';
                 document.getElementById('contentDiv').style.display = 'block';
-                showStatus(`Dados carregados: ${dadosQLP.length} do QLP, ${dadosBase.length} da Base`, 'success');
+
+                showStatus(`Dados carregados: ${dadosBase.length} registros da Base`, 'success');
 
             } catch (error) {
                 console.error('Erro:', error);
                 document.getElementById('loadingDiv').innerHTML = `
-                    <i class="fas fa-exclamation-triangle" style="color: #dc3545; font-size: 64px;"></i>
-                    <p style="color: #dc3545; margin-top: 20px;">Erro ao carregar dados</p>
-                    <p style="font-size: 14px; color: #6c757d;">${error.message}</p>
+                    <i class="fas fa-exclamation-triangle" style="color: #dc3545;"></i>
+                    <p style="margin-top: 20px; color: #dc3545;">Erro ao carregar dados</p>
+                    <p style="font-size: 14px; color: white; margin-top: 10px;">${error.message}</p>
                     <button class="btn btn-warning" onclick="location.reload()" style="margin-top: 20px;">
                         <i class="fas fa-sync-alt"></i> Tentar Novamente
                     </button>
@@ -338,44 +542,39 @@
             }
         }
 
-        function cruzarDados() {
-            // Agrupa QLP por Seção + Turno + Supervisor
-            const gruposQLP = {};
+        function processarDados() {
+            console.log('Processando dados...');
             
+            // Agrupa QLP por função
+            const qlpPorFuncao = {};
             dadosQLP.forEach(d => {
-                if (!d.secao || !d.turno || !d.isAtivo) return;
+                if (!d.funcao || !d.isAtivo) return;
                 
-                const chave = `${d.secao}|${d.turno}|${d.supervisor}`;
-                
-                if (!gruposQLP[chave]) {
-                    gruposQLP[chave] = {
-                        secao: d.secao,
-                        turno: d.turno,
-                        supervisor: d.supervisor,
-                        ql: 0,
+                const funcao = d.funcao.trim();
+                if (!qlpPorFuncao[funcao]) {
+                    qlpPorFuncao[funcao] = {
+                        funcao: funcao,
+                        qlTotal: 0,
                         colaboradores: []
                     };
                 }
                 
-                gruposQLP[chave].ql++;
-                gruposQLP[chave].colaboradores.push(d);
+                qlpPorFuncao[funcao].qlTotal++;
+                qlpPorFuncao[funcao].colaboradores.push(d);
             });
 
-            // Agrupa Base por Seção + Turno + Supervisor + Status
-            const gruposBase = {};
-            
+            // Agrupa Base por função e status
+            const basePorFuncao = {};
             dadosBase.forEach(d => {
-                const secao = d.secao || 'Sem Seção';
-                const turno = d.turno || 'Não definido';
-                const supervisor = d.supervisor || 'Sem supervisor';
-                const status = d.status || '';
+                const funcao = (d.funcao || 'Sem Função').trim();
+                const status = (d.status || '').trim();
                 
-                const chave = `${secao}|${turno}|${supervisor}`;
-                
-                if (!gruposBase[chave]) {
-                    gruposBase[chave] = {
+                if (!basePorFuncao[funcao]) {
+                    basePorFuncao[funcao] = {
                         presente: 0,
+                        desvio: 0,
                         ausente: 0,
+                        atestado: 0,
                         ferias: 0,
                         folga: 0,
                         afastado: 0,
@@ -383,198 +582,322 @@
                     };
                 }
                 
-                gruposBase[chave].total++;
+                basePorFuncao[funcao].total++;
                 
-                if (status === 'Presente') gruposBase[chave].presente++;
-                else if (status === 'Ausente') gruposBase[chave].ausente++;
-                else if (status === 'Férias') gruposBase[chave].ferias++;
-                else if (status === 'Folga') gruposBase[chave].folga++;
-                else if (status === 'Afastado') gruposBase[chave].afastado++;
+                const statusLower = status.toLowerCase();
+                if (statusLower === 'presente') basePorFuncao[funcao].presente++;
+                else if (statusLower === 'desvio') basePorFuncao[funcao].desvio++;
+                else if (statusLower === 'ausente') basePorFuncao[funcao].ausente++;
+                else if (statusLower === 'atestado') basePorFuncao[funcao].atestado++;
+                else if (statusLower.includes('férias') || statusLower.includes('ferias')) basePorFuncao[funcao].ferias++;
+                else if (statusLower === 'folga') basePorFuncao[funcao].folga++;
+                else if (statusLower === 'afastado') basePorFuncao[funcao].afastado++;
             });
 
             // Cruza dados
-            dadosCruzados = [];
+            dadosProducao = [];
             
-            Object.keys(gruposQLP).forEach(chave => {
-                const qlp = gruposQLP[chave];
-                const base = gruposBase[chave] || { presente: 0, ausente: 0, ferias: 0, folga: 0, afastado: 0, total: 0 };
+            // Adiciona funções do QLP
+            Object.keys(qlpPorFuncao).forEach(funcao => {
+                const qlp = qlpPorFuncao[funcao];
+                const base = basePorFuncao[funcao] || { presente: 0, desvio: 0, ausente: 0, atestado: 0, ferias: 0, folga: 0, afastado: 0, total: 0 };
                 
-                dadosCruzados.push({
-                    secao: qlp.secao,
-                    supervisor: qlp.supervisor,
-                    turno: qlp.turno,
-                    ql: qlp.ql,
+                dadosProducao.push({
+                    funcao: funcao,
+                    qlTotal: qlp.qlTotal,
                     capacidade: 0, // Será preenchido manualmente
                     presente: base.presente,
-                    desvioFuncao: 0, // Calculado
-                    vagasPendentes: 0, // Calculado
+                    desvio: base.desvio,
                     afastado: base.afastado,
-                    subtotalAusente: 0, // Calculado
+                    ausente: base.ausente + base.atestado,
+                    feriasFolga: base.ferias + base.folga,
+                    deficit: 0, // Será calculado
                     produtividadeHora: 0, // Será preenchido manualmente
-                    realizado: 0, // Será preenchido manualmente
-                    produzido: 0 // Será preenchido manualmente
+                    meta: 0, // Será calculado
+                    realizado: 0 // Será preenchido manualmente
                 });
             });
 
-            console.log('Dados cruzados:', dadosCruzados.length, 'grupos');
+            // Adiciona funções que só estão na Base
+            Object.keys(basePorFuncao).forEach(funcao => {
+                if (!qlpPorFuncao[funcao] && basePorFuncao[funcao].total > 0) {
+                    const base = basePorFuncao[funcao];
+                    
+                    dadosProducao.push({
+                        funcao: funcao,
+                        qlTotal: 0,
+                        capacidade: 0,
+                        presente: base.presente,
+                        desvio: base.desvio,
+                        afastado: base.afastado,
+                        ausente: base.ausente + base.atestado,
+                        feriasFolga: base.ferias + base.folga,
+                        deficit: 0,
+                        produtividadeHora: 0,
+                        meta: 0,
+                        realizado: 0
+                    });
+                }
+            });
+
+            dadosProducao.sort((a, b) => a.funcao.localeCompare(b.funcao));
+            
+            console.log(`Dados processados: ${dadosProducao.length} funções`);
         }
 
         function preencherFiltros() {
-            const secoes = [...new Set(dadosCruzados.map(d => d.secao))].sort();
-            const turnos = [...new Set(dadosCruzados.map(d => d.turno))].sort();
-            const supervisores = [...new Set(dadosCruzados.map(d => d.supervisor))].sort();
-            
-            document.getElementById('filtroSecao').innerHTML = '<option value="">Todas</option>' +
-                secoes.map(s => `<option value="${s}">${s}</option>`).join('');
-            document.getElementById('filtroTurno').innerHTML = '<option value="">Todos</option>' +
-                turnos.map(t => `<option value="${t}">${t}</option>`).join('');
-            document.getElementById('filtroSupervisor').innerHTML = '<option value="">Todos</option>' +
-                supervisores.map(s => `<option value="${s}">${s}</option>`).join('');
+            const funcoes = [...new Set(dadosProducao.map(d => d.funcao))].sort();
+            const selectFuncoes = document.getElementById('filtroFuncoes');
+            selectFuncoes.innerHTML = funcoes.map(f => `<option value="${f}">${f}</option>`).join('');
+
+            const turnos = [...new Set(dadosBase.map(d => d.turno).filter(t => t))].sort();
+            const selectTurnos = document.getElementById('filtroTurnos');
+            selectTurnos.innerHTML = turnos.map(t => `<option value="${t}">${t}</option>`).join('');
         }
 
         function aplicarFiltros() {
+            const funcoesSelecionadas = Array.from(document.getElementById('filtroFuncoes').selectedOptions).map(o => o.value);
+            const turnosSelecionados = Array.from(document.getElementById('filtroTurnos').selectedOptions).map(o => o.value);
+
+            if (turnosSelecionados.length > 0) {
+                const basesFiltradas = dadosBase.filter(d => turnosSelecionados.includes(d.turno));
+                
+                const basePorFuncao = {};
+                basesFiltradas.forEach(d => {
+                    const funcao = (d.funcao || 'Sem Função').trim();
+                    const status = (d.status || '').trim().toLowerCase();
+                    
+                    if (!basePorFuncao[funcao]) {
+                        basePorFuncao[funcao] = {
+                            presente: 0,
+                            desvio: 0,
+                            ausente: 0,
+                            atestado: 0,
+                            ferias: 0,
+                            folga: 0,
+                            afastado: 0
+                        };
+                    }
+                    
+                    if (status === 'presente') basePorFuncao[funcao].presente++;
+                    else if (status === 'desvio') basePorFuncao[funcao].desvio++;
+                    else if (status === 'ausente') basePorFuncao[funcao].ausente++;
+                    else if (status === 'atestado') basePorFuncao[funcao].atestado++;
+                    else if (status.includes('férias') || status.includes('ferias')) basePorFuncao[funcao].ferias++;
+                    else if (status === 'folga') basePorFuncao[funcao].folga++;
+                    else if (status === 'afastado') basePorFuncao[funcao].afastado++;
+                });
+
+                dadosProducao.forEach(d => {
+                    const base = basePorFuncao[d.funcao] || { presente: 0, desvio: 0, ausente: 0, atestado: 0, ferias: 0, folga: 0, afastado: 0 };
+                    d.presente = base.presente;
+                    d.desvio = base.desvio;
+                    d.afastado = base.afastado;
+                    d.ausente = base.ausente + base.atestado;
+                    d.feriasFolga = base.ferias + base.folga;
+                });
+            }
+
+            if (funcoesSelecionadas.length > 0) {
+                funcoesFiltradas = funcoesSelecionadas;
+            } else {
+                funcoesFiltradas = [];
+            }
+
             renderTabela();
+            atualizarResumo();
+            showStatus('Filtros aplicados!', 'success');
         }
 
         function limparFiltros() {
-            document.getElementById('filtroSecao').value = '';
-            document.getElementById('filtroTurno').value = '';
-            document.getElementById('filtroSupervisor').value = '';
+            document.getElementById('filtroFuncoes').selectedIndex = -1;
+            document.getElementById('filtroTurnos').selectedIndex = -1;
+            funcoesFiltradas = [];
+            
+            processarDados();
             renderTabela();
+            atualizarResumo();
+            showStatus('Filtros removidos!', 'info');
         }
 
         function renderTabela() {
-            const tbody = document.querySelector('#producaoTable tbody');
-            const secao = document.getElementById('filtroSecao').value;
-            const turno = document.getElementById('filtroTurno').value;
-            const supervisor = document.getElementById('filtroSupervisor').value;
-            
-            let filtrados = dadosCruzados.filter(d => {
-                return (!secao || d.secao === secao) &&
-                       (!turno || d.turno === turno) &&
-                       (!supervisor || d.supervisor === supervisor);
-            });
-            
-            // Agrupa por seção
-            const porSecao = {};
-            filtrados.forEach(d => {
-                if (!porSecao[d.secao]) porSecao[d.secao] = [];
-                porSecao[d.secao].push(d);
-            });
-            
+            const tbody = document.querySelector('#tabelaProducao tbody');
             tbody.innerHTML = '';
-            
-            Object.keys(porSecao).sort().forEach(secaoNome => {
-                // Header da seção
-                const trSecao = document.createElement('tr');
-                trSecao.className = 'secao-header';
-                trSecao.innerHTML = `<td colspan="13"><i class="fas fa-layer-group"></i> ${secaoNome}</td>`;
-                tbody.appendChild(trSecao);
-                
-                // Linhas da seção
-                porSecao[secaoNome].forEach((d, idx) => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td></td>
-                        <td>${d.supervisor}</td>
-                        <td>${d.turno}</td>
-                        <td class="calculo-resultado">${d.ql}</td>
-                        <td><input type="number" value="${d.capacidade}" onchange="atualizarCapacidade(${dadosCruzados.indexOf(d)}, this.value)" min="0"></td>
-                        <td class="calculo-resultado status-presente">${d.presente}</td>
-                        <td class="calculo-resultado">${d.desvioFuncao}</td>
-                        <td class="calculo-resultado">${d.vagasPendentes}</td>
-                        <td class="calculo-resultado">${d.afastado}</td>
-                        <td class="calculo-resultado status-ausente">${d.subtotalAusente}</td>
-                        <td><input type="number" value="${d.produtividadeHora}" onchange="atualizarProdutividade(${dadosCruzados.indexOf(d)}, this.value)" min="0" step="0.01"></td>
-                        <td><input type="number" value="${d.realizado}" onchange="atualizarRealizado(${dadosCruzados.indexOf(d)}, this.value)" min="0"></td>
-                        <td><input type="number" value="${d.produzido}" onchange="atualizarProduzido(${dadosCruzados.indexOf(d)}, this.value)" min="0"></td>
-                    `;
-                    tbody.appendChild(tr);
-                });
+
+            let dados = dadosProducao;
+            if (funcoesFiltradas.length > 0) {
+                dados = dadosProducao.filter(d => funcoesFiltradas.includes(d.funcao));
+            }
+
+            document.getElementById('totalFuncoes').textContent = `${dados.length} funções`;
+
+            dados.forEach((d, idx) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${d.funcao}</strong></td>
+                    <td class="valor-calculado">${d.qlTotal}</td>
+                    <td><input type="number" class="input-calculo" value="${d.capacidade}" onchange="atualizarCapacidade(${idx}, this.value)" min="0"></td>
+                    <td class="valor-calculado" style="background: #c8e6c9; color: #2e7d32;">${d.presente}</td>
+                    <td class="valor-calculado" style="background: #ffcdd2; color: #c62828;">${d.desvio}</td>
+                    <td class="valor-calculado">${d.afastado}</td>
+                    <td class="valor-calculado">${d.ausente}</td>
+                    <td class="valor-calculado">${d.feriasFolga}</td>
+                    <td class="valor-calculado" style="background: #fff3cd; color: #856404;">${d.deficit}</td>
+                    <td><input type="number" class="input-calculo" value="${d.produtividadeHora}" onchange="atualizarProdutividade(${idx}, this.value)" min="0" step="0.01"></td>
+                    <td class="valor-calculado">${d.meta.toFixed(2)}</td>
+                    <td><input type="number" class="input-calculo" value="${d.realizado}" onchange="atualizarRealizado(${idx}, this.value)" min="0" step="0.01"></td>
+                `;
+                tbody.appendChild(tr);
             });
         }
 
         function atualizarCapacidade(idx, valor) {
-            dadosCruzados[idx].capacidade = parseFloat(valor) || 0;
+            let dados = funcoesFiltradas.length > 0 
+                ? dadosProducao.filter(d => funcoesFiltradas.includes(d.funcao)) 
+                : dadosProducao;
+            
+            dados[idx].capacidade = parseFloat(valor) || 0;
             calcularLinha(idx);
         }
 
         function atualizarProdutividade(idx, valor) {
-            dadosCruzados[idx].produtividadeHora = parseFloat(valor) || 0;
+            let dados = funcoesFiltradas.length > 0 
+                ? dadosProducao.filter(d => funcoesFiltradas.includes(d.funcao)) 
+                : dadosProducao;
+            
+            dados[idx].produtividadeHora = parseFloat(valor) || 0;
+            calcularLinha(idx);
         }
 
         function atualizarRealizado(idx, valor) {
-            dadosCruzados[idx].realizado = parseFloat(valor) || 0;
-        }
-
-        function atualizarProduzido(idx, valor) {
-            dadosCruzados[idx].produzido = parseFloat(valor) || 0;
+            let dados = funcoesFiltradas.length > 0 
+                ? dadosProducao.filter(d => funcoesFiltradas.includes(d.funcao)) 
+                : dadosProducao;
+            
+            dados[idx].realizado = parseFloat(valor) || 0;
         }
 
         function calcularLinha(idx) {
-            const d = dadosCruzados[idx];
+            let dados = funcoesFiltradas.length > 0 
+                ? dadosProducao.filter(d => funcoesFiltradas.includes(d.funcao)) 
+                : dadosProducao;
             
-            // Desvio Função = Capacidade - Presente
-            d.desvioFuncao = d.capacidade - d.presente;
+            const d = dados[idx];
             
-            // Vagas Pendentes = QL - Capacidade
-            d.vagasPendentes = d.ql - d.capacidade;
+            // Deficit = Capacidade - Presente + Desvio
+            d.deficit = d.capacidade - d.presente + d.desvio;
             
-            // Subtotal Ausente = Desvio Função + Afastado
-            d.subtotalAusente = d.desvioFuncao + d.afastado;
+            // Meta = Presente * Produtividade/Hora * Horas Trabalhadas
+            const horas = parseFloat(document.getElementById('horasTrabalhadas').value) || 8;
+            d.meta = d.presente * d.produtividadeHora * horas;
             
             renderTabela();
         }
 
         function calcularTudo() {
-            dadosCruzados.forEach((d, idx) => calcularLinha(idx));
+            let dados = funcoesFiltradas.length > 0 
+                ? dadosProducao.filter(d => funcoesFiltradas.includes(d.funcao)) 
+                : dadosProducao;
+            
+            dados.forEach((d, idx) => calcularLinha(idx));
             atualizarResumo();
-            showStatus('Cálculos atualizados!', 'success');
+            showStatus('Cálculos atualizados para todas as funções!', 'success');
         }
 
         function atualizarResumo() {
-            const totalQL = dadosCruzados.reduce((sum, d) => sum + d.ql, 0);
-            const totalCapacidade = dadosCruzados.reduce((sum, d) => sum + d.capacidade, 0);
-            const totalPresente = dadosCruzados.reduce((sum, d) => sum + d.presente, 0);
-            const totalAusente = dadosCruzados.reduce((sum, d) => sum + d.subtotalAusente, 0);
+            let dados = funcoesFiltradas.length > 0 
+                ? dadosProducao.filter(d => funcoesFiltradas.includes(d.funcao)) 
+                : dadosProducao;
+            
+            const totalQL = dados.reduce((sum, d) => sum + d.qlTotal, 0);
+            const totalCapacidade = dados.reduce((sum, d) => sum + d.capacidade, 0);
+            const totalPresente = dados.reduce((sum, d) => sum + d.presente, 0);
+            const totalDesvio = dados.reduce((sum, d) => sum + d.desvio, 0);
+            const totalAfastado = dados.reduce((sum, d) => sum + d.afastado, 0);
+            const totalAusente = dados.reduce((sum, d) => sum + d.ausente, 0);
+            const totalDeficit = dados.reduce((sum, d) => sum + d.deficit, 0);
+            const totalMeta = dados.reduce((sum, d) => sum + d.meta, 0);
+            const totalRealizado = dados.reduce((sum, d) => sum + d.realizado, 0);
+            
+            const percentualAtingido = totalMeta > 0 ? ((totalRealizado / totalMeta) * 100).toFixed(1) : 0;
             
             document.getElementById('resumoCards').innerHTML = `
-                <div class="resumo-card" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                <div class="resumo-card">
                     <h3>QL Total</h3>
                     <div class="valor">${totalQL}</div>
+                    <div class="subtexto">Quadro de Lotação</div>
                 </div>
-                <div class="resumo-card" style="background: linear-gradient(135deg, #f093fb, #f5576c);">
+                <div class="resumo-card">
                     <h3>Capacidade</h3>
                     <div class="valor">${totalCapacidade}</div>
+                    <div class="subtexto">Configurada</div>
                 </div>
-                <div class="resumo-card" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">
+                <div class="resumo-card success">
                     <h3>Presente</h3>
                     <div class="valor">${totalPresente}</div>
+                    <div class="subtexto">Trabalhando</div>
                 </div>
-                <div class="resumo-card" style="background: linear-gradient(135deg, #fa709a, #fee140);">
-                    <h3>Subtotal Ausente</h3>
-                    <div class="valor">${totalAusente}</div>
+                <div class="resumo-card danger">
+                    <h3>Desvio</h3>
+                    <div class="valor">${totalDesvio}</div>
+                    <div class="subtexto">Função Incorreta</div>
+                </div>
+                <div class="resumo-card warning">
+                    <h3>Deficit</h3>
+                    <div class="valor">${totalDeficit}</div>
+                    <div class="subtexto">Falta de Pessoal</div>
+                </div>
+                <div class="resumo-card">
+                    <h3>Afastado</h3>
+                    <div class="valor">${totalAfastado}</div>
+                    <div class="subtexto">Afastamentos</div>
+                </div>
+                <div class="resumo-card">
+                    <h3>Meta Total</h3>
+                    <div class="valor">${totalMeta.toFixed(0)}</div>
+                    <div class="subtexto">Esperado</div>
+                </div>
+                <div class="resumo-card ${percentualAtingido >= 100 ? 'success' : percentualAtingido >= 80 ? 'warning' : 'danger'}">
+                    <h3>Realizado</h3>
+                    <div class="valor">${totalRealizado.toFixed(0)}</div>
+                    <div class="subtexto">${percentualAtingido}% da Meta</div>
                 </div>
             `;
         }
 
         async function salvarProducao() {
-            if (dadosCruzados.length === 0) {
+            if (dadosProducao.length === 0) {
                 showStatus('Nenhum dado para salvar', 'error');
                 return;
             }
 
-            if (!confirm('Deseja salvar estes dados na aba Produzido?')) return;
+            if (!confirm('Deseja salvar os dados de produção na aba Produzido?')) return;
 
             try {
                 const dataRef = document.getElementById('dataReferencia').value;
-                const horas = document.getElementById('horasTrabalhadas').value;
+                const horas = parseFloat(document.getElementById('horasTrabalhadas').value) || 8;
+
+                // Prepara dados para salvar
+                const dadosParaSalvar = dadosProducao.map(d => ({
+                    funcao: d.funcao,
+                    qlTotal: d.qlTotal,
+                    capacidade: d.capacidade,
+                    presente: d.presente,
+                    desvio: d.desvio,
+                    afastado: d.afastado,
+                    ausente: d.ausente,
+                    feriasFolga: d.feriasFolga,
+                    deficit: d.deficit,
+                    produtividadeHora: d.produtividadeHora,
+                    meta: d.meta,
+                    realizado: d.realizado
+                }));
 
                 const response = await fetch('/api/producao/salvar', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        dados: dadosCruzados,
+                        dados: dadosParaSalvar,
                         dataReferencia: dataRef,
                         horasTrabalhadas: horas
                     })
@@ -583,9 +906,9 @@
                 const result = await response.json();
 
                 if (result.ok) {
-                    showStatus(result.msg, 'success');
+                    showStatus(result.msg || 'Dados salvos com sucesso!', 'success');
                 } else {
-                    throw new Error(result.msg);
+                    throw new Error(result.msg || 'Erro ao salvar');
                 }
             } catch (error) {
                 console.error('Erro:', error);
@@ -594,27 +917,63 @@
         }
 
         function exportarCSV() {
-            const headers = ['Seção', 'Supervisor', 'Turno', 'QL', 'Capacidade', 'Presente', 'Desvio Função', 
-                           'Vagas Pendentes', 'Afastado', 'Subtotal Ausente', 'Produtividade/Hora', 'Realizado', 'Produzido'];
+            let dados = funcoesFiltradas.length > 0 
+                ? dadosProducao.filter(d => funcoesFiltradas.includes(d.funcao)) 
+                : dadosProducao;
+            
+            if (dados.length === 0) {
+                showStatus('Nenhum dado para exportar', 'error');
+                return;
+            }
+
+            const headers = [
+                'Função', 'QL Total', 'Capacidade', 'Presente', 'Desvio', 'Afastado', 
+                'Ausente', 'Férias/Folga', 'Deficit', 'Produtividade/Hora', 'Meta', 'Realizado'
+            ];
+            
             let csv = headers.join(',') + '\n';
             
-            dadosCruzados.forEach(d => {
-                csv += [d.secao, d.supervisor, d.turno, d.ql, d.capacidade, d.presente, d.desvioFuncao,
-                       d.vagasPendentes, d.afastado, d.subtotalAusente, d.produtividadeHora, d.realizado, d.produzido]
-                       .map(v => `"${v}"`).join(',') + '\n';
+            dados.forEach(d => {
+                csv += [
+                    `"${d.funcao}"`,
+                    d.qlTotal,
+                    d.capacidade,
+                    d.presente,
+                    d.desvio,
+                    d.afastado,
+                    d.ausente,
+                    d.feriasFolga,
+                    d.deficit,
+                    d.produtividadeHora,
+                    d.meta.toFixed(2),
+                    d.realizado.toFixed(2)
+                ].join(',') + '\n';
             });
+
+            // Adiciona resumo
+            csv += '\n';
+            csv += 'RESUMO\n';
+            const totalQL = dados.reduce((sum, d) => sum + d.qlTotal, 0);
+            const totalCapacidade = dados.reduce((sum, d) => sum + d.capacidade, 0);
+            const totalPresente = dados.reduce((sum, d) => sum + d.presente, 0);
+            const totalDesvio = dados.reduce((sum, d) => sum + d.desvio, 0);
+            const totalAfastado = dados.reduce((sum, d) => sum + d.afastado, 0);
+            const totalAusente = dados.reduce((sum, d) => sum + d.ausente, 0);
+            const totalDeficit = dados.reduce((sum, d) => sum + d.deficit, 0);
+            const totalMeta = dados.reduce((sum, d) => sum + d.meta, 0);
+            const totalRealizado = dados.reduce((sum, d) => sum + d.realizado, 0);
+            
+            csv += `"TOTAL",${totalQL},${totalCapacidade},${totalPresente},${totalDesvio},${totalAfastado},${totalAusente},,${totalDeficit},,${totalMeta.toFixed(2)},${totalRealizado.toFixed(2)}\n`;
             
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = `Producao_${new Date().toISOString().split('T')[0]}.csv`;
+            const dataRef = document.getElementById('dataReferencia').value || 'hoje';
+            link.download = `Producao_por_Funcao_${dataRef}.csv`;
             link.click();
-            showStatus('CSV exportado!', 'success');
+            
+            showStatus('CSV exportado com sucesso!', 'success');
         }
-
-        document.getElementById('horasTrabalhadas').addEventListener('change', (e) => {
-            horasTrabalhadas = parseFloat(e.target.value) || 8;
-        });
 
         window.onload = function() {
             const usuario = sessionStorage.getItem('usuario');
@@ -623,8 +982,11 @@
                 setTimeout(() => window.location.href = '/', 2000);
                 return;
             }
+
             carregarDados();
         };
+
+        console.log('Análise de Produção por Função carregada');
     </script>
 </body>
 </html>
