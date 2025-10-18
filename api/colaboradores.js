@@ -1,7 +1,7 @@
-// api/colaboradores.js - VERSÃO FUNCIONAL ORIGINAL
+// api/colaboradores.js - COM SUPORTE A DESVIO
 const sheetsService = require('../lib/sheets');
 
-module.exports = async (req, res) => {
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -10,76 +10,68 @@ module.exports = async (req, res) => {
     return res.status(200).end();
   }
 
-  try {
-    if (req.method === 'GET') {
+  // GET - Buscar colaboradores
+  if (req.method === 'GET') {
+    try {
       const { filtro } = req.query;
-      console.log(`Buscando colaboradores com filtro: "${filtro || 'sem filtro'}"`);
-      const colaboradores = await sheetsService.buscarColaboradores(filtro);
+      const colaboradores = await sheetsService.buscarColaboradores(filtro || '');
       return res.status(200).json(colaboradores);
+    } catch (error) {
+      console.error('Erro ao buscar colaboradores:', error);
+      return res.status(500).json({ error: 'Erro ao buscar colaboradores' });
     }
+  }
 
-    if (req.method === 'POST') {
-      const { action, supervisor, aba, matricula, colaborador, status, dados } = req.body;
+  // POST - Ações diversas
+  if (req.method === 'POST') {
+    try {
+      const { action } = req.body;
 
       switch (action) {
-        case 'getBuffer':
+        case 'addBuffer': {
+          const { supervisor, aba, colaborador } = req.body;
+          const result = await sheetsService.adicionarBuffer(supervisor, aba, colaborador);
+          return res.status(200).json(result);
+        }
+
+        case 'getBuffer': {
+          const { supervisor, aba } = req.body;
           const buffer = await sheetsService.getBuffer(supervisor, aba);
           return res.status(200).json(buffer);
+        }
 
-        case 'addBuffer':
-          if (!supervisor || !aba || !colaborador) {
-            return res.status(400).json({ 
-              ok: false, 
-              msg: 'Dados incompletos para adicionar ao buffer' 
-            });
-          }
-          const resultAdd = await sheetsService.adicionarBuffer(supervisor, aba, colaborador);
-          return res.status(200).json(resultAdd);
+        case 'removeBuffer': {
+          const { supervisor, matricula } = req.body;
+          const result = await sheetsService.removerBuffer(supervisor, matricula);
+          return res.status(200).json(result);
+        }
 
-        case 'removeBuffer':
-          if (!supervisor || !matricula) {
-            return res.status(400).json({ 
-              ok: false, 
-              msg: 'Supervisor e matrícula são obrigatórios' 
-            });
-          }
-          const resultRemove = await sheetsService.removerBuffer(supervisor, matricula);
-          return res.status(200).json(resultRemove);
+        case 'updateStatus': {
+          const { supervisor, matricula, status } = req.body;
+          const result = await sheetsService.atualizarStatusBuffer(supervisor, matricula, status);
+          return res.status(200).json(result);
+        }
 
-        case 'updateStatus':
-          if (!supervisor || !matricula) {
-            return res.status(400).json({ 
-              ok: false, 
-              msg: 'Supervisor e matrícula são obrigatórios' 
-            });
-          }
-          const resultUpdate = await sheetsService.atualizarStatusBuffer(supervisor, matricula, status);
-          return res.status(200).json(resultUpdate);
+        case 'updateDesvio': {
+          const { supervisor, matricula, desvio } = req.body;
+          const result = await sheetsService.atualizarDesvioBuffer(supervisor, matricula, desvio);
+          return res.status(200).json(result);
+        }
 
-        case 'saveToBase':
-          if (!dados || !Array.isArray(dados)) {
-            return res.status(400).json({ 
-              ok: false, 
-              msg: 'Dados inválidos para salvar' 
-            });
-          }
-          const resultSave = await sheetsService.salvarNaBase(dados);
-          return res.status(200).json(resultSave);
+        case 'saveToBase': {
+          const { dados } = req.body;
+          const result = await sheetsService.salvarNaBase(dados);
+          return res.status(200).json(result);
+        }
 
         default:
-          return res.status(400).json({ 
-            error: 'Ação não reconhecida'
-          });
+          return res.status(400).json({ ok: false, msg: 'Ação não reconhecida' });
       }
+    } catch (error) {
+      console.error('Erro na API de colaboradores:', error);
+      return res.status(500).json({ ok: false, msg: 'Erro interno do servidor' });
     }
-
-    return res.status(405).json({ error: 'Método não permitido' });
-
-  } catch (error) {
-    console.error('Erro na API de colaboradores:', error);
-    return res.status(500).json({ 
-      error: 'Erro interno do servidor',
-      details: error.message 
-    });
   }
+
+  return res.status(405).json({ ok: false, msg: 'Método não permitido' });
 };
