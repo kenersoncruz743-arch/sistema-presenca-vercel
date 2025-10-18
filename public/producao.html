@@ -445,8 +445,8 @@
                         <thead>
                             <tr>
                                 <th>Função</th>
+                                <th>Turno</th>
                                 <th>QL Total</th>
-                                <th>Capacidade</th>
                                 <th>Presente</th>
                                 <th>Desvio</th>
                                 <th>Afastado</th>
@@ -454,7 +454,8 @@
                                 <th>Férias/Folga</th>
                                 <th>Deficit</th>
                                 <th>Produtividade/Hora</th>
-                                <th>Meta (8h)</th>
+                                <th>Horas Turno</th>
+                                <th>Capacidade</th>
                                 <th>Realizado</th>
                             </tr>
                         </thead>
@@ -469,6 +470,7 @@
         let dadosBase = [];
         let dadosQLP = [];
         let dadosProducao = [];
+        let dadosMeta = {};
         let funcoesFiltradas = [];
 
         function showStatus(msg, type = 'info') {
@@ -496,6 +498,25 @@
                 const hoje = new Date().toISOString().split('T')[0];
                 document.getElementById('dataReferencia').value = hoje;
 
+                // Carrega Meta de Produtividade
+                console.log('Carregando Meta de Produtividade...');
+                const resMeta = await fetch('/api/producao/meta');
+                const resultMeta = await resMeta.json();
+                
+                if (resultMeta.ok && resultMeta.dados) {
+                    resultMeta.dados.forEach(m => {
+                        if (m.data && m.meta && m.produtividadeHora) {
+                            dadosMeta[m.data] = {
+                                meta: parseFloat(m.meta) || 0,
+                                produtividadeHora: parseFloat(m.produtividadeHora) || 0
+                            };
+                        }
+                    });
+                    console.log(`Meta carregada para ${Object.keys(dadosMeta).length} datas`);
+                } else {
+                    console.warn('Aba Meta não encontrada ou vazia');
+                }
+
                 console.log('Carregando dados da Base...');
                 const resBase = await fetch('/api/producao/base');
                 const resultBase = await resBase.json();
@@ -520,6 +541,7 @@
 
                 processarDados();
                 preencherFiltros();
+                calcularTudo();
                 renderTabela();
                 atualizarResumo();
 
@@ -563,14 +585,18 @@
                 qlpPorFuncao[funcao].colaboradores.push(d);
             });
 
-            // Agrupa Base por função e status
-            const basePorFuncao = {};
+            // Agrupa Base por função, turno e status
+            const basePorFuncaoTurno = {};
             dadosBase.forEach(d => {
                 const funcao = (d.funcao || 'Sem Função').trim();
+                const turno = (d.turno || 'Sem Turno').trim();
                 const status = (d.status || '').trim();
+                const chave = `${funcao}|${turno}`;
                 
-                if (!basePorFuncao[funcao]) {
-                    basePorFuncao[funcao] = {
+                if (!basePorFuncaoTurno[chave]) {
+                    basePorFuncaoTurno[chave] = {
+                        funcao: funcao,
+                        turno: turno,
                         presente: 0,
                         desvio: 0,
                         ausente: 0,
@@ -582,67 +608,49 @@
                     };
                 }
                 
-                basePorFuncao[funcao].total++;
+                basePorFuncaoTurno[chave].total++;
                 
                 const statusLower = status.toLowerCase();
-                if (statusLower === 'presente') basePorFuncao[funcao].presente++;
-                else if (statusLower === 'desvio') basePorFuncao[funcao].desvio++;
-                else if (statusLower === 'ausente') basePorFuncao[funcao].ausente++;
-                else if (statusLower === 'atestado') basePorFuncao[funcao].atestado++;
-                else if (statusLower.includes('férias') || statusLower.includes('ferias')) basePorFuncao[funcao].ferias++;
-                else if (statusLower === 'folga') basePorFuncao[funcao].folga++;
-                else if (statusLower === 'afastado') basePorFuncao[funcao].afastado++;
+                if (statusLower === 'presente') basePorFuncaoTurno[chave].presente++;
+                else if (statusLower === 'desvio') basePorFuncaoTurno[chave].desvio++;
+                else if (statusLower === 'ausente') basePorFuncaoTurno[chave].ausente++;
+                else if (statusLower === 'atestado') basePorFuncaoTurno[chave].atestado++;
+                else if (statusLower.includes('férias') || statusLower.includes('ferias')) basePorFuncaoTurno[chave].ferias++;
+                else if (statusLower === 'folga') basePorFuncaoTurno[chave].folga++;
+                else if (statusLower === 'afastado') basePorFuncaoTurno[chave].afastado++;
             });
 
-            // Cruza dados
+            // Cruza dados por função e turno
             dadosProducao = [];
             
-            // Adiciona funções do QLP
-            Object.keys(qlpPorFuncao).forEach(funcao => {
-                const qlp = qlpPorFuncao[funcao];
-                const base = basePorFuncao[funcao] || { presente: 0, desvio: 0, ausente: 0, atestado: 0, ferias: 0, folga: 0, afastado: 0, total: 0 };
+            Object.keys(basePorFuncaoTurno).forEach(chave => {
+                const base = basePorFuncaoTurno[chave];
+                const qlp = qlpPorFuncao[base.funcao] || { qlTotal: 0 };
                 
                 dadosProducao.push({
-                    funcao: funcao,
+                    funcao: base.funcao,
+                    turno: base.turno,
                     qlTotal: qlp.qlTotal,
-                    capacidade: 0, // Será preenchido manualmente
                     presente: base.presente,
                     desvio: base.desvio,
                     afastado: base.afastado,
                     ausente: base.ausente + base.atestado,
                     feriasFolga: base.ferias + base.folga,
-                    deficit: 0, // Será calculado
-                    produtividadeHora: 0, // Será preenchido manualmente
-                    meta: 0, // Será calculado
-                    realizado: 0 // Será preenchido manualmente
+                    produtividadeHora: 0,
+                    horasTurno: 0,
+                    capacidade: 0,
+                    meta: 0,
+                    deficit: 0,
+                    realizado: 0
                 });
             });
 
-            // Adiciona funções que só estão na Base
-            Object.keys(basePorFuncao).forEach(funcao => {
-                if (!qlpPorFuncao[funcao] && basePorFuncao[funcao].total > 0) {
-                    const base = basePorFuncao[funcao];
-                    
-                    dadosProducao.push({
-                        funcao: funcao,
-                        qlTotal: 0,
-                        capacidade: 0,
-                        presente: base.presente,
-                        desvio: base.desvio,
-                        afastado: base.afastado,
-                        ausente: base.ausente + base.atestado,
-                        feriasFolga: base.ferias + base.folga,
-                        deficit: 0,
-                        produtividadeHora: 0,
-                        meta: 0,
-                        realizado: 0
-                    });
-                }
+            dadosProducao.sort((a, b) => {
+                if (a.funcao !== b.funcao) return a.funcao.localeCompare(b.funcao);
+                return a.turno.localeCompare(b.turno);
             });
-
-            dadosProducao.sort((a, b) => a.funcao.localeCompare(b.funcao));
             
-            console.log(`Dados processados: ${dadosProducao.length} funções`);
+            console.log(`Dados processados: ${dadosProducao.length} registros (função + turno)`);
         }
 
         function preencherFiltros() {
@@ -735,38 +743,21 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><strong>${d.funcao}</strong></td>
+                    <td><span style="background: #e3f2fd; padding: 4px 8px; border-radius: 4px; font-weight: 600; color: #1976d2;">${d.turno}</span></td>
                     <td class="valor-calculado">${d.qlTotal}</td>
-                    <td><input type="number" class="input-calculo" value="${d.capacidade}" onchange="atualizarCapacidade(${idx}, this.value)" min="0"></td>
-                    <td class="valor-calculado" style="background: #c8e6c9; color: #2e7d32;">${d.presente}</td>
-                    <td class="valor-calculado" style="background: #ffcdd2; color: #c62828;">${d.desvio}</td>
+                    <td class="valor-calculado" style="background: #c8e6c9; color: #2e7d32; font-weight: 600;">${d.presente}</td>
+                    <td class="valor-calculado" style="background: #ffcdd2; color: #c62828; font-weight: 600;">${d.desvio}</td>
                     <td class="valor-calculado">${d.afastado}</td>
                     <td class="valor-calculado">${d.ausente}</td>
                     <td class="valor-calculado">${d.feriasFolga}</td>
-                    <td class="valor-calculado" style="background: #fff3cd; color: #856404;">${d.deficit}</td>
-                    <td><input type="number" class="input-calculo" value="${d.produtividadeHora}" onchange="atualizarProdutividade(${idx}, this.value)" min="0" step="0.01"></td>
-                    <td class="valor-calculado">${d.meta.toFixed(2)}</td>
+                    <td class="valor-calculado" style="background: #fff3cd; color: #856404; font-weight: 600;">${d.deficit}</td>
+                    <td class="valor-calculado" style="background: #e1f5fe; color: #0277bd;">${d.produtividadeHora.toFixed(2)}</td>
+                    <td class="valor-calculado" style="background: #f3e5f5; color: #6a1b9a;">${d.horasTurno.toFixed(2)}</td>
+                    <td class="valor-calculado" style="background: #e8f5e9; color: #2e7d32; font-weight: 600; font-size: 15px;">${d.capacidade.toFixed(2)}</td>
                     <td><input type="number" class="input-calculo" value="${d.realizado}" onchange="atualizarRealizado(${idx}, this.value)" min="0" step="0.01"></td>
                 `;
                 tbody.appendChild(tr);
             });
-        }
-
-        function atualizarCapacidade(idx, valor) {
-            let dados = funcoesFiltradas.length > 0 
-                ? dadosProducao.filter(d => funcoesFiltradas.includes(d.funcao)) 
-                : dadosProducao;
-            
-            dados[idx].capacidade = parseFloat(valor) || 0;
-            calcularLinha(idx);
-        }
-
-        function atualizarProdutividade(idx, valor) {
-            let dados = funcoesFiltradas.length > 0 
-                ? dadosProducao.filter(d => funcoesFiltradas.includes(d.funcao)) 
-                : dadosProducao;
-            
-            dados[idx].produtividadeHora = parseFloat(valor) || 0;
-            calcularLinha(idx);
         }
 
         function atualizarRealizado(idx, valor) {
@@ -784,14 +775,47 @@
             
             const d = dados[idx];
             
-            // Deficit = Capacidade - Presente + Desvio
-            d.deficit = d.capacidade - d.presente + d.desvio;
+            // Busca produtividade/hora da aba Meta para a data selecionada
+            const dataRef = document.getElementById('dataReferencia').value;
+            const dataFormatada = formatarDataParaBR(dataRef);
             
-            // Meta = Presente * Produtividade/Hora * Horas Trabalhadas
-            const horas = parseFloat(document.getElementById('horasTrabalhadas').value) || 8;
-            d.meta = d.presente * d.produtividadeHora * horas;
+            if (dadosMeta[dataFormatada]) {
+                d.produtividadeHora = dadosMeta[dataFormatada].produtividadeHora;
+            } else {
+                console.warn(`Meta não encontrada para ${dataFormatada}`);
+            }
+            
+            // Calcula horas do turno
+            const dataSelecionada = new Date(dataRef + 'T00:00:00');
+            const diaSemana = dataSelecionada.getDay(); // 0=Domingo, 6=Sábado
+            const ehSabado = diaSemana === 6;
+            
+            if (d.turno.toUpperCase().includes('A')) {
+                d.horasTurno = 6.05;
+            } else if (d.turno.toUpperCase().includes('B')) {
+                d.horasTurno = ehSabado ? 4 : 7.05;
+            } else if (d.turno.toUpperCase().includes('C')) {
+                d.horasTurno = 7.05;
+            } else {
+                d.horasTurno = 8; // Padrão se não identificar turno
+            }
+            
+            // Capacidade = Presente × Produtividade/Hora × Horas do Turno
+            d.capacidade = d.presente * d.produtividadeHora * d.horasTurno;
+            
+            // Meta = mesma fórmula da capacidade (capacidade é a meta)
+            d.meta = d.capacidade;
+            
+            // Deficit = Capacidade - Presente + Desvio
+            d.deficit = d.presente > 0 ? d.desvio : d.qlTotal;
             
             renderTabela();
+        }
+
+        function formatarDataParaBR(dataISO) {
+            if (!dataISO) return '';
+            const partes = dataISO.split('-');
+            return `${partes[2]}/${partes[1]}/${partes[0]}`;
         }
 
         function calcularTudo() {
@@ -803,6 +827,16 @@
             atualizarResumo();
             showStatus('Cálculos atualizados para todas as funções!', 'success');
         }
+
+        // Adiciona listener para recalcular ao mudar a data
+        document.addEventListener('DOMContentLoaded', () => {
+            const inputData = document.getElementById('dataReferencia');
+            if (inputData) {
+                inputData.addEventListener('change', () => {
+                    calcularTudo();
+                });
+            }
+        });
 
         function atualizarResumo() {
             let dados = funcoesFiltradas.length > 0 
@@ -819,7 +853,7 @@
             const totalMeta = dados.reduce((sum, d) => sum + d.meta, 0);
             const totalRealizado = dados.reduce((sum, d) => sum + d.realizado, 0);
             
-            const percentualAtingido = totalMeta > 0 ? ((totalRealizado / totalMeta) * 100).toFixed(1) : 0;
+            const percentualAtingido = totalCapacidade > 0 ? ((totalRealizado / totalCapacidade) * 100).toFixed(1) : 0;
             
             document.getElementById('resumoCards').innerHTML = `
                 <div class="resumo-card">
@@ -829,7 +863,7 @@
                 </div>
                 <div class="resumo-card">
                     <h3>Capacidade</h3>
-                    <div class="valor">${totalCapacidade}</div>
+                    <div class="valor">${totalCapacidade.toFixed(0)}</div>
                     <div class="subtexto">Configurada</div>
                 </div>
                 <div class="resumo-card success">
@@ -877,9 +911,9 @@
                 const dataRef = document.getElementById('dataReferencia').value;
                 const horas = parseFloat(document.getElementById('horasTrabalhadas').value) || 8;
 
-                // Prepara dados para salvar
                 const dadosParaSalvar = dadosProducao.map(d => ({
                     funcao: d.funcao,
+                    turno: d.turno,
                     qlTotal: d.qlTotal,
                     capacidade: d.capacidade,
                     presente: d.presente,
@@ -889,6 +923,7 @@
                     feriasFolga: d.feriasFolga,
                     deficit: d.deficit,
                     produtividadeHora: d.produtividadeHora,
+                    horasTurno: d.horasTurno,
                     meta: d.meta,
                     realizado: d.realizado
                 }));
@@ -927,8 +962,8 @@
             }
 
             const headers = [
-                'Função', 'QL Total', 'Capacidade', 'Presente', 'Desvio', 'Afastado', 
-                'Ausente', 'Férias/Folga', 'Deficit', 'Produtividade/Hora', 'Meta', 'Realizado'
+                'Função', 'Turno', 'QL Total', 'Capacidade', 'Presente', 'Desvio', 'Afastado', 
+                'Ausente', 'Férias/Folga', 'Deficit', 'Produtividade/Hora', 'Horas Turno', 'Meta', 'Realizado'
             ];
             
             let csv = headers.join(',') + '\n';
@@ -936,21 +971,22 @@
             dados.forEach(d => {
                 csv += [
                     `"${d.funcao}"`,
+                    `"${d.turno}"`,
                     d.qlTotal,
-                    d.capacidade,
+                    d.capacidade.toFixed(2),
                     d.presente,
                     d.desvio,
                     d.afastado,
                     d.ausente,
                     d.feriasFolga,
                     d.deficit,
-                    d.produtividadeHora,
+                    d.produtividadeHora.toFixed(2),
+                    d.horasTurno.toFixed(2),
                     d.meta.toFixed(2),
                     d.realizado.toFixed(2)
                 ].join(',') + '\n';
             });
 
-            // Adiciona resumo
             csv += '\n';
             csv += 'RESUMO\n';
             const totalQL = dados.reduce((sum, d) => sum + d.qlTotal, 0);
@@ -963,7 +999,7 @@
             const totalMeta = dados.reduce((sum, d) => sum + d.meta, 0);
             const totalRealizado = dados.reduce((sum, d) => sum + d.realizado, 0);
             
-            csv += `"TOTAL",${totalQL},${totalCapacidade},${totalPresente},${totalDesvio},${totalAfastado},${totalAusente},,${totalDeficit},,${totalMeta.toFixed(2)},${totalRealizado.toFixed(2)}\n`;
+            csv += `"TOTAL","",${totalQL},${totalCapacidade.toFixed(2)},${totalPresente},${totalDesvio},${totalAfastado},${totalAusente},,${totalDeficit},,,${totalMeta.toFixed(2)},${totalRealizado.toFixed(2)}\n`;
             
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
