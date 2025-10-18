@@ -107,12 +107,6 @@
     border-left: 4px solid #1976d2;
   }
   
-  .grupo-funcao h4 { 
-    margin: 0 0 15px; 
-    color: #1976d2; 
-    font-size: 16px;
-  }
-  
   .item-res { 
     display: flex; 
     justify-content: space-between; 
@@ -261,6 +255,7 @@
         <th><i class="fas fa-id-badge"></i> Matrícula</th>
         <th><i class="fas fa-user"></i> Nome</th>
         <th><i class="fas fa-check-circle"></i> Status</th>
+        <th><i class="fas fa-exchange-alt"></i> Desvio</th>
         <th><i class="fas fa-cogs"></i> Ações</th>
       </tr>
     </thead>
@@ -288,48 +283,14 @@
     supervisor = sessionStorage.getItem('usuario') || '';
     aba = sessionStorage.getItem('abaSelecionada') || '';
     
-    console.log('Dados inicializados:', { supervisor, aba });
-    
-    if (supervisor) {
-      document.getElementById('supervisorName').textContent = supervisor;
-    }
-    
-    if (aba) {
-      document.getElementById('areaSelecionada').textContent = aba;
-    }
+    if (supervisor) document.getElementById('supervisorName').textContent = supervisor;
+    if (aba) document.getElementById('areaSelecionada').textContent = aba;
     
     return supervisor && aba;
   }
 
-  async function apiCall(endpoint, method = 'GET', data = null) {
-    try {
-      const options = {
-        method: method,
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      };
-      
-      if (data) {
-        options.body = JSON.stringify(data);
-      }
-      
-      const response = await fetch(`/api/${endpoint}`, options);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Erro na API:', error);
-      throw error;
-    }
-  }
-
   async function buscar() {
     const filtro = document.getElementById("filtro").value.trim();
-    
     if (!filtro) {
       showStatus('Digite algo para buscar', 'error');
       return;
@@ -337,7 +298,6 @@
 
     const btnBuscar = document.getElementById('btnBuscar');
     const originalText = btnBuscar.innerHTML;
-    
     btnBuscar.innerHTML = '<i class="fas fa-spinner loading-spinner"></i> Buscando...';
     btnBuscar.disabled = true;
 
@@ -347,16 +307,13 @@
 
       if (response.ok) {
         exibirBusca(data || []);
-        if (data.length === 0) {
-          showStatus('Nenhum colaborador encontrado', 'error');
-        }
+        if (data.length === 0) showStatus('Nenhum colaborador encontrado', 'error');
       } else {
         throw new Error(data.error || 'Erro ao buscar');
       }
     } catch (error) {
       console.error('Erro na busca:', error);
       showStatus('Erro ao buscar colaboradores', 'error');
-      alert('Erro ao buscar colaboradores. Verifique sua conexão.');
     } finally {
       btnBuscar.innerHTML = originalText;
       btnBuscar.disabled = false;
@@ -366,7 +323,6 @@
   function limparBusca() {
     document.getElementById("filtro").value = "";
     document.getElementById("resultado").innerHTML = "";
-    clearStatus();
   }
 
   function exibirBusca(lista) {
@@ -388,10 +344,7 @@
       grupos[f].sort((a,b) => a.nome.localeCompare(b.nome, 'pt-BR'))
     );
 
-    const funcoesOrdenadas = Object.keys(grupos).sort((a,b) => 
-      a.localeCompare(b, 'pt-BR')
-    );
-    
+    const funcoesOrdenadas = Object.keys(grupos).sort((a,b) => a.localeCompare(b, 'pt-BR'));
     div.innerHTML = "";
 
     funcoesOrdenadas.forEach(funcao => {
@@ -403,7 +356,6 @@
       `;
       
       const grupoDiv = section.querySelector('.grupo-funcao');
-
       grupos[funcao].forEach(c => {
         const item = document.createElement('div');
         item.className = 'item-res';
@@ -465,7 +417,6 @@
     } catch (error) {
       console.error('Erro ao adicionar:', error);
       showStatus('Erro ao adicionar colaborador', 'error');
-      
       buttons.forEach(btn => {
         btn.innerHTML = '<i class="fas fa-plus"></i> Adicionar';
         btn.disabled = false;
@@ -521,7 +472,7 @@
     if (!lista || lista.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="4" class="empty-state">
+          <td colspan="5" class="empty-state">
             <i class="fas fa-info-circle"></i> Nenhum colaborador selecionado
           </td>
         </tr>`;
@@ -535,15 +486,13 @@
       grupos[f].push(c);
     });
 
-    const funcoesOrdenadas = Object.keys(grupos).sort((a,b) => 
-      a.localeCompare(b, 'pt-BR')
-    );
+    const funcoesOrdenadas = Object.keys(grupos).sort((a,b) => a.localeCompare(b, 'pt-BR'));
 
     funcoesOrdenadas.forEach(funcao => {
       const trFuncao = document.createElement("tr");
       trFuncao.className = "funcao-header";
       trFuncao.innerHTML = `
-        <td colspan="4">
+        <td colspan="5">
           <i class="fas fa-users"></i> ${funcao} (${grupos[funcao].length} colaboradores)
         </td>`;
       tbody.appendChild(trFuncao);
@@ -572,6 +521,12 @@
             </select>
           </td>
           <td>
+            <select onchange="atualizarDesvio('${c.matricula}', this)" style="width: 100%;">
+              <option value="" ${!c.desvio ? "selected" : ""}>-- Sem Desvio --</option>
+              <option value="Desvio" ${c.desvio === "Desvio" ? "selected" : ""}>🔄 Desvio</option>
+            </select>
+          </td>
+          <td>
             <button class="btn-danger" onclick="remover('${c.matricula}')" title="Remover colaborador">
               <i class="fas fa-trash"></i> Remover
             </button>
@@ -585,7 +540,6 @@
   async function atualizarStatus(matricula, selectEl) {
     const novoStatus = selectEl.value;
     const tr = document.getElementById(`linha_${matricula}`);
-    
     if (tr) tr.className = statusToClass(novoStatus);
 
     try {
@@ -599,11 +553,31 @@
           status: novoStatus
         })
       });
-      
       showStatus(`Status atualizado: ${novoStatus || 'Vazio'}`, 'success');
     } catch (error) {
       console.error('Erro ao atualizar status:', error);
       showStatus('Erro ao atualizar status', 'error');
+    }
+  }
+
+  async function atualizarDesvio(matricula, selectEl) {
+    const novoDesvio = selectEl.value;
+
+    try {
+      await fetch('/api/colaboradores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'updateDesvio',
+          supervisor: supervisor,
+          matricula: matricula,
+          desvio: novoDesvio
+        })
+      });
+      showStatus(`Desvio atualizado: ${novoDesvio || 'Sem Desvio'}`, 'success');
+    } catch (error) {
+      console.error('Erro ao atualizar desvio:', error);
+      showStatus('Erro ao atualizar desvio', 'error');
     }
   }
 
@@ -630,7 +604,6 @@
           tr.style.opacity = '0';
           setTimeout(() => tr.remove(), 300);
         }
-        
         showStatus('Colaborador removido com sucesso', 'success');
         
         setTimeout(() => {
@@ -639,7 +612,7 @@
           if (dataRows.length === 0) {
             tbody.innerHTML = `
               <tr>
-                <td colspan="4" class="empty-state">
+                <td colspan="5" class="empty-state">
                   <i class="fas fa-info-circle"></i> Nenhum colaborador selecionado
                 </td>
               </tr>`;
@@ -682,9 +655,11 @@
         const matricula = l.children[0].innerText;
         const nome = l.children[1].innerText;
         const funcao = l.dataset.funcao || "";
-        const select = l.querySelector("select");
-        const status = select ? select.value : "";
-        dados.push([supervisor, aba, matricula, nome, funcao, status]);
+        const selectStatus = l.querySelectorAll("select")[0];
+        const status = selectStatus ? selectStatus.value : "";
+        const selectDesvio = l.querySelectorAll("select")[1];
+        const desvio = selectDesvio ? selectDesvio.value : "";
+        dados.push([supervisor, aba, matricula, nome, funcao, status, desvio]);
       });
 
       const response = await fetch('/api/colaboradores', {
@@ -732,37 +707,20 @@
     console.log(`Status [${type}]: ${message}`);
   }
 
-  function clearStatus() {
-  }
-
   document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('filtro').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') {
-        buscar();
-      }
+      if (e.key === 'Enter') buscar();
     });
   });
 
   window.onload = function() {
-    console.log('Painel carregando...');
-    
     if (!initializeData()) {
       alert('Dados da sessão não encontrados. Redirecionando para login...');
       window.location.href = '/';
       return;
     }
-    
-    console.log('Dados inicializados. Carregando tabela...');
     atualizarTabela();
-    
-    console.log('Painel carregado com sucesso!');
   };
-
-  console.log('Painel.html carregado');
-  console.log('SessionStorage atual:', {
-    usuario: sessionStorage.getItem('usuario'),
-    abaSelecionada: sessionStorage.getItem('abaSelecionada')
-  });
 </script>
 
 </body>
