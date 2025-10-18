@@ -1,4 +1,4 @@
-// api/producao/resumo-base.js - CORRIGIDO
+// api/producao/resumo-base.js - COM CONTADOR DE DESVIOS
 const sheetsService = require('../../lib/sheets');
 
 module.exports = async function handler(req, res) {
@@ -34,15 +34,12 @@ module.exports = async function handler(req, res) {
     const rows = await sheetBase.getRows();
     console.log(`[RESUMO-BASE] ${rows.length} registros na Base`);
     
-    // ===== CORREÇÃO DO FORMATO DE DATA =====
     // Obtém data do query ou usa hoje
     let dataFiltro;
     if (req.query.data) {
-      // Se vier no formato YYYY-MM-DD (do input date), converte para DD/MM/YYYY
       const [ano, mes, dia] = req.query.data.split('-');
       dataFiltro = `${dia}/${mes}/${ano}`;
     } else {
-      // Usa hoje no formato DD/MM/YYYY
       dataFiltro = new Date().toLocaleDateString('pt-BR');
     }
     
@@ -55,9 +52,11 @@ module.exports = async function handler(req, res) {
       total: 0,
       presente: 0,
       ausente: 0,
+      atestado: 0,
       ferias: 0,
       folga: 0,
       afastado: 0,
+      desvio: 0,
       outros: 0
     };
     
@@ -67,36 +66,35 @@ module.exports = async function handler(req, res) {
     rows.forEach(row => {
       const dataRegistro = String(row.get('Data') || '').trim();
       
-      // Debug: mostra as primeiras 5 datas para verificar formato
       if (registrosFiltrados < 5) {
         console.log(`[RESUMO-BASE] Data encontrada: "${dataRegistro}"`);
       }
       
-      // Filtra pela data
       if (dataRegistro !== dataFiltro) return;
       
       registrosFiltrados++;
       
       const supervisor = String(row.get('Supervisor') || 'Sem supervisor').trim();
-      const aba = String(row.get('Aba') || '').trim(); // Seção/Turno (ex: Separação TA-1)
-      const funcao = String(row.get('Função') || 'Não informada').trim(); // Função real (ex: AUX. DE ARMAZEM)
-      const turno = String(row.get('Turno') || 'Não informado').trim(); // Turno (coluna 8)
+      const aba = String(row.get('Aba') || '').trim();
+      const funcao = String(row.get('Função') || 'Não informada').trim();
+      const turno = String(row.get('Turno') || 'Não informado').trim();
       const status = String(row.get('Status') || 'Outro').trim();
+      const desvio = String(row.get('Desvio') || '').trim();
       const nome = String(row.get('Nome') || '').trim();
       const matricula = String(row.get('Matricula') || '').trim();
       
-      // Debug das primeiras 3 linhas
       if (registrosFiltrados < 3) {
-        console.log(`[RESUMO-BASE] Registro ${registrosFiltrados + 1}:`, {
+        console.log(`[RESUMO-BASE] Registro ${registrosFiltrados}:`, {
           supervisor,
           aba,
           funcao,
           status,
+          desvio,
           nome
         });
       }
       
-      if (!nome) return; // Ignora linhas sem nome
+      if (!nome) return;
       
       // ====== RESUMO POR SUPERVISOR ======
       if (!resumoPorSupervisor[supervisor]) {
@@ -105,9 +103,11 @@ module.exports = async function handler(req, res) {
           total: 0,
           presente: 0,
           ausente: 0,
+          atestado: 0,
           ferias: 0,
           folga: 0,
           afastado: 0,
+          desvio: 0,
           outros: 0,
           porFuncao: {},
           colaboradores: []
@@ -120,7 +120,8 @@ module.exports = async function handler(req, res) {
         matricula,
         funcao,
         turno,
-        status
+        status,
+        desvio
       });
       
       // Conta por status no supervisor
@@ -129,6 +130,8 @@ module.exports = async function handler(req, res) {
         resumoPorSupervisor[supervisor].presente++;
       } else if (statusLower === 'ausente') {
         resumoPorSupervisor[supervisor].ausente++;
+      } else if (statusLower === 'atestado') {
+        resumoPorSupervisor[supervisor].atestado++;
       } else if (statusLower.includes('férias') || statusLower.includes('ferias')) {
         resumoPorSupervisor[supervisor].ferias++;
       } else if (statusLower === 'folga') {
@@ -137,6 +140,11 @@ module.exports = async function handler(req, res) {
         resumoPorSupervisor[supervisor].afastado++;
       } else {
         resumoPorSupervisor[supervisor].outros++;
+      }
+      
+      // Conta desvios
+      if (desvio && desvio.toLowerCase() === 'desvio') {
+        resumoPorSupervisor[supervisor].desvio++;
       }
       
       // Conta por função dentro do supervisor
@@ -161,9 +169,11 @@ module.exports = async function handler(req, res) {
           total: 0,
           presente: 0,
           ausente: 0,
+          atestado: 0,
           ferias: 0,
           folga: 0,
           afastado: 0,
+          desvio: 0,
           outros: 0,
           porSupervisor: {},
           colaboradores: []
@@ -176,7 +186,8 @@ module.exports = async function handler(req, res) {
         matricula,
         supervisor,
         turno,
-        status
+        status,
+        desvio
       });
       
       // Conta por status na função
@@ -184,6 +195,8 @@ module.exports = async function handler(req, res) {
         resumoPorFuncao[funcao].presente++;
       } else if (statusLower === 'ausente') {
         resumoPorFuncao[funcao].ausente++;
+      } else if (statusLower === 'atestado') {
+        resumoPorFuncao[funcao].atestado++;
       } else if (statusLower.includes('férias') || statusLower.includes('ferias')) {
         resumoPorFuncao[funcao].ferias++;
       } else if (statusLower === 'folga') {
@@ -192,6 +205,11 @@ module.exports = async function handler(req, res) {
         resumoPorFuncao[funcao].afastado++;
       } else {
         resumoPorFuncao[funcao].outros++;
+      }
+      
+      // Conta desvios
+      if (desvio && desvio.toLowerCase() === 'desvio') {
+        resumoPorFuncao[funcao].desvio++;
       }
       
       // Conta por supervisor dentro da função
@@ -215,6 +233,8 @@ module.exports = async function handler(req, res) {
         resumoGeral.presente++;
       } else if (statusLower === 'ausente') {
         resumoGeral.ausente++;
+      } else if (statusLower === 'atestado') {
+        resumoGeral.atestado++;
       } else if (statusLower.includes('férias') || statusLower.includes('ferias')) {
         resumoGeral.ferias++;
       } else if (statusLower === 'folga') {
@@ -223,6 +243,11 @@ module.exports = async function handler(req, res) {
         resumoGeral.afastado++;
       } else {
         resumoGeral.outros++;
+      }
+      
+      // Conta desvios no geral
+      if (desvio && desvio.toLowerCase() === 'desvio') {
+        resumoGeral.desvio++;
       }
     });
     
@@ -239,6 +264,7 @@ module.exports = async function handler(req, res) {
     if (resumoGeral.total > 0) {
       resumoGeral.percentualPresente = ((resumoGeral.presente / resumoGeral.total) * 100).toFixed(1);
       resumoGeral.percentualAusente = (((resumoGeral.total - resumoGeral.presente) / resumoGeral.total) * 100).toFixed(1);
+      resumoGeral.percentualDesvio = ((resumoGeral.desvio / resumoGeral.total) * 100).toFixed(1);
     }
     
     console.log('[RESUMO-BASE] Resumo gerado:');
@@ -246,6 +272,7 @@ module.exports = async function handler(req, res) {
     console.log(`  - ${funcoes.length} funções`);
     console.log(`  - ${resumoGeral.total} colaboradores no total`);
     console.log(`  - ${resumoGeral.presente} presentes (${resumoGeral.percentualPresente}%)`);
+    console.log(`  - ${resumoGeral.desvio} desvios (${resumoGeral.percentualDesvio}%)`);
     
     return res.status(200).json({
       ok: true,
