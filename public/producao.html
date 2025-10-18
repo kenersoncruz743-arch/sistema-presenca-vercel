@@ -445,6 +445,7 @@
                         <thead>
                             <tr>
                                 <th>Função</th>
+                                <th>Turno</th>
                                 <th>QL Total</th>
                                 <th>Presente</th>
                                 <th>Desvio</th>
@@ -584,16 +585,22 @@
                 qlpPorFuncao[funcao].colaboradores.push(d);
             });
 
-            // Agrupa Base por função e status (SEM separar por turno)
-            const basePorFuncao = {};
+            // Agrupa Base por função, turno e status
+            const basePorFuncaoTurno = {};
             dadosBase.forEach(d => {
                 const funcao = (d.funcao || 'Sem Função').trim();
+                let turno = (d.turno || 'Sem Turno').trim();
                 const status = (d.status || '').trim();
-                const turno = (d.turno || '').trim();
                 
-                if (!basePorFuncao[funcao]) {
-                    basePorFuncao[funcao] = {
+                // Normaliza o turno: primeira letra maiúscula, resto minúsculo
+                turno = turno.charAt(0).toUpperCase() + turno.slice(1).toLowerCase();
+                
+                const chave = `${funcao}|${turno}`;
+                
+                if (!basePorFuncaoTurno[chave]) {
+                    basePorFuncaoTurno[chave] = {
                         funcao: funcao,
+                        turno: turno,
                         presente: 0,
                         desvio: 0,
                         ausente: 0,
@@ -601,47 +608,32 @@
                         ferias: 0,
                         folga: 0,
                         afastado: 0,
-                        total: 0,
-                        turnos: { A: 0, B: 0, C: 0 }
+                        total: 0
                     };
                 }
                 
-                basePorFuncao[funcao].total++;
-                
-                // Conta turnos para calcular horas médias
-                if (turno.toUpperCase().includes('A')) basePorFuncao[funcao].turnos.A++;
-                else if (turno.toUpperCase().includes('B')) basePorFuncao[funcao].turnos.B++;
-                else if (turno.toUpperCase().includes('C')) basePorFuncao[funcao].turnos.C++;
+                basePorFuncaoTurno[chave].total++;
                 
                 const statusLower = status.toLowerCase();
-                if (statusLower === 'presente') basePorFuncao[funcao].presente++;
-                else if (statusLower === 'desvio') basePorFuncao[funcao].desvio++;
-                else if (statusLower === 'ausente') basePorFuncao[funcao].ausente++;
-                else if (statusLower === 'atestado') basePorFuncao[funcao].atestado++;
-                else if (statusLower.includes('férias') || statusLower.includes('ferias')) basePorFuncao[funcao].ferias++;
-                else if (statusLower === 'folga') basePorFuncao[funcao].folga++;
-                else if (statusLower === 'afastado') basePorFuncao[funcao].afastado++;
+                if (statusLower === 'presente') basePorFuncaoTurno[chave].presente++;
+                else if (statusLower === 'desvio') basePorFuncaoTurno[chave].desvio++;
+                else if (statusLower === 'ausente') basePorFuncaoTurno[chave].ausente++;
+                else if (statusLower === 'atestado') basePorFuncaoTurno[chave].atestado++;
+                else if (statusLower.includes('férias') || statusLower.includes('ferias')) basePorFuncaoTurno[chave].ferias++;
+                else if (statusLower === 'folga') basePorFuncaoTurno[chave].folga++;
+                else if (statusLower === 'afastado') basePorFuncaoTurno[chave].afastado++;
             });
 
-            // Cruza dados por função (sem turno)
+            // Cruza dados por função e turno
             dadosProducao = [];
             
-            // Adiciona todas as funções que têm QL ou dados na Base
-            const todasFuncoes = new Set([
-                ...Object.keys(qlpPorFuncao),
-                ...Object.keys(basePorFuncao)
-            ]);
-            
-            todasFuncoes.forEach(funcao => {
-                const qlp = qlpPorFuncao[funcao] || { qlTotal: 0 };
-                const base = basePorFuncao[funcao] || { 
-                    presente: 0, desvio: 0, ausente: 0, atestado: 0, 
-                    ferias: 0, folga: 0, afastado: 0, total: 0,
-                    turnos: { A: 0, B: 0, C: 0 }
-                };
+            Object.keys(basePorFuncaoTurno).forEach(chave => {
+                const base = basePorFuncaoTurno[chave];
+                const qlp = qlpPorFuncao[base.funcao] || { qlTotal: 0 };
                 
                 dadosProducao.push({
-                    funcao: funcao,
+                    funcao: base.funcao,
+                    turno: base.turno,
                     qlTotal: qlp.qlTotal,
                     presente: base.presente,
                     desvio: base.desvio,
@@ -653,14 +645,16 @@
                     capacidade: 0,
                     meta: 0,
                     deficit: 0,
-                    realizado: 0,
-                    turnos: base.turnos
+                    realizado: 0
                 });
             });
 
-            dadosProducao.sort((a, b) => a.funcao.localeCompare(b.funcao));
+            dadosProducao.sort((a, b) => {
+                if (a.funcao !== b.funcao) return a.funcao.localeCompare(b.funcao);
+                return a.turno.localeCompare(b.turno);
+            });
             
-            console.log(`Dados processados: ${dadosProducao.length} funções`);
+            console.log(`Dados processados: ${dadosProducao.length} registros (função + turno)`);
         }
 
         function preencherFiltros() {
@@ -747,12 +741,13 @@
                 dados = dadosProducao.filter(d => funcoesFiltradas.includes(d.funcao));
             }
 
-            document.getElementById('totalFuncoes').textContent = `${dados.length} funções`;
+            document.getElementById('totalFuncoes').textContent = `${dados.length} registros`;
 
             dados.forEach((d, idx) => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><strong>${d.funcao}</strong></td>
+                    <td><span style="background: #e3f2fd; padding: 4px 8px; border-radius: 4px; font-weight: 600; color: #1976d2;">${d.turno}</span></td>
                     <td class="valor-calculado">${d.qlTotal}</td>
                     <td class="valor-calculado" style="background: #c8e6c9; color: #2e7d32; font-weight: 600;">${d.presente}</td>
                     <td class="valor-calculado" style="background: #ffcdd2; color: #c62828; font-weight: 600;">${d.desvio}</td>
@@ -760,10 +755,10 @@
                     <td class="valor-calculado">${d.ausente}</td>
                     <td class="valor-calculado">${d.feriasFolga}</td>
                     <td class="valor-calculado" style="background: #fff3cd; color: #856404; font-weight: 600;">${d.deficit}</td>
-                    <td class="valor-calculado" style="background: #e1f5fe; color: #0277bd;">${d.produtividadeHora.toFixed(2)}</td>
+                    <td class="valor-calculado" style="background: #e1f5fe; color: #0277bd;">${Math.round(d.produtividadeHora)}</td>
                     <td class="valor-calculado" style="background: #f3e5f5; color: #6a1b9a;">${d.horasTurno.toFixed(2)}</td>
-                    <td class="valor-calculado" style="background: #e8f5e9; color: #2e7d32; font-weight: 600; font-size: 15px;">${d.capacidade.toFixed(2)}</td>
-                    <td><input type="number" class="input-calculo" value="${d.realizado}" onchange="atualizarRealizado(${idx}, this.value)" min="0" step="0.01"></td>
+                    <td class="valor-calculado" style="background: #e8f5e9; color: #2e7d32; font-weight: 600; font-size: 15px;">${Math.round(d.capacidade)}</td>
+                    <td><input type="number" class="input-calculo" value="${Math.round(d.realizado)}" onchange="atualizarRealizado(${idx}, this.value)" min="0" step="1"></td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -790,32 +785,29 @@
             
             if (dadosMeta[dataFormatada]) {
                 d.produtividadeHora = dadosMeta[dataFormatada].produtividadeHora;
+                d.meta = dadosMeta[dataFormatada].meta; // Usa a meta do Google Sheets
             } else {
                 console.warn(`Meta não encontrada para ${dataFormatada}`);
             }
             
-            // Calcula horas médias baseado na distribuição de turnos
+            // Calcula horas do turno
             const dataSelecionada = new Date(dataRef + 'T00:00:00');
             const diaSemana = dataSelecionada.getDay();
             const ehSabado = diaSemana === 6;
             
-            let horasTotal = 0;
-            let totalPessoas = d.turnos.A + d.turnos.B + d.turnos.C;
-            
-            if (totalPessoas > 0) {
-                horasTotal += d.turnos.A * 6.05;
-                horasTotal += d.turnos.B * (ehSabado ? 4 : 7.05);
-                horasTotal += d.turnos.C * 7.05;
-                d.horasTurno = horasTotal / totalPessoas;
+            const turnoUpper = d.turno.toUpperCase();
+            if (turnoUpper.includes('TURNO A') || turnoUpper === 'TURNO A') {
+                d.horasTurno = 6.05;
+            } else if (turnoUpper.includes('TURNO B') || turnoUpper === 'TURNO B') {
+                d.horasTurno = ehSabado ? 4 : 7.05;
+            } else if (turnoUpper.includes('TURNO C') || turnoUpper === 'TURNO C') {
+                d.horasTurno = 7.05;
             } else {
-                d.horasTurno = 8; // Padrão
+                d.horasTurno = 8;
             }
             
-            // Capacidade = Presente × Produtividade/Hora × Horas Médias
+            // Capacidade = Presente × Produtividade/Hora × Horas do Turno
             d.capacidade = d.presente * d.produtividadeHora * d.horasTurno;
-            
-            // Meta = mesma fórmula da capacidade
-            d.meta = d.capacidade;
             
             // Deficit = Se tem presente, mostra desvio; senão mostra QL Total
             d.deficit = d.presente > 0 ? d.desvio : d.qlTotal;
@@ -864,7 +856,7 @@
             const totalMeta = dados.reduce((sum, d) => sum + d.meta, 0);
             const totalRealizado = dados.reduce((sum, d) => sum + d.realizado, 0);
             
-            const percentualAtingido = totalCapacidade > 0 ? ((totalRealizado / totalCapacidade) * 100).toFixed(1) : 0;
+            const percentualAtingido = totalMeta > 0 ? ((totalRealizado / totalMeta) * 100).toFixed(1) : 0;
             
             document.getElementById('resumoCards').innerHTML = `
                 <div class="resumo-card">
@@ -874,7 +866,7 @@
                 </div>
                 <div class="resumo-card">
                     <h3>Capacidade</h3>
-                    <div class="valor">${totalCapacidade.toFixed(0)}</div>
+                    <div class="valor">${Math.round(totalCapacidade)}</div>
                     <div class="subtexto">Configurada</div>
                 </div>
                 <div class="resumo-card success">
@@ -899,12 +891,12 @@
                 </div>
                 <div class="resumo-card">
                     <h3>Meta Total</h3>
-                    <div class="valor">${totalMeta.toFixed(0)}</div>
+                    <div class="valor">${Math.round(totalMeta)}</div>
                     <div class="subtexto">Esperado</div>
                 </div>
                 <div class="resumo-card ${percentualAtingido >= 100 ? 'success' : percentualAtingido >= 80 ? 'warning' : 'danger'}">
                     <h3>Realizado</h3>
-                    <div class="valor">${totalRealizado.toFixed(0)}</div>
+                    <div class="valor">${Math.round(totalRealizado)}</div>
                     <div class="subtexto">${percentualAtingido}% da Meta</div>
                 </div>
             `;
@@ -972,7 +964,7 @@
             }
 
             const headers = [
-                'Função', 'QL Total', 'Capacidade', 'Presente', 'Desvio', 'Afastado', 
+                'Função', 'Turno', 'QL Total', 'Capacidade', 'Presente', 'Desvio', 'Afastado', 
                 'Ausente', 'Férias/Folga', 'Deficit', 'Produtividade/Hora', 'Horas Turno', 'Meta', 'Realizado'
             ];
             
@@ -981,18 +973,19 @@
             dados.forEach(d => {
                 csv += [
                     `"${d.funcao}"`,
+                    `"${d.turno}"`,
                     d.qlTotal,
-                    d.capacidade.toFixed(2),
+                    Math.round(d.capacidade),
                     d.presente,
                     d.desvio,
                     d.afastado,
                     d.ausente,
                     d.feriasFolga,
                     d.deficit,
-                    d.produtividadeHora.toFixed(2),
+                    Math.round(d.produtividadeHora),
                     d.horasTurno.toFixed(2),
-                    d.meta.toFixed(2),
-                    d.realizado.toFixed(2)
+                    Math.round(d.meta),
+                    Math.round(d.realizado)
                 ].join(',') + '\n';
             });
 
@@ -1008,7 +1001,7 @@
             const totalMeta = dados.reduce((sum, d) => sum + d.meta, 0);
             const totalRealizado = dados.reduce((sum, d) => sum + d.realizado, 0);
             
-            csv += `"TOTAL",${totalQL},${totalCapacidade.toFixed(2)},${totalPresente},${totalDesvio},${totalAfastado},${totalAusente},,${totalDeficit},,,${totalMeta.toFixed(2)},${totalRealizado.toFixed(2)}\n`;
+            csv += `"TOTAL","",${totalQL},${Math.round(totalCapacidade)},${totalPresente},${totalDesvio},${totalAfastado},${totalAusente},,${totalDeficit},,,${Math.round(totalMeta)},${Math.round(totalRealizado)}\n`;
             
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
