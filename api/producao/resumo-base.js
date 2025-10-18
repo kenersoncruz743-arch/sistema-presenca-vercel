@@ -78,21 +78,20 @@ module.exports = async function handler(req, res) {
       registrosFiltrados++;
       
       const supervisor = String(row.get('Supervisor') || 'Sem supervisor').trim();
-      // CORRIGIDO: Busca da coluna correta (era Função, mas está em Aba ou Seção)
-      const funcao = String(row.get('Aba') || row.get('Seção') || row.get('Função') || 'Não informada').trim();
+      const aba = String(row.get('Aba') || '').trim(); // Seção/Turno (ex: Separação TA-1)
+      const funcao = String(row.get('Função') || 'Não informada').trim(); // Função real (ex: AUX. DE ARMAZEM)
       const status = String(row.get('Status') || 'Outro').trim();
       const nome = String(row.get('Nome') || '').trim();
       const matricula = String(row.get('Matricula') || '').trim();
       
-      // Debug das primeiras 3 linhas para confirmar os campos
+      // Debug das primeiras 3 linhas
       if (registrosFiltrados < 3) {
         console.log(`[RESUMO-BASE] Registro ${registrosFiltrados + 1}:`, {
           supervisor,
+          aba,
           funcao,
           status,
-          nome,
-          matricula,
-          campos_disponiveis: Object.keys(row._rawData)
+          nome
         });
       }
       
