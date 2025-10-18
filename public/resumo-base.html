@@ -110,9 +110,20 @@
             transition: border-color 0.3s;
         }
         
+        .filtro-group select[multiple] {
+            min-height: 120px;
+        }
+        
         .filtro-group input:focus, .filtro-group select:focus {
             outline: none;
             border-color: #667eea;
+        }
+        
+        .filtro-hint {
+            font-size: 11px;
+            color: #6c757d;
+            font-style: italic;
+            margin-top: 3px;
         }
         
         .resumo-geral {
@@ -385,10 +396,36 @@
                     <label><i class="fas fa-calendar"></i> Data</label>
                     <input type="date" id="filtroData" value="">
                 </div>
+                <div class="filtro-group">
+                    <label><i class="fas fa-user-tie"></i> Supervisores</label>
+                    <select id="filtroSupervisor" multiple>
+                        <option value="">Carregando...</option>
+                    </select>
+                    <span class="filtro-hint">Ctrl+Clique para múltipla seleção</span>
+                </div>
+                <div class="filtro-group">
+                    <label><i class="fas fa-briefcase"></i> Funções</label>
+                    <select id="filtroFuncao" multiple>
+                        <option value="">Carregando...</option>
+                    </select>
+                    <span class="filtro-hint">Ctrl+Clique para múltipla seleção</span>
+                </div>
+                <div class="filtro-group">
+                    <label><i class="fas fa-clock"></i> Turnos</label>
+                    <select id="filtroTurno" multiple>
+                        <option value="">Carregando...</option>
+                    </select>
+                    <span class="filtro-hint">Ctrl+Clique para múltipla seleção</span>
+                </div>
             </div>
-            <button class="btn btn-primary" onclick="carregarResumo()">
-                <i class="fas fa-search"></i> Buscar
-            </button>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="btn btn-primary" onclick="aplicarFiltros()">
+                    <i class="fas fa-search"></i> Buscar
+                </button>
+                <button class="btn btn-secondary" onclick="limparFiltros()">
+                    <i class="fas fa-eraser"></i> Limpar Filtros
+                </button>
+            </div>
         </div>
 
         <div id="statusDiv"></div>
@@ -457,6 +494,7 @@
 
     <script>
         let dadosResumo = null;
+        let dadosOriginais = null; // Armazena dados sem filtro
 
         function showStatus(msg, type = 'info') {
             const div = document.getElementById('statusDiv');
@@ -498,7 +536,10 @@
                     throw new Error(result.msg || 'Erro ao carregar resumo');
                 }
 
+                dadosOriginais = JSON.parse(JSON.stringify(result)); // Clone profundo
                 dadosResumo = result;
+                
+                preencherFiltros();
                 renderResumo();
 
                 document.getElementById('loadingDiv').style.display = 'none';
@@ -517,6 +558,145 @@
                     </button>
                 `;
                 showStatus(error.message, 'error');
+            }
+        }
+
+        function preencherFiltros() {
+            if (!dadosOriginais) return;
+
+            // Extrai supervisores únicos
+            const supervisores = [...new Set(dadosOriginais.porSupervisor.map(s => s.supervisor))].sort();
+            const selectSup = document.getElementById('filtroSupervisor');
+            selectSup.innerHTML = supervisores.map(s => `<option value="${s}">${s}</option>`).join('');
+
+            // Extrai funções únicas
+            const funcoes = [...new Set(dadosOriginais.porFuncao.map(f => f.funcao))].sort();
+            const selectFunc = document.getElementById('filtroFuncao');
+            selectFunc.innerHTML = funcoes.map(f => `<option value="${f}">${f}</option>`).join('');
+
+            // Extrai turnos únicos de todos os colaboradores
+            const turnos = new Set();
+            dadosOriginais.porSupervisor.forEach(sup => {
+                sup.colaboradores.forEach(colab => {
+                    if (colab.turno && colab.turno !== 'Não informado') {
+                        turnos.add(colab.turno);
+                    }
+                });
+            });
+            const turnosArray = [...turnos].sort();
+            const selectTurno = document.getElementById('filtroTurno');
+            selectTurno.innerHTML = turnosArray.map(t => `<option value="${t}">${t}</option>`).join('');
+        }
+
+        function aplicarFiltros() {
+            if (!dadosOriginais) return;
+
+            const supervisoresSelecionados = Array.from(document.getElementById('filtroSupervisor').selectedOptions).map(o => o.value);
+            const funcoesSelecionadas = Array.from(document.getElementById('filtroFuncao').selectedOptions).map(o => o.value);
+            const turnosSelecionados = Array.from(document.getElementById('filtroTurno').selectedOptions).map(o => o.value);
+
+            console.log('Filtros aplicados:', { supervisoresSelecionados, funcoesSelecionadas, turnosSelecionados });
+
+            // Clone dos dados originais
+            dadosResumo = JSON.parse(JSON.stringify(dadosOriginais));
+
+            // Aplica filtros em supervisores
+            if (supervisoresSelecionados.length > 0) {
+                dadosResumo.porSupervisor = dadosResumo.porSupervisor.filter(sup => 
+                    supervisoresSelecionados.includes(sup.supervisor)
+                );
+            }
+
+            // Aplica filtros em funções
+            if (funcoesSelecionadas.length > 0) {
+                dadosResumo.porFuncao = dadosResumo.porFuncao.filter(func => 
+                    funcoesSelecionadas.includes(func.funcao)
+                );
+            }
+
+            // Aplica filtros de turno em colaboradores
+            if (turnosSelecionados.length > 0) {
+                dadosResumo.porSupervisor = dadosResumo.porSupervisor.map(sup => {
+                    const colabsFiltrados = sup.colaboradores.filter(c => turnosSelecionados.includes(c.turno));
+                    return {
+                        ...sup,
+                        colaboradores: colabsFiltrados,
+                        total: colabsFiltrados.length,
+                        presente: colabsFiltrados.filter(c => c.status.toLowerCase() === 'presente').length,
+                        ausente: colabsFiltrados.filter(c => c.status.toLowerCase() === 'ausente').length,
+                        ferias: colabsFiltrados.filter(c => c.status.toLowerCase().includes('férias') || c.status.toLowerCase().includes('ferias')).length,
+                        folga: colabsFiltrados.filter(c => c.status.toLowerCase() === 'folga').length,
+                        afastado: colabsFiltrados.filter(c => c.status.toLowerCase() === 'afastado').length,
+                        outros: colabsFiltrados.filter(c => {
+                            const st = c.status.toLowerCase();
+                            return st !== 'presente' && st !== 'ausente' && !st.includes('férias') && !st.includes('ferias') && st !== 'folga' && st !== 'afastado';
+                        }).length
+                    };
+                }).filter(sup => sup.total > 0);
+
+                dadosResumo.porFuncao = dadosResumo.porFuncao.map(func => {
+                    const colabsFiltrados = func.colaboradores.filter(c => turnosSelecionados.includes(c.turno));
+                    return {
+                        ...func,
+                        colaboradores: colabsFiltrados,
+                        total: colabsFiltrados.length,
+                        presente: colabsFiltrados.filter(c => c.status.toLowerCase() === 'presente').length,
+                        ausente: colabsFiltrados.filter(c => c.status.toLowerCase() === 'ausente').length,
+                        ferias: colabsFiltrados.filter(c => c.status.toLowerCase().includes('férias') || c.status.toLowerCase().includes('ferias')).length,
+                        folga: colabsFiltrados.filter(c => c.status.toLowerCase() === 'folga').length,
+                        afastado: colabsFiltrados.filter(c => c.status.toLowerCase() === 'afastado').length,
+                        outros: colabsFiltrados.filter(c => {
+                            const st = c.status.toLowerCase();
+                            return st !== 'presente' && st !== 'ausente' && !st.includes('férias') && !st.includes('ferias') && st !== 'folga' && st !== 'afastado';
+                        }).length
+                    };
+                }).filter(func => func.total > 0);
+            }
+
+            // Recalcula resumo geral
+            let totalGeral = 0;
+            let presenteGeral = 0;
+            let ausenteGeral = 0;
+            let feriasGeral = 0;
+            let folgaGeral = 0;
+            let afastadoGeral = 0;
+            let outrosGeral = 0;
+
+            dadosResumo.porSupervisor.forEach(sup => {
+                totalGeral += sup.total;
+                presenteGeral += sup.presente;
+                ausenteGeral += sup.ausente;
+                feriasGeral += sup.ferias;
+                folgaGeral += sup.folga;
+                afastadoGeral += sup.afastado;
+                outrosGeral += sup.outros;
+            });
+
+            dadosResumo.resumoGeral = {
+                total: totalGeral,
+                presente: presenteGeral,
+                ausente: ausenteGeral,
+                ferias: feriasGeral,
+                folga: folgaGeral,
+                afastado: afastadoGeral,
+                outros: outrosGeral,
+                percentualPresente: totalGeral > 0 ? ((presenteGeral / totalGeral) * 100).toFixed(1) : 0,
+                percentualAusente: totalGeral > 0 ? (((totalGeral - presenteGeral) / totalGeral) * 100).toFixed(1) : 0
+            };
+
+            renderResumo();
+            showStatus('Filtros aplicados com sucesso!', 'success');
+        }
+
+        function limparFiltros() {
+            document.getElementById('filtroSupervisor').selectedIndex = -1;
+            document.getElementById('filtroFuncao').selectedIndex = -1;
+            document.getElementById('filtroTurno').selectedIndex = -1;
+            
+            if (dadosOriginais) {
+                dadosResumo = JSON.parse(JSON.stringify(dadosOriginais));
+                renderResumo();
+                showStatus('Filtros limpos!', 'info');
             }
         }
 
@@ -591,7 +771,7 @@
                         <div id="sup-${idx}" class="colaboradores-lista">
                             ${sup.colaboradores.map(c => `
                                 <div class="colaborador-item">
-                                    <strong>${c.nome}</strong> (${c.matricula}) - ${c.funcao} - 
+                                    <strong>${c.nome}</strong> (${c.matricula}) - <strong>${c.funcao}</strong> - Turno: ${c.turno} - 
                                     <span style="color: ${c.status === 'Presente' ? '#28a745' : '#dc3545'};">
                                         ${c.status}
                                     </span>
@@ -639,7 +819,7 @@
                         <div id="func-${idx}" class="colaboradores-lista">
                             ${func.colaboradores.map(c => `
                                 <div class="colaborador-item">
-                                    <strong>${c.nome}</strong> (${c.matricula}) - ${c.supervisor} - 
+                                    <strong>${c.nome}</strong> (${c.matricula}) - ${c.supervisor} - Turno: ${c.turno} - 
                                     <span style="color: ${c.status === 'Presente' ? '#28a745' : '#dc3545'};">
                                         ${c.status}
                                     </span>
