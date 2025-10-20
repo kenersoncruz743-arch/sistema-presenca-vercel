@@ -969,8 +969,8 @@ document.getElementById('resumoCards').innerHTML = `
             }
 
             const headers = [
-                'Função', 'Turno', 'QL Total', 'Presente', 'Desvio', 'Afastado', 
-                'Ausente', 'Férias/Folga', 'Deficit', 'Produtividade/Hora', 'Horas Turno', 'Capacidade', 'Realizado'
+                'Função', 'QL Total', 'Capacidade', 'Presente', 'Desvio', 'Afastado', 
+                'Ausente', 'Férias/Folga', 'Deficit', 'Produtividade/Hora', 'Meta', 'Realizado'
             ];
             
             let csv = headers.join(',') + '\n';
@@ -978,17 +978,16 @@ document.getElementById('resumoCards').innerHTML = `
             dados.forEach(d => {
                 csv += [
                     `"${d.funcao}"`,
-                    `"${d.turno}"`,
                     d.qlTotal,
+                    d.capacidade,
                     d.presente,
                     d.desvio,
                     d.afastado,
                     d.ausente,
                     d.feriasFolga,
                     d.deficit,
-                    d.produtividadeHora.toFixed(2),
-                    d.horasTurno.toFixed(2),
-                    d.capacidade.toFixed(2),
+                    d.produtividadeHora,
+                    d.meta.toFixed(2),
                     d.realizado.toFixed(2)
                 ].join(',') + '\n';
             });
@@ -997,15 +996,16 @@ document.getElementById('resumoCards').innerHTML = `
             csv += '\n';
             csv += 'RESUMO\n';
             const totalQL = dados.reduce((sum, d) => sum + d.qlTotal, 0);
+            const totalCapacidade = dados.reduce((sum, d) => sum + d.capacidade, 0);
             const totalPresente = dados.reduce((sum, d) => sum + d.presente, 0);
             const totalDesvio = dados.reduce((sum, d) => sum + d.desvio, 0);
             const totalAfastado = dados.reduce((sum, d) => sum + d.afastado, 0);
             const totalAusente = dados.reduce((sum, d) => sum + d.ausente, 0);
             const totalDeficit = dados.reduce((sum, d) => sum + d.deficit, 0);
-            const totalCapacidade = dados.reduce((sum, d) => sum + d.capacidade, 0);
+            const totalMeta = dados.reduce((sum, d) => sum + d.meta, 0);
             const totalRealizado = dados.reduce((sum, d) => sum + d.realizado, 0);
             
-            csv += `"TOTAL",""${totalQL},${totalPresente},${totalDesvio},${totalAfastado},${totalAusente},,,${totalDeficit},,,${totalCapacidade.toFixed(2)},${totalRealizado.toFixed(2)}\n`;
+            csv += `"TOTAL",${totalQL},${totalCapacidade},${totalPresente},${totalDesvio},${totalAfastado},${totalAusente},,${totalDeficit},,${totalMeta.toFixed(2)},${totalRealizado.toFixed(2)}\n`;
             
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
