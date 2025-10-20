@@ -669,51 +669,65 @@ document.getElementById('resumoCards').innerHTML = `
             const funcoesSelecionadas = Array.from(document.getElementById('filtroFuncoes').selectedOptions).map(o => o.value);
             const turnosSelecionados = Array.from(document.getElementById('filtroTurnos').selectedOptions).map(o => o.value);
 
-            if (turnosSelecionados.length > 0) {
-                const basesFiltradas = dadosBase.filter(d => turnosSelecionados.includes(d.turno));
-                
-                const basePorFuncao = {};
-                basesFiltradas.forEach(d => {
-                    const funcao = (d.funcao || 'Sem Função').trim();
-                    const status = (d.status || '').trim().toLowerCase();
-                    
-                    if (!basePorFuncao[funcao]) {
-                        basePorFuncao[funcao] = {
-                            presente: 0,
-                            desvio: 0,
-                            ausente: 0,
-                            atestado: 0,
-                            ferias: 0,
-                            folga: 0,
-                            afastado: 0
-                        };
-                    }
-                    
-                    if (status === 'presente') basePorFuncao[funcao].presente++;
-                    else if (status === 'desvio') basePorFuncao[funcao].desvio++;
-                    else if (status === 'ausente') basePorFuncao[funcao].ausente++;
-                    else if (status === 'atestado') basePorFuncao[funcao].atestado++;
-                    else if (status.includes('férias') || status.includes('ferias')) basePorFuncao[funcao].ferias++;
-                    else if (status === 'folga') basePorFuncao[funcao].folga++;
-                    else if (status === 'afastado') basePorFuncao[funcao].afastado++;
-                });
-
-                dadosProducao.forEach(d => {
-                    const base = basePorFuncao[d.funcao] || { presente: 0, desvio: 0, ausente: 0, atestado: 0, ferias: 0, folga: 0, afastado: 0 };
-                    d.presente = base.presente;
-                    d.desvio = base.desvio;
-                    d.afastado = base.afastado;
-                    d.ausente = base.ausente + base.atestado;
-                    d.feriasFolga = base.ferias + base.folga;
-                });
-            }
-
             if (funcoesSelecionadas.length > 0) {
                 funcoesFiltradas = funcoesSelecionadas;
             } else {
                 funcoesFiltradas = [];
             }
 
+            if (turnosSelecionados.length > 0) {
+                // Reprocessa dados considerando apenas os turnos selecionados
+                const baseFiltrada = dadosBase.filter(d => turnosSelecionados.includes(d.turno));
+                
+                const basePorFuncaoTurno = {};
+                baseFiltrada.forEach(d => {
+                    const funcao = (d.funcao || 'Sem Função').trim();
+                    const turno = (d.turno || 'Sem Turno').trim();
+                    const status = (d.status || '').trim();
+                    const chave = `${funcao}|${turno}`;
+                    
+                    if (!basePorFuncaoTurno[chave]) {
+                        basePorFuncaoTurno[chave] = {
+                            funcao: funcao,
+                            turno: turno,
+                            presente: 0,
+                            desvio: 0,
+                            ausente: 0,
+                            atestado: 0,
+                            ferias: 0,
+                            folga: 0,
+                            afastado: 0,
+                            total: 0
+                        };
+                    }
+                    
+                    basePorFuncaoTurno[chave].total++;
+                    
+                    const statusLower = status.toLowerCase();
+                    if (statusLower === 'presente') basePorFuncaoTurno[chave].presente++;
+                    else if (statusLower === 'desvio') basePorFuncaoTurno[chave].desvio++;
+                    else if (statusLower === 'ausente') basePorFuncaoTurno[chave].ausente++;
+                    else if (statusLower === 'atestado') basePorFuncaoTurno[chave].atestado++;
+                    else if (statusLower.includes('férias') || statusLower.includes('ferias')) basePorFuncaoTurno[chave].ferias++;
+                    else if (statusLower === 'folga') basePorFuncaoTurno[chave].folga++;
+                    else if (statusLower === 'afastado') basePorFuncaoTurno[chave].afastado++;
+                });
+
+                // Atualiza apenas os registros que correspondem aos turnos filtrados
+                dadosProducao.forEach(d => {
+                    const chave = `${d.funcao}|${d.turno}`;
+                    if (basePorFuncaoTurno[chave]) {
+                        const base = basePorFuncaoTurno[chave];
+                        d.presente = base.presente;
+                        d.desvio = base.desvio;
+                        d.afastado = base.afastado;
+                        d.ausente = base.ausente + base.atestado;
+                        d.feriasFolga = base.ferias + base.folga;
+                    }
+                });
+            }
+
+            calcularTudo();
             renderTabela();
             atualizarResumo();
             showStatus('Filtros aplicados!', 'success');
@@ -747,7 +761,12 @@ document.getElementById('resumoCards').innerHTML = `
                     <td><strong>${d.funcao}</strong></td>
                     <td><span style="background: #e3f2fd; padding: 4px 8px; border-radius: 4px; font-weight: 600; color: #1976d2;">${d.turno}</span></td>
                     <td class="valor-calculado">${d.qlTotal}</td>
-                    <td class="valor-calculado" style="background: #c8e6c9; color: #2e7d32; font-weight: 600;">${d.presente}</td>
+                    <td class="valor-calculado" style="background: #c8e6c9; color: #2e7d32; font-weight: 600;">
+                        ${d.presente}
+                        <div style="font-size: 11px; color: #666; margin-top: 4px; font-weight: normal;">
+                            Cap: ${d.capacidade.toFixed(0)}
+                        </div>
+                    </td>
                     <td class="valor-calculado" style="background: #ffcdd2; color: #c62828; font-weight: 600;">${d.desvio}</td>
                     <td class="valor-calculado">${d.afastado}</td>
                     <td class="valor-calculado">${d.ausente}</td>
@@ -756,7 +775,7 @@ document.getElementById('resumoCards').innerHTML = `
                     <td class="valor-calculado" style="background: #e1f5fe; color: #0277bd;">${d.produtividadeHora.toFixed(2)}</td>
                     <td class="valor-calculado" style="background: #f3e5f5; color: #6a1b9a;">${d.horasTurno.toFixed(2)}</td>
                     <td class="valor-calculado" style="background: #e8f5e9; color: #2e7d32; font-weight: 600; font-size: 15px;">${d.capacidade.toFixed(2)}</td>
-                    <td><input type="number" class="input-calculo" value="${d.realizado}" onchange="atualizarRealizado(${idx}, this.value)" min="0" step="0.01"></td>
+                    <td><input type="number" class="input-calculo" value="${d.realizado}" onchange="atualizarRealizado(${dadosProducao.indexOf(d)}, this.value)" min="0" step="0.01"></td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -775,19 +794,12 @@ document.getElementById('resumoCards').innerHTML = `
         }
 
         function atualizarRealizado(idx, valor) {
-            let dados = funcoesFiltradas.length > 0 
-                ? dadosProducao.filter(d => funcoesFiltradas.includes(d.funcao)) 
-                : dadosProducao;
-            
-            dados[idx].realizado = parseFloat(valor) || 0;
+            dadosProducao[idx].realizado = parseFloat(valor) || 0;
+            atualizarResumo();
         }
 
         function calcularLinha(idx) {
-            let dados = funcoesFiltradas.length > 0 
-                ? dadosProducao.filter(d => funcoesFiltradas.includes(d.funcao)) 
-                : dadosProducao;
-            
-            const d = dados[idx];
+            const d = dadosProducao[idx];
             
             // Busca produtividade/hora da aba Meta para a data selecionada
             const dataRef = document.getElementById('dataReferencia').value;
@@ -797,18 +809,22 @@ document.getElementById('resumoCards').innerHTML = `
                 d.produtividadeHora = dadosMeta[dataFormatada].produtividadeHora;
             } else {
                 console.warn(`Meta não encontrada para ${dataFormatada}`);
+                d.produtividadeHora = 0;
             }
             
-            // Calcula horas do turno
-            const dataSelecionada = new Date(dataRef + 'T00:00:00');
+            // Calcula horas do turno com verificação correta de sábado
+            const dataSelecionada = new Date(dataRef + 'T12:00:00'); // Usa meio-dia para evitar problemas de timezone
             const diaSemana = dataSelecionada.getDay(); // 0=Domingo, 6=Sábado
             const ehSabado = diaSemana === 6;
             
-            if (d.turno.toUpperCase().includes('A')) {
+            const turnoUpper = d.turno.toUpperCase();
+            
+            if (turnoUpper.includes('TURNO A') || turnoUpper === 'A') {
                 d.horasTurno = 6.05;
-            } else if (d.turno.toUpperCase().includes('B')) {
+            } else if (turnoUpper.includes('TURNO B') || turnoUpper === 'B') {
                 d.horasTurno = ehSabado ? 4 : 7.05;
-            } else if (d.turno.toUpperCase().includes('C')) {
+                console.log(`Turno B: Data=${dataRef}, Dia da semana=${diaSemana}, É sábado=${ehSabado}, Horas=${d.horasTurno}`);
+            } else if (turnoUpper.includes('TURNO C') || turnoUpper === 'C') {
                 d.horasTurno = 7.05;
             } else {
                 d.horasTurno = 8; // Padrão se não identificar turno
@@ -820,8 +836,8 @@ document.getElementById('resumoCards').innerHTML = `
             // Meta = mesma fórmula da capacidade (capacidade é a meta)
             d.meta = d.capacidade;
             
-            // Deficit = Capacidade - Presente + Desvio
-            d.deficit = d.presente > 0 ? d.desvio : d.qlTotal;
+            // Deficit = Desvio (colaboradores em desvio de função)
+            d.deficit = d.desvio;
             
             renderTabela();
         }
@@ -833,11 +849,7 @@ document.getElementById('resumoCards').innerHTML = `
         }
 
         function calcularTudo() {
-            let dados = funcoesFiltradas.length > 0 
-                ? dadosProducao.filter(d => funcoesFiltradas.includes(d.funcao)) 
-                : dadosProducao;
-            
-            dados.forEach((d, idx) => calcularLinha(idx));
+            dadosProducao.forEach((d, idx) => calcularLinha(idx));
             atualizarResumo();
             showStatus('Cálculos atualizados para todas as funções!', 'success');
         }
@@ -969,8 +981,8 @@ document.getElementById('resumoCards').innerHTML = `
             }
 
             const headers = [
-                'Função', 'QL Total', 'Capacidade', 'Presente', 'Desvio', 'Afastado', 
-                'Ausente', 'Férias/Folga', 'Deficit', 'Produtividade/Hora', 'Meta', 'Realizado'
+                'Função', 'Turno', 'QL Total', 'Presente', 'Desvio', 'Afastado', 
+                'Ausente', 'Férias/Folga', 'Deficit', 'Produtividade/Hora', 'Horas Turno', 'Capacidade', 'Realizado'
             ];
             
             let csv = headers.join(',') + '\n';
@@ -978,16 +990,17 @@ document.getElementById('resumoCards').innerHTML = `
             dados.forEach(d => {
                 csv += [
                     `"${d.funcao}"`,
+                    `"${d.turno}"`,
                     d.qlTotal,
-                    d.capacidade,
                     d.presente,
                     d.desvio,
                     d.afastado,
                     d.ausente,
                     d.feriasFolga,
                     d.deficit,
-                    d.produtividadeHora,
-                    d.meta.toFixed(2),
+                    d.produtividadeHora.toFixed(2),
+                    d.horasTurno.toFixed(2),
+                    d.capacidade.toFixed(2),
                     d.realizado.toFixed(2)
                 ].join(',') + '\n';
             });
@@ -996,16 +1009,15 @@ document.getElementById('resumoCards').innerHTML = `
             csv += '\n';
             csv += 'RESUMO\n';
             const totalQL = dados.reduce((sum, d) => sum + d.qlTotal, 0);
-            const totalCapacidade = dados.reduce((sum, d) => sum + d.capacidade, 0);
             const totalPresente = dados.reduce((sum, d) => sum + d.presente, 0);
             const totalDesvio = dados.reduce((sum, d) => sum + d.desvio, 0);
             const totalAfastado = dados.reduce((sum, d) => sum + d.afastado, 0);
             const totalAusente = dados.reduce((sum, d) => sum + d.ausente, 0);
             const totalDeficit = dados.reduce((sum, d) => sum + d.deficit, 0);
-            const totalMeta = dados.reduce((sum, d) => sum + d.meta, 0);
+            const totalCapacidade = dados.reduce((sum, d) => sum + d.capacidade, 0);
             const totalRealizado = dados.reduce((sum, d) => sum + d.realizado, 0);
             
-            csv += `"TOTAL",${totalQL},${totalCapacidade},${totalPresente},${totalDesvio},${totalAfastado},${totalAusente},,${totalDeficit},,${totalMeta.toFixed(2)},${totalRealizado.toFixed(2)}\n`;
+            csv += `"TOTAL",""${totalQL},${totalPresente},${totalDesvio},${totalAfastado},${totalAusente},,,${totalDeficit},,,${totalCapacidade.toFixed(2)},${totalRealizado.toFixed(2)}\n`;
             
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
