@@ -516,6 +516,22 @@
                     throw new Error('Aba Produtividade_Hora não encontrada ou vazia');
                 }
 
+                console.log('Carregando Meta...');
+                const resMeta = await fetch('/api/producao/meta');
+                const resultMeta = await resMeta.json();
+                
+                if (resultMeta.ok && resultMeta.dados) {
+                    resultMeta.dados.forEach(m => {
+                        if (m.data) {
+                            dadosMeta[m.data] = {
+                                meta: parseFloat(m.meta) || 0,
+                                produtividadeHora: parseFloat(m.produtividadeHora) || 0
+                            };
+                        }
+                    });
+                    console.log(`Meta carregada para ${Object.keys(dadosMeta).length} datas`);
+                }
+
                 console.log('Carregando dados da Base...');
                 const resBase = await fetch('/api/producao/base');
                 const resultBase = await resBase.json();
@@ -567,26 +583,31 @@
             console.log('Processando dados...');
             console.log('Funções permitidas:', funcoesPermitidas);
             
-            const qlpPorFuncao = {};
+            // Agrupa QLP por função E turno
+            const qlpPorFuncaoTurno = {};
             dadosQLP.forEach(d => {
                 if (!d.funcao || !d.isAtivo) return;
                 
                 const funcao = d.funcao.trim();
+                const turno = (d.turno || 'Sem Turno').trim();
                 
                 if (!funcoesPermitidas.includes(funcao)) {
                     return;
                 }
                 
-                if (!qlpPorFuncao[funcao]) {
-                    qlpPorFuncao[funcao] = {
+                const chave = `${funcao}|${turno}`;
+                
+                if (!qlpPorFuncaoTurno[chave]) {
+                    qlpPorFuncaoTurno[chave] = {
                         funcao: funcao,
+                        turno: turno,
                         qlTotal: 0,
                         colaboradores: []
                     };
                 }
                 
-                qlpPorFuncao[funcao].qlTotal++;
-                qlpPorFuncao[funcao].colaboradores.push(d);
+                qlpPorFuncaoTurno[chave].qlTotal++;
+                qlpPorFuncaoTurno[chave].colaboradores.push(d);
             });
 
             const basePorFuncaoTurno = {};
@@ -632,7 +653,7 @@
             
             Object.keys(basePorFuncaoTurno).forEach(chave => {
                 const base = basePorFuncaoTurno[chave];
-                const qlp = qlpPorFuncao[base.funcao] || { qlTotal: 0 };
+                const qlp = qlpPorFuncaoTurno[chave] || { qlTotal: 0 };
                 
                 dadosProducao.push({
                     funcao: base.funcao,
@@ -746,6 +767,9 @@
                 tr.innerHTML = `
                     <td><strong>${d.funcao}</strong></td>
                     <td><span style="background: #e3f2fd; padding: 4px 8px; border-radius: 4px; font-weight: 600; color: #1976d2;">${d.turno}</span></td>
+                    <td class="valor-calculado">${d.qlTotal}</td>
+                    <td class="valor-calculado">${d.presente}</td>
+                    <td class="valor-calculado">${d.desvio}</td>
                     <td class="valor-calculado">${d.afastado}</td>
                     <td class="valor-calculado">${d.ausente}</td>
                     <td class="valor-calculado">${d.feriasFolga}</td>
