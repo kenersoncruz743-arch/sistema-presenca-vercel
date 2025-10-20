@@ -23,38 +23,37 @@ module.exports = async function handler(req, res) {
     const doc = await sheetsService.init();
     console.log(`[PRODUCAO/META] Conectado: ${doc.title}`);
     
+    // Carrega aba Meta
     const sheetMeta = doc.sheetsByTitle['Meta'];
     if (!sheetMeta) {
-      console.warn('[PRODUCAO/META] Aba Meta não encontrada');
-      return res.status(200).json({
-        ok: true,
-        dados: [],
+      return res.status(404).json({
+        ok: false,
         msg: 'Aba Meta não encontrada'
       });
     }
     
-    const rows = await sheetMeta.getRows();
-    console.log(`[PRODUCAO/META] ${rows.length} registros na Meta`);
+    const rowsMeta = await sheetMeta.getRows();
+    console.log(`[PRODUCAO/META] ${rowsMeta.length} registros na Meta`);
     
     const dados = [];
     
-    for (const row of rows) {
+    rowsMeta.forEach(row => {
       const data = String(row.get('Data') || '').trim();
-      const meta = String(row.get('Meta') || '0').trim();
-      const produtividadeHora = String(row.get('Produtividade/hora') || '0').trim();
+      const meta = String(row.get('Meta') || '').trim();
+      const produtividadeHora = String(row.get('Produtividade/hora') || '').trim();
       
-      if (data) {
-        // Converte valores numéricos (remove vírgulas e converte para float)
+      if (data && produtividadeHora) {
+        // Converte produtividade/hora para número (aceita vírgula ou ponto)
+        const produtividadeNum = parseFloat(produtividadeHora.replace(',', '.')) || 0;
         const metaNum = parseFloat(meta.replace(',', '.')) || 0;
-        const prodHoraNum = parseFloat(produtividadeHora.replace(',', '.')) || 0;
         
         dados.push({
           data: data,
           meta: metaNum,
-          produtividadeHora: prodHoraNum
+          produtividadeHora: produtividadeNum
         });
       }
-    }
+    });
     
     console.log(`[PRODUCAO/META] ${dados.length} registros processados`);
     
