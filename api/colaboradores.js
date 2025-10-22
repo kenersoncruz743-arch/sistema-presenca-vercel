@@ -1,4 +1,4 @@
-// api/colaboradores.js - COM SUPORTE A DESVIO
+// api/colaboradores.js - COM SUPORTE A VALIDAÇÃO POR ABA
 const sheetsService = require('../lib/sheets');
 
 module.exports = async function handler(req, res) {
@@ -41,20 +41,26 @@ module.exports = async function handler(req, res) {
         }
 
         case 'removeBuffer': {
-          const { supervisor, matricula } = req.body;
-          const result = await sheetsService.removerBuffer(supervisor, matricula);
+          const { supervisor, aba, matricula } = req.body;
+          // Usa aba como chave principal se fornecida
+          const chave = aba || supervisor;
+          const result = await sheetsService.removerBufferPorAba(chave, matricula);
           return res.status(200).json(result);
         }
 
         case 'updateStatus': {
-          const { supervisor, matricula, status } = req.body;
-          const result = await sheetsService.atualizarStatusBuffer(supervisor, matricula, status);
+          const { supervisor, aba, matricula, status } = req.body;
+          // Usa aba como chave principal se fornecida
+          const chave = aba || supervisor;
+          const result = await sheetsService.atualizarStatusBufferPorAba(chave, matricula, status);
           return res.status(200).json(result);
         }
 
         case 'updateDesvio': {
-          const { supervisor, matricula, desvio } = req.body;
-          const result = await sheetsService.atualizarDesvioBuffer(supervisor, matricula, desvio);
+          const { supervisor, aba, matricula, desvio } = req.body;
+          // Usa aba como chave principal se fornecida
+          const chave = aba || supervisor;
+          const result = await sheetsService.atualizarDesvioBufferPorAba(chave, matricula, desvio);
           return res.status(200).json(result);
         }
 
