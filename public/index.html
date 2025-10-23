@@ -126,17 +126,16 @@
             font-size: 18px;
         }
         
-        .credentials {
+        .debug-info {
             background: #f8f9fa;
             padding: 15px;
             border-radius: 8px;
-            margin-bottom: 15px;
-            font-size: 14px;
+            margin-top: 15px;
+            font-size: 12px;
             text-align: left;
-        }
-        
-        .credentials strong {
-            color: #667eea;
+            font-family: monospace;
+            max-height: 200px;
+            overflow-y: auto;
         }
         
         @media (max-width: 480px) {
@@ -190,6 +189,14 @@
         
         <div id="loginStatus"></div>
         
+        <div class="test-section">
+            <h3>Ferramentas de Diagnóstico</h3>
+            <button class="btn btn-secondary" onclick="testarConexao()">
+                <i class="fas fa-network-wired"></i> Testar Conexão API
+            </button>
+            <div id="debugInfo" class="debug-info" style="display: none;"></div>
+        </div>
+    </div>
 
     <script>
         const API_BASE = window.location.origin;
@@ -198,6 +205,82 @@
             const statusEl = document.getElementById('loginStatus');
             statusEl.innerHTML = message;
             statusEl.className = `status ${type}`;
+        }
+
+        function showDebug(info) {
+            const debugEl = document.getElementById('debugInfo');
+            debugEl.style.display = 'block';
+            debugEl.innerHTML = `<pre>${JSON.stringify(info, null, 2)}</pre>`;
+        }
+
+        // Função de teste de conexão
+        async function testarConexao() {
+            showStatus('<i class="fas fa-cog loading"></i> Testando conexão...', 'info');
+            showDebug({ status: 'Iniciando teste...' });
+            
+            try {
+                const url = `${API_BASE}/api`;
+                
+                console.log('[TEST] URL:', url);
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'test'
+                    })
+                });
+                
+                console.log('[TEST] Status:', response.status);
+                console.log('[TEST] Headers:', [...response.headers.entries()]);
+                
+                const contentType = response.headers.get('content-type');
+                console.log('[TEST] Content-Type:', contentType);
+                
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await response.text();
+                    console.error('[TEST] Resposta não é JSON:', text.substring(0, 200));
+                    
+                    showDebug({
+                        erro: 'API retornou HTML ao invés de JSON',
+                        status: response.status,
+                        contentType: contentType,
+                        primeiros200chars: text.substring(0, 200)
+                    });
+                    
+                    showStatus('<i class="fas fa-times-circle"></i> Erro: API não está respondendo corretamente', 'error');
+                    return;
+                }
+                
+                const result = await response.json();
+                
+                console.log('[TEST] Resultado:', result);
+                
+                showDebug({
+                    url: url,
+                    status: response.status,
+                    resultado: result
+                });
+                
+                if (result.ok) {
+                    showStatus(`<i class="fas fa-check-circle"></i> ${result.msg}`, 'success');
+                } else {
+                    showStatus(`<i class="fas fa-exclamation-triangle"></i> ${result.msg}`, 'error');
+                }
+                
+            } catch (error) {
+                console.error('[TEST] Erro:', error);
+                
+                showDebug({
+                    erro: error.message,
+                    stack: error.stack,
+                    url: `${API_BASE}/api`
+                });
+                
+                showStatus('<i class="fas fa-exclamation-triangle"></i> Erro de conexão: ' + error.message, 'error');
+            }
         }
 
         // Função de login
@@ -219,7 +302,12 @@
             showStatus('<i class="fas fa-cog loading"></i> Validando credenciais...', 'info');
             
             try {
-                const response = await fetch(`${API_BASE}/api/auth`, {
+                const url = `${API_BASE}/api`;
+                
+                console.log('[LOGIN] URL:', url);
+                console.log('[LOGIN] Dados:', { usuario, action: 'login' });
+                
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -231,25 +319,44 @@
                     })
                 });
                 
+                console.log('[LOGIN] Status:', response.status);
+                
+                const contentType = response.headers.get('content-type');
+                console.log('[LOGIN] Content-Type:', contentType);
+                
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await response.text();
+                    console.error('[LOGIN] Resposta não é JSON:', text.substring(0, 200));
+                    
+                    showDebug({
+                        erro: 'API retornou HTML ao invés de JSON',
+                        status: response.status,
+                        contentType: contentType,
+                        primeiros200chars: text.substring(0, 200)
+                    });
+                    
+                    throw new Error('API não está respondendo corretamente. Verifique se as variáveis de ambiente estão configuradas no Vercel.');
+                }
+                
                 const result = await response.json();
                 
-                console.log('Resposta do login:', result);
+                console.log('[LOGIN] Resposta:', result);
                 
                 if (result.ok) {
                     showStatus('<i class="fas fa-check-circle"></i> Login realizado com sucesso!', 'success');
                     
-                    // CORREÇÃO: Salva dados corretamente no sessionStorage
+                    // Salva dados no sessionStorage
                     sessionStorage.setItem('usuario', result.usuario);
                     sessionStorage.setItem('abas', JSON.stringify(result.abas));
                     
-                    console.log('Dados salvos no sessionStorage:', {
+                    console.log('[LOGIN] Dados salvos:', {
                         usuario: result.usuario,
                         abas: result.abas
                     });
                     
-                    // Redireciona para o menu após um breve delay
+                    // Redireciona para o menu
                     setTimeout(() => {
-                        console.log('Redirecionando para menu...');
+                        console.log('[LOGIN] Redirecionando para menu...');
                         window.location.href = '/menu';
                     }, 1000);
                     
@@ -258,24 +365,31 @@
                 }
                 
             } catch (error) {
-                console.error('Erro no login:', error);
-                showStatus('<i class="fas fa-exclamation-triangle"></i> Erro de conexão. Verifique sua internet.', 'error');
+                console.error('[LOGIN] Erro:', error);
+                showStatus(`<i class="fas fa-exclamation-triangle"></i> ${error.message}`, 'error');
+                
+                showDebug({
+                    erro: error.message,
+                    stack: error.stack,
+                    url: `${API_BASE}/api`
+                });
             } finally {
                 loginBtn.disabled = false;
                 loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Entrar';
             }
         });
 
-     
         // Limpa sessionStorage ao carregar a página de login
         window.onload = function() {
-            console.log('Página de login carregada');
+            console.log('[INIT] Página de login carregada');
+            console.log('[INIT] API Base:', API_BASE);
             sessionStorage.clear();
             
             // Auto-preenche credenciais para desenvolvimento local
             if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
                 document.getElementById('usuario').value = 'admin';
                 document.getElementById('senha').value = '123';
+                console.log('[INIT] Credenciais de teste preenchidas');
             }
         };
 
@@ -286,8 +400,8 @@
             }
         });
 
-        // Debug
-        console.log('Login page loaded');
+        console.log('[INIT] Login page loaded');
+        console.log('[INIT] API Base:', API_BASE);
     </script>
 </body>
 </html>
