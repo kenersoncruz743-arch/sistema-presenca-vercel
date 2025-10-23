@@ -1,262 +1,338 @@
-  // api/auth.js - Nova rota dedicada para autenticação
-  const sheetsService = require('../lib/sheets');
+// api/index.js - API UNIFICADA COMPLETA
+const sheetsService = require('../lib/sheets');
+
+// ==================== FUNÇÃO PRINCIPAL DE ROTEAMENTO ====================
+module.exports = async (req, res) => {
+  // CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   
-  module.exports = async (req, res) => {
-    // CORS
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    
-    if (req.method === 'OPTIONS') {
-      return res.status(200).end();
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  try {
+    const { pathname } = new URL(req.url, `http://${req.headers.host}`);
+    console.log('[API] Rota:', pathname, 'Método:', req.method);
+
+    // ==================== AUTENTICAÇÃO ====================
+    if (pathname === '/api' || pathname === '/api/' || pathname === '/api/auth') {
+      return await handleAuth(req, res);
     }
-  
-    // Apenas aceita POST
-    if (req.method !== 'POST') {
-      return res.status(405).json({ 
+
+    // ==================== COLABORADORES ====================
+    if (pathname.startsWith('/api/colaboradores')) {
+      return await handleColaboradores(req, res);
+    }
+
+    // ==================== ALOCAÇÃO BOX ====================
+    if (pathname.startsWith('/api/alocacaobox')) {
+      return await handleAlocacaoBox(req, res);
+    }
+
+    // ==================== MAPA DE CARGA ====================
+    if (pathname.startsWith('/api/mapacarga')) {
+      return await handleMapaCarga(req, res);
+    }
+
+    // ==================== PRODUÇÃO ====================
+    if (pathname.startsWith('/api/producao')) {
+      return await handleProducao(req, res, pathname);
+    }
+
+    // ==================== QLP ====================
+    if (pathname.startsWith('/api/qlp')) {
+      return await handleQLP(req, res, pathname);
+    }
+
+    // ==================== TESTE DE CONEXÃO ====================
+    if (pathname.startsWith('/api/test')) {
+      return await handleTestConnection(req, res);
+    }
+
+    // Rota não encontrada
+    return res.status(404).json({
+      ok: false,
+      msg: 'Rota não encontrada',
+      pathname: pathname
+    });
+
+  } catch (error) {
+    console.error('[API] Erro geral:', error);
+    return res.status(500).json({
+      ok: false,
+      msg: 'Erro interno do servidor',
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+};
+
+// ==================== HANDLER: AUTENTICAÇÃO ====================
+async function handleAuth(req, res) {
+  // Aceita tanto GET quanto POST para compatibilidade
+  if (req.method === 'GET') {
+    return res.status(200).json({
+      ok: true,
+      msg: 'API de autenticação funcionando',
+      endpoints: {
+        login: 'POST /api/auth com { action: "login", usuario, senha }',
+        test: 'POST /api/auth com { action: "test" }',
+        createTestData: 'POST /api/auth com { action: "createTestData" }'
+      }
+    });
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ 
+      ok: false, 
+      msg: 'Método não permitido. Use POST.' 
+    });
+  }
+
+  try {
+    const { usuario, senha, action } = req.body;
+
+    console.log('[AUTH] Action:', action);
+    console.log('[AUTH] Usuario:', usuario);
+
+    if (!action) {
+      return res.status(400).json({ 
         ok: false, 
-        msg: 'Método não permitido. Use POST.' 
+        msg: 'Ação não especificada. Use action: "login", "test" ou "createTestData"' 
       });
     }
-  
-    try {
-      console.log('[AUTH] Requisição recebida');
-      console.log('[AUTH] Body:', req.body);
-      
-      const { usuario, senha, action } = req.body;
-  
-      if (!action) {
+
+    // LOGIN
+    if (action === 'login') {
+      if (!usuario || !senha) {
         return res.status(400).json({ 
           ok: false, 
-          msg: 'Ação não especificada. Use action: "login"' 
+          msg: 'Usuário e senha são obrigatórios' 
         });
       }
-  
-      // LOGIN
-      if (action === 'login') {
-        if (!usuario || !senha) {
-          return res.status(400).json({ 
-            ok: false, 
-            msg: 'Usuário e senha são obrigatórios' 
+
+      console.log(`[AUTH] Tentativa de login: ${usuario}`);
+      const result = await sheetsService.validarLogin(usuario, senha);
+      console.log('[AUTH] Resultado login:', result);
+      
+      return res.status(200).json(result);
+    }
+
+    // TESTE DE CONEXÃO
+    if (action === 'test') {
+      console.log('[AUTH] Testando conexão...');
+      
+      try {
+        const doc = await sheetsService.init();
+        const sheets = Object.keys(doc.sheetsByTitle);
+        
+        console.log('[AUTH] Conexão OK. Planilha:', doc.title);
+        
+        return res.status(200).json({
+          ok: true,
+          msg: `Conectado à planilha: ${doc.title}`,
+          sheets: sheets,
+          totalSheets: sheets.length
+        });
+      } catch (error) {
+        console.error('[AUTH] Erro no teste:', error);
+        return res.status(500).json({
+          ok: false,
+          msg: 'Erro ao conectar com Google Sheets',
+          error: error.message
+        });
+      }
+    }
+
+    // CRIAR DADOS DE TESTE
+    if (action === 'createTestData') {
+      console.log('[AUTH] Criando dados de teste...');
+      
+      try {
+        const doc = await sheetsService.init();
+        
+        // Aba Usuarios
+        let sheet = doc.sheetsByTitle['Usuarios'];
+        if (!sheet) {
+          sheet = await doc.addSheet({ 
+            title: 'Usuarios',
+            headerValues: ['Usuario', 'Senha', 'Aba']
           });
         }
-  
-        console.log(`[AUTH] Tentativa de login: ${usuario}`);
         
-        const result = await sheetsService.validarLogin(usuario, senha);
+        const existingUsers = await sheet.getRows();
+        if (existingUsers.length === 0) {
+          await sheet.addRows([
+            { Usuario: 'admin', Senha: '123', Aba: 'PCP_Gestão' },
+            { Usuario: 'supervisor1', Senha: '456', Aba: 'WMS TA' },
+            { Usuario: 'supervisor2', Senha: '789', Aba: 'WMS TB' },
+            { Usuario: 'admin', Senha: '123', Aba: 'Separação TB' }
+          ]);
+        }
         
-        console.log('[AUTH] Resultado:', result);
+        // Aba Quadro
+        sheet = doc.sheetsByTitle['Quadro'];
+        if (!sheet) {
+          sheet = await doc.addSheet({ 
+            title: 'Quadro',
+            headerValues: ['Coluna 1', 'NOME', 'FUNÇÃO NO RM', 'Função que atua', 'Coluna 2']
+          });
+        }
         
+        const existingQuadro = await sheet.getRows();
+        if (existingQuadro.length === 0) {
+          await sheet.addRows([
+            { 'Coluna 1': '001', 'NOME': 'João Silva', 'Função que atua': 'Operador' },
+            { 'Coluna 1': '002', 'NOME': 'Maria Santos', 'Função que atua': 'Supervisora' },
+            { 'Coluna 1': '003', 'NOME': 'Pedro Costa', 'Função que atua': 'Operador' }
+          ]);
+        }
+        
+        if (!doc.sheetsByTitle['Lista']) {
+          await doc.addSheet({ 
+            title: 'Lista',
+            headerValues: ['Supervisor', 'Grupo', 'matricula', 'Nome', 'Função', 'status']
+          });
+        }
+        
+        if (!doc.sheetsByTitle['Base']) {
+          await doc.addSheet({ 
+            title: 'Base',
+            headerValues: ['Supervisor', 'Aba', 'Matricula', 'Nome', 'Função', 'Status', 'Data']
+          });
+        }
+        
+        console.log('[AUTH] Dados de teste criados com sucesso');
+        
+        return res.status(200).json({ 
+          ok: true, 
+          msg: 'Dados de teste criados com sucesso!' 
+        });
+        
+      } catch (error) {
+        console.error('[AUTH] Erro ao criar dados de teste:', error);
+        return res.status(500).json({
+          ok: false,
+          msg: 'Erro ao criar dados de teste',
+          error: error.message
+        });
+      }
+    }
+
+    return res.status(400).json({ 
+      ok: false,
+      msg: 'Ação não reconhecida: ' + action,
+      validActions: ['login', 'test', 'createTestData']
+    });
+
+  } catch (error) {
+    console.error('[AUTH] Erro:', error);
+    return res.status(500).json({
+      ok: false,
+      msg: 'Erro no processamento da autenticação',
+      error: error.message
+    });
+  }
+}
+
+// ==================== HANDLER: COLABORADORES ====================
+async function handleColaboradores(req, res) {
+  // GET - Buscar colaboradores
+  if (req.method === 'GET') {
+    const { filtro } = req.query;
+    console.log('[COLABORADORES] Buscando com filtro:', filtro);
+    
+    const colaboradores = await sheetsService.buscarColaboradores(filtro || '');
+    return res.status(200).json(colaboradores);
+  }
+
+  // POST - Ações diversas
+  if (req.method === 'POST') {
+    const { action } = req.body;
+    console.log('[COLABORADORES] Action:', action);
+
+    switch (action) {
+      case 'addBuffer': {
+        const { supervisor, aba, colaborador } = req.body;
+        
+        if (!supervisor || !aba || !colaborador || !colaborador.matricula || !colaborador.nome) {
+          return res.status(400).json({ ok: false, msg: 'Parâmetros incompletos' });
+        }
+        
+        const result = await sheetsService.adicionarBuffer(supervisor, aba, colaborador);
         return res.status(200).json(result);
       }
-  
-      // TESTE DE CONEXÃO
-      if (action === 'test') {
-        console.log('[AUTH] Testando conexão...');
+
+      case 'getBuffer': {
+        const { supervisor, aba } = req.body;
         
-        try {
-          const doc = await sheetsService.init();
-          const sheets = Object.keys(doc.sheetsByTitle);
-          
-          return res.status(200).json({
-            ok: true,
-            msg: `Conectado à planilha: ${doc.title}`,
-            sheets: sheets,
-            totalSheets: sheets.length
-          });
-        } catch (error) {
-          console.error('[AUTH] Erro no teste:', error);
-          return res.status(500).json({
-            ok: false,
-            msg: 'Erro ao conectar: ' + error.message
-          });
+        if (!supervisor || !aba) {
+          return res.status(400).json({ ok: false, msg: 'Supervisor e aba são obrigatórios' });
         }
-      }
-  
-      // CRIAR DADOS DE TESTE
-      if (action === 'createTestData') {
-        console.log('[AUTH] Criando dados de teste...');
         
-        try {
-          const doc = await sheetsService.init();
-          
-          // Aba Usuarios
-          let sheet = doc.sheetsByTitle['Usuarios'];
-          if (!sheet) {
-            sheet = await doc.addSheet({ 
-              title: 'Usuarios',
-              headerValues: ['Usuario', 'Senha', 'Aba']
-            });
-          }
-          
-          const existingUsers = await sheet.getRows();
-          if (existingUsers.length === 0) {
-            await sheet.addRows([
-              { Usuario: 'admin', Senha: '123', Aba: 'PCP_Gestão' },
-              { Usuario: 'supervisor1', Senha: '456', Aba: 'WMS TA' },
-              { Usuario: 'supervisor2', Senha: '789', Aba: 'WMS TB' },
-              { Usuario: 'admin', Senha: '123', Aba: 'Separação TB' }
-            ]);
-          }
-          
-          // Aba Quadro
-          sheet = doc.sheetsByTitle['Quadro'];
-          if (!sheet) {
-            sheet = await doc.addSheet({ 
-              title: 'Quadro',
-              headerValues: ['Coluna 1', 'NOME', 'FUNÇÃO NO RM', 'Função que atua', 'Coluna 2']
-            });
-          }
-          
-          const existingQuadro = await sheet.getRows();
-          if (existingQuadro.length === 0) {
-            await sheet.addRows([
-              { 'Coluna 1': '001', 'NOME': 'João Silva', 'Função que atua': 'Operador' },
-              { 'Coluna 1': '002', 'NOME': 'Maria Santos', 'Função que atua': 'Supervisora' },
-              { 'Coluna 1': '003', 'NOME': 'Pedro Costa', 'Função que atua': 'Operador' }
-            ]);
-          }
-          
-          if (!doc.sheetsByTitle['Lista']) {
-            await doc.addSheet({ 
-              title: 'Lista',
-              headerValues: ['Supervisor', 'Grupo', 'matricula', 'Nome', 'Função', 'status']
-            });
-          }
-          
-          if (!doc.sheetsByTitle['Base']) {
-            await doc.addSheet({ 
-              title: 'Base',
-              headerValues: ['Supervisor', 'Aba', 'Matricula', 'Nome', 'Função', 'Status', 'Data']
-            });
-          }
-          
-          return res.status(200).json({ 
-            ok: true, 
-            msg: 'Dados de teste criados com sucesso!' 
-          });
-          
-        } catch (error) {
-          console.error('[AUTH] Erro ao criar dados de teste:', error);
-          return res.status(500).json({
-            ok: false,
-            msg: 'Erro ao criar dados de teste: ' + error.message
-          });
-        }
+        const buffer = await sheetsService.getBuffer(supervisor, aba);
+        return res.status(200).json(buffer);
       }
-  
-      return res.status(400).json({ 
-        ok: false,
-        msg: 'Ação não reconhecida: ' + action,
-        validActions: ['login', 'test', 'createTestData']
-      });
-  
-    } catch (error) {
-      console.error('[AUTH] Erro geral:', error);
-      return res.status(500).json({
-        ok: false,
-        msg: 'Erro interno do servidor',
-        details: error.message,
-        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-      });
-    }
-  };
-  // ==================== HANDLER: COLABORADORES ====================
-  async function handleColaboradores(req, res) {
-    // GET - Buscar colaboradores
-    if (req.method === 'GET') {
-      const { filtro } = req.query;
-      console.log('[COLABORADORES] Buscando com filtro:', filtro);
-      
-      const colaboradores = await sheetsService.buscarColaboradores(filtro || '');
-      return res.status(200).json(colaboradores);
-    }
-  
-    // POST - Ações diversas
-    if (req.method === 'POST') {
-      const { action } = req.body;
-      console.log('[COLABORADORES] Action:', action);
-  
-      switch (action) {
-        case 'addBuffer': {
-          const { supervisor, aba, colaborador } = req.body;
-          
-          if (!supervisor || !aba || !colaborador || !colaborador.matricula || !colaborador.nome) {
-            return res.status(400).json({ ok: false, msg: 'Parâmetros incompletos' });
-          }
-          
-          const result = await sheetsService.adicionarBuffer(supervisor, aba, colaborador);
-          return res.status(200).json(result);
+
+      case 'removeBuffer': {
+        const { supervisor, aba, matricula } = req.body;
+        
+        if (!supervisor || !matricula) {
+          return res.status(400).json({ ok: false, msg: 'Supervisor e matrícula são obrigatórios' });
         }
-  
-        case 'getBuffer': {
-          const { supervisor, aba } = req.body;
-          
-          if (!supervisor || !aba) {
-            return res.status(400).json({ ok: false, msg: 'Supervisor e aba são obrigatórios' });
-          }
-          
-          const buffer = await sheetsService.getBuffer(supervisor, aba);
-          return res.status(200).json(buffer);
-        }
-  
-        case 'removeBuffer': {
-          const { supervisor, aba, matricula } = req.body;
-          
-          if (!supervisor || !matricula) {
-            return res.status(400).json({ ok: false, msg: 'Supervisor e matrícula são obrigatórios' });
-          }
-          
-          const chave = aba || supervisor;
-          const result = await sheetsService.removerBufferPorAba(chave, matricula);
-          return res.status(200).json(result);
-        }
-  
-        case 'updateStatus': {
-          const { supervisor, aba, matricula, status } = req.body;
-          
-          if (!supervisor || !matricula || status === undefined) {
-            return res.status(400).json({ ok: false, msg: 'Parâmetros incompletos' });
-          }
-          
-          const chave = aba || supervisor;
-          const result = await sheetsService.atualizarStatusBufferPorAba(chave, matricula, status);
-          return res.status(200).json(result);
-        }
-  
-        case 'updateDesvio': {
-          const { supervisor, aba, matricula, desvio } = req.body;
-          
-          if (!supervisor || !matricula) {
-            return res.status(400).json({ ok: false, msg: 'Parâmetros incompletos' });
-          }
-          
-          const chave = aba || supervisor;
-          const result = await sheetsService.atualizarDesvioBufferPorAba(chave, matricula, desvio);
-          return res.status(200).json(result);
-        }
-  
-        case 'saveToBase': {
-          const { dados } = req.body;
-          
-          if (!dados || !Array.isArray(dados) || dados.length === 0) {
-            return res.status(400).json({ ok: false, msg: 'Dados inválidos' });
-          }
-          
-          const result = await sheetsService.salvarNaBase(dados);
-          return res.status(200).json(result);
-        }
-  
-        default:
-          return res.status(400).json({ 
-            ok: false, 
-            msg: 'Ação não reconhecida: ' + action
-          });
+        
+        const chave = aba || supervisor;
+        const result = await sheetsService.removerBufferPorAba(chave, matricula);
+        return res.status(200).json(result);
       }
+
+      case 'updateStatus': {
+        const { supervisor, aba, matricula, status } = req.body;
+        
+        if (!supervisor || !matricula || status === undefined) {
+          return res.status(400).json({ ok: false, msg: 'Parâmetros incompletos' });
+        }
+        
+        const chave = aba || supervisor;
+        const result = await sheetsService.atualizarStatusBufferPorAba(chave, matricula, status);
+        return res.status(200).json(result);
+      }
+
+      case 'updateDesvio': {
+        const { supervisor, aba, matricula, desvio } = req.body;
+        
+        if (!supervisor || !matricula) {
+          return res.status(400).json({ ok: false, msg: 'Parâmetros incompletos' });
+        }
+        
+        const chave = aba || supervisor;
+        const result = await sheetsService.atualizarDesvioBufferPorAba(chave, matricula, desvio);
+        return res.status(200).json(result);
+      }
+
+      case 'saveToBase': {
+        const { dados } = req.body;
+        
+        if (!dados || !Array.isArray(dados) || dados.length === 0) {
+          return res.status(400).json({ ok: false, msg: 'Dados inválidos' });
+        }
+        
+        const result = await sheetsService.salvarNaBase(dados);
+        return res.status(200).json(result);
+      }
+
+      default:
+        return res.status(400).json({ 
+          ok: false, 
+          msg: 'Ação não reconhecida: ' + action
+        });
     }
-  
-    return res.status(405).json({ ok: false, msg: 'Método não permitido' });
   }
+
+  return res.status(405).json({ ok: false, msg: 'Método não permitido' });
+}
 
 // ==================== HANDLER: ALOCAÇÃO BOX ====================
 async function handleAlocacaoBox(req, res) {
