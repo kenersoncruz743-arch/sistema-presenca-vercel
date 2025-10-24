@@ -1,4 +1,4 @@
-// api/producao.js - API UNIFICADA DE PRODUÇÃO - COM TRATAMENTO ROBUSTO DE ERROS
+// api/producao.js - API UNIFICADA DE PRODUÇÃO - CORRIGIDA PARA TURNO C
 const sheetsService = require('../lib/sheets');
 
 module.exports = async function handler(req, res) {
@@ -30,7 +30,6 @@ module.exports = async function handler(req, res) {
         const doc = await sheetsService.init();
         console.log(`[PRODUCAO/BASE] Conectado: ${doc.title}`);
         
-        // Verifica se a aba Base existe
         const sheetBase = doc.sheetsByTitle['Base'];
         if (!sheetBase) {
           console.error('[PRODUCAO/BASE] Aba Base não encontrada');
@@ -44,7 +43,7 @@ module.exports = async function handler(req, res) {
         const rowsBase = await sheetBase.getRows();
         console.log(`[PRODUCAO/BASE] ${rowsBase.length} registros na Base`);
         
-        // Carrega QLP para cruzamento (opcional)
+        // Carrega QLP para cruzamento
         const sheetQLP = doc.sheetsByTitle['QLP'];
         const mapaQLP = {};
         
@@ -96,13 +95,45 @@ module.exports = async function handler(req, res) {
               turno = mapaQLP[matricula].turno || turno;
             }
             
-            // Determina turno pela aba se não tiver no QLP
+            // CORREÇÃO: Lógica melhorada para determinar turno pela aba
             if (turno === 'Não definido' && aba) {
-              const abaLower = aba.toLowerCase();
-              if (abaLower.includes('ta') || abaLower.includes('turno a')) turno = 'Turno A';
-              else if (abaLower.includes('tb') || abaLower.includes('turno b')) turno = 'Turno B';
-              else if (abaLower.includes('tc') || abaLower.includes('turno c')) turno = 'Turno C';
+              const abaUpper = aba.toUpperCase().trim();
+              
+              // Testa variações do Turno A
+              if (abaUpper.includes('TURNO A') || abaUpper === 'A' || abaUpper.endsWith(' A')) {
+                turno = 'Turno A';
+              }
+              // Testa variações do Turno B
+              else if (abaUpper.includes('TURNO B') || abaUpper === 'B' || abaUpper.endsWith(' B')) {
+                turno = 'Turno B';
+              }
+              // Testa variações do Turno C
+              else if (abaUpper.includes('TURNO C') || abaUpper === 'C' || abaUpper.endsWith(' C')) {
+                turno = 'Turno C';
+              }
+              // Tenta extrair turno de outras formas
+              else if (abaUpper.includes('TA')) {
+                turno = 'Turno A';
+              }
+              else if (abaUpper.includes('TB')) {
+                turno = 'Turno B';
+              }
+              else if (abaUpper.includes('TC')) {
+                turno = 'Turno C';
+              }
             }
+            
+            // NORMALIZAÇÃO FINAL: Garante formato padrão "Turno X"
+            turno = turno.trim();
+            if (turno.toUpperCase() === 'A') turno = 'Turno A';
+            else if (turno.toUpperCase() === 'B') turno = 'Turno B';
+            else if (turno.toUpperCase() === 'C') turno = 'Turno C';
+            else if (turno.toUpperCase() === 'TURNO A') turno = 'Turno A';
+            else if (turno.toUpperCase() === 'TURNO B') turno = 'Turno B';
+            else if (turno.toUpperCase() === 'TURNO C') turno = 'Turno C';
+            else if (turno.toUpperCase().includes('TURNO A')) turno = 'Turno A';
+            else if (turno.toUpperCase().includes('TURNO B')) turno = 'Turno B';
+            else if (turno.toUpperCase().includes('TURNO C')) turno = 'Turno C';
             
             dados.push({
               supervisor,
@@ -121,6 +152,7 @@ module.exports = async function handler(req, res) {
         });
         
         console.log(`[PRODUCAO/BASE] ${dados.length} registros processados (hoje)`);
+        console.log('[PRODUCAO/BASE] Turnos únicos:', [...new Set(dados.map(d => d.turno))]);
         
         return res.status(200).json({
           ok: true,
@@ -212,7 +244,6 @@ module.exports = async function handler(req, res) {
       try {
         const doc = await sheetsService.init();
         console.log(`[PRODUCAO/PRODUTIVIDADE] Conectado: ${doc.title}`);
-        console.log(`[PRODUCAO/PRODUTIVIDADE] Abas disponíveis:`, Object.keys(doc.sheetsByTitle));
         
         const sheetProd = doc.sheetsByTitle['Produtividade_Hora'];
         if (!sheetProd) {
@@ -537,7 +568,7 @@ module.exports = async function handler(req, res) {
         });
       }
       
-      const { dados, dataReferencia, horasTrabalhadas } = req.body;
+      const { dados, dataReferencia } = req.body;
       
       if (!dados || !Array.isArray(dados)) {
         return res.status(400).json({
@@ -553,8 +584,7 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({
         ok: true,
         msg: `${dados.length} registros prontos para salvar (implementar salvamento na aba Produzido)`,
-        dataReferencia,
-        horasTrabalhadas
+        dataReferencia
       });
     }
 
