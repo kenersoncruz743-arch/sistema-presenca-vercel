@@ -553,147 +553,174 @@ async function handleProducao(req, res, pathname) {
   }
 
   // /api/producao/resumo-base
-  if (pathname === '/api/producao/resumo-base') {
-    if (req.method !== 'GET') {
-      return res.status(405).json({ ok: false, msg: 'Método não permitido' });
-    }
-
-    const doc = await sheetsService.init();
-    const sheetBase = doc.sheetsByTitle['Base'];
-    
-    if (!sheetBase) {
-      return res.status(404).json({ ok: false, msg: 'Aba Base não encontrada' });
-    }
-    
-    const rows = await sheetBase.getRows();
-    
-    let dataFiltro;
-    if (req.query.data) {
-      const [ano, mes, dia] = req.query.data.split('-');
-      dataFiltro = `${dia}/${mes}/${ano}`;
-    } else {
-      dataFiltro = new Date().toLocaleDateString('pt-BR');
-    }
-    
-    const resumoPorSupervisor = {};
-    const resumoPorFuncao = {};
-    const resumoGeral = {
-      total: 0, presente: 0, ausente: 0, atestado: 0,
-      ferias: 0, folga: 0, afastado: 0, desvio: 0, outros: 0
-    };
-    
-    rows.forEach(row => {
-      const dataRegistro = String(row.get('Data') || '').trim();
-      if (dataRegistro !== dataFiltro) return;
-      
-      const supervisor = String(row.get('Supervisor') || 'Sem supervisor').trim();
-      const aba = String(row.get('Aba') || '').trim();
-      const funcao = String(row.get('Função') || 'Não informada').trim();
-      const turno = String(row.get('Turno') || 'Não informado').trim();
-      const status = String(row.get('Status') || 'Outro').trim();
-      const desvio = String(row.get('Desvio') || '').trim();
-      const nome = String(row.get('Nome') || '').trim();
-      const matricula = String(row.get('Matricula') || '').trim();
-      
-      if (!nome) return;
-      
-      // Resumo por supervisor
-      if (!resumoPorSupervisor[supervisor]) {
-        resumoPorSupervisor[supervisor] = {
-          supervisor, total: 0, presente: 0, ausente: 0, atestado: 0,
-          ferias: 0, folga: 0, afastado: 0, desvio: 0, outros: 0,
-          porFuncao: {}, colaboradores: []
+  // /api/producao/resumo-base
+    if (pathname === '/api/producao/resumo-base') {
+      if (req.method !== 'GET') {
+        return res.status(405).json({ ok: false, msg: 'Método não permitido' });
+      }
+  
+      try {
+        console.log('[RESUMO-BASE] Iniciando processamento...');
+        
+        const doc = await sheetsService.init();
+        const sheetBase = doc.sheetsByTitle['Base'];
+        
+        if (!sheetBase) {
+          console.error('[RESUMO-BASE] Aba Base não encontrada');
+          return res.status(404).json({ ok: false, msg: 'Aba Base não encontrada' });
+        }
+        
+        const rows = await sheetBase.getRows();
+        console.log(`[RESUMO-BASE] Total de linhas na Base: ${rows.length}`);
+        
+        // Processa data do filtro - FIX: usa new URL para pegar query params
+        let dataFiltro;
+        const urlObj = new URL(req.url, `http://${req.headers.host}`);
+        const dataParam = urlObj.searchParams.get('data');
+        
+        if (dataParam) {
+          const [ano, mes, dia] = dataParam.split('-');
+          dataFiltro = `${dia}/${mes}/${ano}`;
+        } else {
+          dataFiltro = new Date().toLocaleDateString('pt-BR');
+        }
+        
+        console.log(`[RESUMO-BASE] Data filtro: ${dataFiltro}`);
+        
+        const resumoPorSupervisor = {};
+        const resumoPorFuncao = {};
+        const resumoGeral = {
+          total: 0, presente: 0, ausente: 0, atestado: 0,
+          ferias: 0, folga: 0, afastado: 0, desvio: 0, outros: 0
         };
+        
+        let processados = 0;
+        
+        rows.forEach(row => {
+          const dataRegistro = String(row.get('Data') || '').trim();
+          if (dataRegistro !== dataFiltro) return;
+          
+          processados++;
+          
+          const supervisor = String(row.get('Supervisor') || 'Sem supervisor').trim();
+          const aba = String(row.get('Aba') || '').trim();
+          const funcao = String(row.get('Função') || 'Não informada').trim();
+          const turno = String(row.get('Turno') || 'Não informado').trim();
+          const status = String(row.get('Status') || 'Outro').trim();
+          const desvio = String(row.get('Desvio') || '').trim();
+          const nome = String(row.get('Nome') || '').trim();
+          const matricula = String(row.get('Matricula') || '').trim();
+          
+          if (!nome) return;
+          
+          // Resumo por supervisor
+          if (!resumoPorSupervisor[supervisor]) {
+            resumoPorSupervisor[supervisor] = {
+              supervisor, total: 0, presente: 0, ausente: 0, atestado: 0,
+              ferias: 0, folga: 0, afastado: 0, desvio: 0, outros: 0,
+              colaboradores: []
+            };
+          }
+          
+          resumoPorSupervisor[supervisor].total++;
+          resumoPorSupervisor[supervisor].colaboradores.push({
+            nome, matricula, funcao, turno, status, desvio
+          });
+          
+          const statusLower = status.toLowerCase();
+          if (statusLower === 'presente') resumoPorSupervisor[supervisor].presente++;
+          else if (statusLower === 'ausente') resumoPorSupervisor[supervisor].ausente++;
+          else if (statusLower === 'atestado') resumoPorSupervisor[supervisor].atestado++;
+          else if (statusLower.includes('férias') || statusLower.includes('ferias')) resumoPorSupervisor[supervisor].ferias++;
+          else if (statusLower === 'folga') resumoPorSupervisor[supervisor].folga++;
+          else if (statusLower === 'afastado') resumoPorSupervisor[supervisor].afastado++;
+          else resumoPorSupervisor[supervisor].outros++;
+          
+          if (desvio && desvio.toLowerCase() === 'desvio') {
+            resumoPorSupervisor[supervisor].desvio++;
+          }
+          
+          // Resumo por função
+          if (!resumoPorFuncao[funcao]) {
+            resumoPorFuncao[funcao] = {
+              funcao, total: 0, presente: 0, ausente: 0, atestado: 0,
+              ferias: 0, folga: 0, afastado: 0, desvio: 0, outros: 0,
+              colaboradores: []
+            };
+          }
+          
+          resumoPorFuncao[funcao].total++;
+          resumoPorFuncao[funcao].colaboradores.push({
+            nome, matricula, supervisor, turno, status, desvio
+          });
+          
+          if (statusLower === 'presente') resumoPorFuncao[funcao].presente++;
+          else if (statusLower === 'ausente') resumoPorFuncao[funcao].ausente++;
+          else if (statusLower === 'atestado') resumoPorFuncao[funcao].atestado++;
+          else if (statusLower.includes('férias') || statusLower.includes('ferias')) resumoPorFuncao[funcao].ferias++;
+          else if (statusLower === 'folga') resumoPorFuncao[funcao].folga++;
+          else if (statusLower === 'afastado') resumoPorFuncao[funcao].afastado++;
+          else resumoPorFuncao[funcao].outros++;
+          
+          if (desvio && desvio.toLowerCase() === 'desvio') {
+            resumoPorFuncao[funcao].desvio++;
+          }
+          
+          // Resumo geral
+          resumoGeral.total++;
+          if (statusLower === 'presente') resumoGeral.presente++;
+          else if (statusLower === 'ausente') resumoGeral.ausente++;
+          else if (statusLower === 'atestado') resumoGeral.atestado++;
+          else if (statusLower.includes('férias') || statusLower.includes('ferias')) resumoGeral.ferias++;
+          else if (statusLower === 'folga') resumoGeral.folga++;
+          else if (statusLower === 'afastado') resumoGeral.afastado++;
+          else resumoGeral.outros++;
+          
+          if (desvio && desvio.toLowerCase() === 'desvio') {
+            resumoGeral.desvio++;
+          }
+        });
+        
+        console.log(`[RESUMO-BASE] Registros processados para ${dataFiltro}: ${processados}`);
+        
+        const supervisores = Object.values(resumoPorSupervisor)
+          .sort((a, b) => a.supervisor.localeCompare(b.supervisor));
+        
+        const funcoes = Object.values(resumoPorFuncao)
+          .sort((a, b) => a.funcao.localeCompare(b.funcao));
+        
+        if (resumoGeral.total > 0) {
+          resumoGeral.percentualPresente = ((resumoGeral.presente / resumoGeral.total) * 100).toFixed(1);
+          resumoGeral.percentualAusente = (((resumoGeral.total - resumoGeral.presente) / resumoGeral.total) * 100).toFixed(1);
+          resumoGeral.percentualDesvio = ((resumoGeral.desvio / resumoGeral.total) * 100).toFixed(1);
+        }
+        
+        console.log('[RESUMO-BASE] Processamento concluído com sucesso');
+        
+        return res.status(200).json({
+          ok: true,
+          dataReferencia: dataFiltro,
+          resumoGeral,
+          porSupervisor: supervisores,
+          porFuncao: funcoes,
+          totais: {
+            supervisores: supervisores.length,
+            funcoes: funcoes.length,
+            colaboradores: resumoGeral.total
+          },
+          timestamp: new Date().toISOString()
+        });
+        
+      } catch (error) {
+        console.error('[RESUMO-BASE] Erro:', error);
+        return res.status(500).json({
+          ok: false,
+          msg: 'Erro ao processar resumo',
+          error: error.message,
+          stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
       }
-      
-      resumoPorSupervisor[supervisor].total++;
-      resumoPorSupervisor[supervisor].colaboradores.push({
-        nome, matricula, funcao, turno, status, desvio
-      });
-      
-      const statusLower = status.toLowerCase();
-      if (statusLower === 'presente') resumoPorSupervisor[supervisor].presente++;
-      else if (statusLower === 'ausente') resumoPorSupervisor[supervisor].ausente++;
-      else if (statusLower === 'atestado') resumoPorSupervisor[supervisor].atestado++;
-      else if (statusLower.includes('férias')) resumoPorSupervisor[supervisor].ferias++;
-      else if (statusLower === 'folga') resumoPorSupervisor[supervisor].folga++;
-      else if (statusLower === 'afastado') resumoPorSupervisor[supervisor].afastado++;
-      else resumoPorSupervisor[supervisor].outros++;
-      
-      if (desvio && desvio.toLowerCase() === 'desvio') {
-        resumoPorSupervisor[supervisor].desvio++;
-      }
-      
-      // Resumo por função
-      if (!resumoPorFuncao[funcao]) {
-        resumoPorFuncao[funcao] = {
-          funcao, total: 0, presente: 0, ausente: 0, atestado: 0,
-          ferias: 0, folga: 0, afastado: 0, desvio: 0, outros: 0,
-          porSupervisor: {}, colaboradores: []
-        };
-      }
-      
-      resumoPorFuncao[funcao].total++;
-      resumoPorFuncao[funcao].colaboradores.push({
-        nome, matricula, supervisor, turno, status, desvio
-      });
-      
-      if (statusLower === 'presente') resumoPorFuncao[funcao].presente++;
-      else if (statusLower === 'ausente') resumoPorFuncao[funcao].ausente++;
-      else if (statusLower === 'atestado') resumoPorFuncao[funcao].atestado++;
-      else if (statusLower.includes('férias')) resumoPorFuncao[funcao].ferias++;
-      else if (statusLower === 'folga') resumoPorFuncao[funcao].folga++;
-      else if (statusLower === 'afastado') resumoPorFuncao[funcao].afastado++;
-      else resumoPorFuncao[funcao].outros++;
-      
-      if (desvio && desvio.toLowerCase() === 'desvio') {
-        resumoPorFuncao[funcao].desvio++;
-      }
-      
-      // Resumo geral
-      resumoGeral.total++;
-      if (statusLower === 'presente') resumoGeral.presente++;
-      else if (statusLower === 'ausente') resumoGeral.ausente++;
-      else if (statusLower === 'atestado') resumoGeral.atestado++;
-      else if (statusLower.includes('férias')) resumoGeral.ferias++;
-      else if (statusLower === 'folga') resumoGeral.folga++;
-      else if (statusLower === 'afastado') resumoGeral.afastado++;
-      else resumoGeral.outros++;
-      
-      if (desvio && desvio.toLowerCase() === 'desvio') {
-        resumoGeral.desvio++;
-      }
-    });
-    
-    const supervisores = Object.values(resumoPorSupervisor)
-      .sort((a, b) => a.supervisor.localeCompare(b.supervisor));
-    
-    const funcoes = Object.values(resumoPorFuncao)
-      .sort((a, b) => a.funcao.localeCompare(b.funcao));
-    
-    if (resumoGeral.total > 0) {
-      resumoGeral.percentualPresente = ((resumoGeral.presente / resumoGeral.total) * 100).toFixed(1);
-      resumoGeral.percentualAusente = (((resumoGeral.total - resumoGeral.presente) / resumoGeral.total) * 100).toFixed(1);
-      resumoGeral.percentualDesvio = ((resumoGeral.desvio / resumoGeral.total) * 100).toFixed(1);
     }
-    
-    return res.status(200).json({
-      ok: true,
-      dataReferencia: dataFiltro,
-      resumoGeral,
-      porSupervisor: supervisores,
-      porFuncao: funcoes,
-      totais: {
-        supervisores: supervisores.length,
-        funcoes: funcoes.length,
-        colaboradores: resumoGeral.total
-      },
-      timestamp: new Date().toISOString()
-    });
-  }
-
-  return res.status(404).json({ ok: false, msg: 'Rota de produção não encontrada' });
-}
 
 // ==================== HANDLER: QLP ====================
 async function handleQLP(req, res, pathname) {
