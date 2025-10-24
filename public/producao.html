@@ -500,8 +500,9 @@
                 const hoje = new Date().toISOString().split('T')[0];
                 document.getElementById('dataReferencia').value = hoje;
 
+                // AJUSTE: Usar query parameter action
                 console.log('Carregando Produtividade_Hora...');
-                const resProdutividade = await fetch('/api/producao/produtividade');
+                const resProdutividade = await fetch('/api/producao?action=produtividade');
                 const resultProdutividade = await resProdutividade.json();
                 
                 if (resultProdutividade.ok && resultProdutividade.dados) {
@@ -516,8 +517,9 @@
                     throw new Error('Aba Produtividade_Hora não encontrada ou vazia');
                 }
 
+                // AJUSTE: Usar query parameter action
                 console.log('Carregando Meta...');
-                const resMeta = await fetch('/api/producao/meta');
+                const resMeta = await fetch('/api/producao?action=meta');
                 const resultMeta = await resMeta.json();
                 
                 if (resultMeta.ok && resultMeta.dados) {
@@ -532,8 +534,9 @@
                     console.log(`Meta carregada para ${Object.keys(dadosMeta).length} datas`);
                 }
 
+                // AJUSTE: Usar query parameter action
                 console.log('Carregando dados da Base...');
-                const resBase = await fetch('/api/producao/base');
+                const resBase = await fetch('/api/producao?action=base');
                 const resultBase = await resBase.json();
                 
                 if (!resultBase.ok) {
@@ -583,7 +586,6 @@
             console.log('Processando dados...');
             console.log('Funções permitidas:', funcoesPermitidas);
             
-            // Agrupa QLP por função E turno
             const qlpPorFuncaoTurno = {};
             dadosQLP.forEach(d => {
                 if (!d.funcao || !d.isAtivo) return;
@@ -906,7 +908,8 @@
                     realizado: d.realizado
                 }));
 
-                const response = await fetch('/api/producao/salvar', {
+                // AJUSTE: Usar query parameter action e método POST
+                const response = await fetch('/api/producao?action=salvar', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ dados: dadosParaSalvar, dataReferencia: dataRef, horasTrabalhadas: horas })
