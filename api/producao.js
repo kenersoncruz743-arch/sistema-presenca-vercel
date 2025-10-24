@@ -95,45 +95,66 @@ module.exports = async function handler(req, res) {
               turno = mapaQLP[matricula].turno || turno;
             }
             
-            // CORREÇÃO: Lógica melhorada para determinar turno pela aba
-            if (turno === 'Não definido' && aba) {
-              const abaUpper = aba.toUpperCase().trim();
-              
-              // Testa variações do Turno A
-              if (abaUpper.includes('TURNO A') || abaUpper === 'A' || abaUpper.endsWith(' A')) {
-                turno = 'Turno A';
-              }
-              // Testa variações do Turno B
-              else if (abaUpper.includes('TURNO B') || abaUpper === 'B' || abaUpper.endsWith(' B')) {
-                turno = 'Turno B';
-              }
-              // Testa variações do Turno C
-              else if (abaUpper.includes('TURNO C') || abaUpper === 'C' || abaUpper.endsWith(' C')) {
-                turno = 'Turno C';
-              }
-              // Tenta extrair turno de outras formas
-              else if (abaUpper.includes('TA')) {
-                turno = 'Turno A';
-              }
-              else if (abaUpper.includes('TB')) {
-                turno = 'Turno B';
-              }
-              else if (abaUpper.includes('TC')) {
-                turno = 'Turno C';
+            // CORREÇÃO COMPLETA: Lógica melhorada para determinar turno pela aba
+            if (!turno || turno === 'Não definido' || turno === '') {
+              if (aba) {
+                const abaUpper = aba.toUpperCase().trim();
+                
+                // Remove espaços extras e normaliza
+                const abaNormalizada = abaUpper.replace(/\s+/g, ' ');
+                
+                console.log(`[DEBUG] Processando aba: "${aba}" -> "${abaNormalizada}"`);
+                
+                // Testa Turno C primeiro (mais específico)
+                if (abaNormalizada.includes('TURNO C') || 
+                    abaNormalizada === 'C' || 
+                    abaNormalizada.endsWith(' C') ||
+                    abaNormalizada.startsWith('C ') ||
+                    abaNormalizada.includes(' TC') ||
+                    abaNormalizada.includes('TC ')) {
+                  turno = 'Turno C';
+                }
+                // Testa Turno B
+                else if (abaNormalizada.includes('TURNO B') || 
+                         abaNormalizada === 'B' || 
+                         abaNormalizada.endsWith(' B') ||
+                         abaNormalizada.startsWith('B ') ||
+                         abaNormalizada.includes(' TB') ||
+                         abaNormalizada.includes('TB ')) {
+                  turno = 'Turno B';
+                }
+                // Testa Turno A
+                else if (abaNormalizada.includes('TURNO A') || 
+                         abaNormalizada === 'A' || 
+                         abaNormalizada.endsWith(' A') ||
+                         abaNormalizada.startsWith('A ') ||
+                         abaNormalizada.includes(' TA') ||
+                         abaNormalizada.includes('TA ')) {
+                  turno = 'Turno A';
+                }
+                
+                console.log(`[DEBUG] Turno identificado: "${turno}"`);
               }
             }
             
             // NORMALIZAÇÃO FINAL: Garante formato padrão "Turno X"
-            turno = turno.trim();
-            if (turno.toUpperCase() === 'A') turno = 'Turno A';
-            else if (turno.toUpperCase() === 'B') turno = 'Turno B';
-            else if (turno.toUpperCase() === 'C') turno = 'Turno C';
-            else if (turno.toUpperCase() === 'TURNO A') turno = 'Turno A';
-            else if (turno.toUpperCase() === 'TURNO B') turno = 'Turno B';
-            else if (turno.toUpperCase() === 'TURNO C') turno = 'Turno C';
-            else if (turno.toUpperCase().includes('TURNO A')) turno = 'Turno A';
-            else if (turno.toUpperCase().includes('TURNO B')) turno = 'Turno B';
-            else if (turno.toUpperCase().includes('TURNO C')) turno = 'Turno C';
+            const turnoUpper = turno.toUpperCase().trim();
+            
+            if (turnoUpper === 'A' || turnoUpper === 'TA' || turnoUpper === 'TURNO A') {
+              turno = 'Turno A';
+            } else if (turnoUpper === 'B' || turnoUpper === 'TB' || turnoUpper === 'TURNO B') {
+              turno = 'Turno B';
+            } else if (turnoUpper === 'C' || turnoUpper === 'TC' || turnoUpper === 'TURNO C') {
+              turno = 'Turno C';
+            } else if (turnoUpper.includes('TURNO A') || turnoUpper.includes('TA')) {
+              turno = 'Turno A';
+            } else if (turnoUpper.includes('TURNO B') || turnoUpper.includes('TB')) {
+              turno = 'Turno B';
+            } else if (turnoUpper.includes('TURNO C') || turnoUpper.includes('TC')) {
+              turno = 'Turno C';
+            } else if (!turno || turno === 'NÃO DEFINIDO' || turno === 'NAO DEFINIDO') {
+              turno = 'Não definido';
+            }
             
             dados.push({
               supervisor,
@@ -153,6 +174,13 @@ module.exports = async function handler(req, res) {
         
         console.log(`[PRODUCAO/BASE] ${dados.length} registros processados (hoje)`);
         console.log('[PRODUCAO/BASE] Turnos únicos:', [...new Set(dados.map(d => d.turno))]);
+        
+        // Debug: Mostra distribuição de turnos
+        const contagemTurnos = {};
+        dados.forEach(d => {
+          contagemTurnos[d.turno] = (contagemTurnos[d.turno] || 0) + 1;
+        });
+        console.log('[PRODUCAO/BASE] Distribuição de turnos:', contagemTurnos);
         
         return res.status(200).json({
           ok: true,
