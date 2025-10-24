@@ -394,11 +394,6 @@
                 </div>
                 
                 <div class="filter-group">
-                    <label><i class="fas fa-clock"></i> Horas Trabalhadas</label>
-                    <input type="number" id="horasTrabalhadas" value="8" min="1" max="24" step="0.5">
-                </div>
-                
-                <div class="filter-group">
                     <label><i class="fas fa-briefcase"></i> Funções</label>
                     <select id="filtroFuncoes" multiple>
                         <option value="">Carregando...</option>
@@ -500,7 +495,6 @@
                 const hoje = new Date().toISOString().split('T')[0];
                 document.getElementById('dataReferencia').value = hoje;
 
-                // AJUSTE: Usar query parameter action
                 console.log('Carregando Produtividade_Hora...');
                 const resProdutividade = await fetch('/api/producao?action=produtividade');
                 const resultProdutividade = await resProdutividade.json();
@@ -517,7 +511,6 @@
                     throw new Error('Aba Produtividade_Hora não encontrada ou vazia');
                 }
 
-                // AJUSTE: Usar query parameter action
                 console.log('Carregando Meta...');
                 const resMeta = await fetch('/api/producao?action=meta');
                 const resultMeta = await resMeta.json();
@@ -534,7 +527,6 @@
                     console.log(`Meta carregada para ${Object.keys(dadosMeta).length} datas`);
                 }
 
-                // AJUSTE: Usar query parameter action
                 console.log('Carregando dados da Base...');
                 const resBase = await fetch('/api/producao?action=base');
                 const resultBase = await resBase.json();
@@ -545,6 +537,7 @@
                 
                 dadosBase = resultBase.dados || [];
                 console.log(`Base carregada: ${dadosBase.length} registros`);
+                console.log('Turnos únicos na Base:', [...new Set(dadosBase.map(d => d.turno))]);
 
                 console.log('Carregando QLP...');
                 const resQLP = await fetch('/api/qlp/quadro');
@@ -583,9 +576,10 @@
         }
 
         function processarDados() {
-            console.log('Processando dados...');
+            console.log('=== PROCESSANDO DADOS ===');
             console.log('Funções permitidas:', funcoesPermitidas);
             
+            // Agrupa QLP por função/turno
             const qlpPorFuncaoTurno = {};
             dadosQLP.forEach(d => {
                 if (!d.funcao || !d.isAtivo) return;
@@ -612,6 +606,7 @@
                 qlpPorFuncaoTurno[chave].colaboradores.push(d);
             });
 
+            // Agrupa Base por função/turno
             const basePorFuncaoTurno = {};
             dadosBase.forEach(d => {
                 const funcao = (d.funcao || 'Sem Função').trim();
@@ -651,11 +646,15 @@
                 else if (statusLower === 'afastado') basePorFuncaoTurno[chave].afastado++;
             });
 
+            // Combina QLP + Base
             dadosProducao = [];
             
+            // Primeiro processa os que estão na Base
             Object.keys(basePorFuncaoTurno).forEach(chave => {
                 const base = basePorFuncaoTurno[chave];
                 const qlp = qlpPorFuncaoTurno[chave] || { qlTotal: 0 };
+                
+                console.log(`Processando: ${chave}`, { base, qlp });
                 
                 dadosProducao.push({
                     funcao: base.funcao,
@@ -675,12 +674,39 @@
                 });
             });
 
+            // Depois adiciona os que estão apenas no QLP (com presentes = 0)
+            Object.keys(qlpPorFuncaoTurno).forEach(chave => {
+                if (!basePorFuncaoTurno[chave]) {
+                    const qlp = qlpPorFuncaoTurno[chave];
+                    
+                    console.log(`QLP sem Base: ${chave}`, qlp);
+                    
+                    dadosProducao.push({
+                        funcao: qlp.funcao,
+                        turno: qlp.turno,
+                        qlTotal: qlp.qlTotal,
+                        presente: 0,
+                        desvio: 0,
+                        afastado: 0,
+                        ausente: 0,
+                        feriasFolga: 0,
+                        produtividadeHora: dadosProdutividade[qlp.funcao] || 0,
+                        horasTurno: 0,
+                        capacidade: 0,
+                        meta: 0,
+                        deficit: 0,
+                        realizado: 0
+                    });
+                }
+            });
+
             dadosProducao.sort((a, b) => {
                 if (a.funcao !== b.funcao) return a.funcao.localeCompare(b.funcao);
                 return a.turno.localeCompare(b.turno);
             });
             
-            console.log(`Dados processados: ${dadosProducao.length} registros`);
+            console.log(`=== DADOS PROCESSADOS: ${dadosProducao.length} registros ===`);
+            console.log('Turnos presentes:', [...new Set(dadosProducao.map(d => d.turno))]);
         }
 
         function preencherFiltros() {
@@ -688,7 +714,11 @@
             const selectFuncoes = document.getElementById('filtroFuncoes');
             selectFuncoes.innerHTML = funcoes.map(f => `<option value="${f}">${f}</option>`).join('');
 
-            const turnos = [...new Set(dadosBase.filter(d => funcoesPermitidas.includes(d.funcao)).map(d => d.turno).filter(t => t))].sort();
+            // CORREÇÃO: Pega turnos direto do dadosProducao processado
+            const turnos = [...new Set(dadosProducao.map(d => d.turno).filter(t => t && t !== 'Sem Turno'))].sort();
+            
+            console.log('Turnos para filtro:', turnos);
+            
             const selectTurnos = document.getElementById('filtroTurnos');
             selectTurnos.innerHTML = turnos.map(t => `<option value="${t}">${t}</option>`).join('');
         }
@@ -798,17 +828,32 @@
             const dataSelecionada = new Date(dataRef + 'T12:00:00');
             const diaSemana = dataSelecionada.getDay();
             const ehSabado = diaSemana === 6;
-            const turnoUpper = d.turno.toUpperCase();
             
-            if (turnoUpper.includes('TURNO A') || turnoUpper === 'A') {
+            // CORREÇÃO: Normaliza o turno antes de comparar
+            const turnoUpper = d.turno.toUpperCase().trim();
+            
+            console.log(`Calculando linha: Função=${d.funcao}, Turno="${d.turno}", TurnoUpper="${turnoUpper}", Dia=${diaSemana}`);
+            
+            // CORREÇÃO: Lógica de horas melhorada para todos os turnos
+            if (turnoUpper === 'TURNO A' || turnoUpper === 'A') {
                 d.horasTurno = 6.05;
-            } else if (turnoUpper.includes('TURNO B') || turnoUpper === 'B') {
+            } else if (turnoUpper === 'TURNO B' || turnoUpper === 'B') {
                 d.horasTurno = ehSabado ? 4 : 7.05;
-            } else if (turnoUpper.includes('TURNO C') || turnoUpper === 'C') {
+            } else if (turnoUpper === 'TURNO C' || turnoUpper === 'C') {
+                d.horasTurno = 7.05;
+            } else if (turnoUpper.includes('TURNO A')) {
+                d.horasTurno = 6.05;
+            } else if (turnoUpper.includes('TURNO B')) {
+                d.horasTurno = ehSabado ? 4 : 7.05;
+            } else if (turnoUpper.includes('TURNO C')) {
                 d.horasTurno = 7.05;
             } else {
+                // Se não reconhecer, usa padrão de 8 horas
                 d.horasTurno = 8;
+                console.warn(`Turno não reconhecido: "${d.turno}" (${turnoUpper}), usando 8 horas`);
             }
+            
+            console.log(`Horas calculadas: ${d.horasTurno}`);
             
             d.capacidade = d.presente * d.produtividadeHora * d.horasTurno;
             d.meta = d.capacidade;
@@ -816,7 +861,10 @@
         }
 
         function calcularTudo() {
-            dadosProducao.forEach((d, idx) => calcularLinha(idx));
+            console.log('=== CALCULANDO TUDO ===');
+            dadosProducao.forEach((d, idx) => {
+                calcularLinha(idx);
+            });
             renderTabela();
             atualizarResumo();
             showStatus('Cálculos atualizados!', 'success');
@@ -889,7 +937,6 @@
 
             try {
                 const dataRef = document.getElementById('dataReferencia').value;
-                const horas = parseFloat(document.getElementById('horasTrabalhadas').value) || 8;
 
                 const dadosParaSalvar = dadosProducao.map(d => ({
                     funcao: d.funcao,
@@ -908,11 +955,10 @@
                     realizado: d.realizado
                 }));
 
-                // AJUSTE: Usar query parameter action e método POST
                 const response = await fetch('/api/producao?action=salvar', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ dados: dadosParaSalvar, dataReferencia: dataRef, horasTrabalhadas: horas })
+                    body: JSON.stringify({ dados: dadosParaSalvar, dataReferencia: dataRef })
                 });
 
                 const result = await response.json();
