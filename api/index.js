@@ -1,4 +1,4 @@
-// api/index.js - API UNIFICADA COMPLETA
+// api/index.js - API UNIFICADA COMPLETA - VALIDADA E CORRIGIDA
 const sheetsService = require('../lib/sheets');
 
 // ==================== FUNÇÃO PRINCIPAL DE ROTEAMENTO ====================
@@ -13,7 +13,9 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { pathname } = new URL(req.url, `http://${req.headers.host}`);
+    const urlObj = new URL(req.url, `http://${req.headers.host}`);
+    const pathname = urlObj.pathname;
+    
     console.log('[API] Rota:', pathname, 'Método:', req.method);
 
     // ==================== AUTENTICAÇÃO ====================
@@ -23,7 +25,7 @@ module.exports = async (req, res) => {
 
     // ==================== COLABORADORES ====================
     if (pathname.startsWith('/api/colaboradores')) {
-      return await handleColaboradores(req, res);
+      return await handleColaboradores(req, res, urlObj);
     }
 
     // ==================== ALOCAÇÃO BOX ====================
@@ -38,12 +40,12 @@ module.exports = async (req, res) => {
 
     // ==================== PRODUÇÃO ====================
     if (pathname.startsWith('/api/producao')) {
-      return await handleProducao(req, res, pathname);
+      return await handleProducao(req, res, pathname, urlObj);
     }
 
     // ==================== QLP ====================
     if (pathname.startsWith('/api/qlp')) {
-      return await handleQLP(req, res, pathname);
+      return await handleQLP(req, res, pathname, urlObj);
     }
 
     // ==================== TESTE DE CONEXÃO ====================
@@ -71,7 +73,6 @@ module.exports = async (req, res) => {
 
 // ==================== HANDLER: AUTENTICAÇÃO ====================
 async function handleAuth(req, res) {
-  // Aceita tanto GET quanto POST para compatibilidade
   if (req.method === 'GET') {
     return res.status(200).json({
       ok: true,
@@ -238,328 +239,383 @@ async function handleAuth(req, res) {
 }
 
 // ==================== HANDLER: COLABORADORES ====================
-async function handleColaboradores(req, res) {
-  // GET - Buscar colaboradores
-  if (req.method === 'GET') {
-    const { filtro } = req.query;
-    console.log('[COLABORADORES] Buscando com filtro:', filtro);
-    
-    const colaboradores = await sheetsService.buscarColaboradores(filtro || '');
-    return res.status(200).json(colaboradores);
-  }
-
-  // POST - Ações diversas
-  if (req.method === 'POST') {
-    const { action } = req.body;
-    console.log('[COLABORADORES] Action:', action);
-
-    switch (action) {
-      case 'addBuffer': {
-        const { supervisor, aba, colaborador } = req.body;
-        
-        if (!supervisor || !aba || !colaborador || !colaborador.matricula || !colaborador.nome) {
-          return res.status(400).json({ ok: false, msg: 'Parâmetros incompletos' });
-        }
-        
-        const result = await sheetsService.adicionarBuffer(supervisor, aba, colaborador);
-        return res.status(200).json(result);
-      }
-
-      case 'getBuffer': {
-        const { supervisor, aba } = req.body;
-        
-        if (!supervisor || !aba) {
-          return res.status(400).json({ ok: false, msg: 'Supervisor e aba são obrigatórios' });
-        }
-        
-        const buffer = await sheetsService.getBuffer(supervisor, aba);
-        return res.status(200).json(buffer);
-      }
-
-      case 'removeBuffer': {
-        const { supervisor, aba, matricula } = req.body;
-        
-        if (!supervisor || !matricula) {
-          return res.status(400).json({ ok: false, msg: 'Supervisor e matrícula são obrigatórios' });
-        }
-        
-        const chave = aba || supervisor;
-        const result = await sheetsService.removerBufferPorAba(chave, matricula);
-        return res.status(200).json(result);
-      }
-
-      case 'updateStatus': {
-        const { supervisor, aba, matricula, status } = req.body;
-        
-        if (!supervisor || !matricula || status === undefined) {
-          return res.status(400).json({ ok: false, msg: 'Parâmetros incompletos' });
-        }
-        
-        const chave = aba || supervisor;
-        const result = await sheetsService.atualizarStatusBufferPorAba(chave, matricula, status);
-        return res.status(200).json(result);
-      }
-
-      case 'updateDesvio': {
-        const { supervisor, aba, matricula, desvio } = req.body;
-        
-        if (!supervisor || !matricula) {
-          return res.status(400).json({ ok: false, msg: 'Parâmetros incompletos' });
-        }
-        
-        const chave = aba || supervisor;
-        const result = await sheetsService.atualizarDesvioBufferPorAba(chave, matricula, desvio);
-        return res.status(200).json(result);
-      }
-
-      case 'saveToBase': {
-        const { dados } = req.body;
-        
-        if (!dados || !Array.isArray(dados) || dados.length === 0) {
-          return res.status(400).json({ ok: false, msg: 'Dados inválidos' });
-        }
-        
-        const result = await sheetsService.salvarNaBase(dados);
-        return res.status(200).json(result);
-      }
-
-      default:
-        return res.status(400).json({ 
-          ok: false, 
-          msg: 'Ação não reconhecida: ' + action
-        });
+async function handleColaboradores(req, res, urlObj) {
+  try {
+    // GET - Buscar colaboradores
+    if (req.method === 'GET') {
+      const filtro = urlObj.searchParams.get('filtro') || '';
+      console.log('[COLABORADORES] Buscando com filtro:', filtro);
+      
+      const colaboradores = await sheetsService.buscarColaboradores(filtro);
+      return res.status(200).json(colaboradores);
     }
-  }
 
-  return res.status(405).json({ ok: false, msg: 'Método não permitido' });
+    // POST - Ações diversas
+    if (req.method === 'POST') {
+      const { action } = req.body;
+      console.log('[COLABORADORES] Action:', action);
+
+      switch (action) {
+        case 'addBuffer': {
+          const { supervisor, aba, colaborador } = req.body;
+          
+          if (!supervisor || !aba || !colaborador || !colaborador.matricula || !colaborador.nome) {
+            return res.status(400).json({ ok: false, msg: 'Parâmetros incompletos' });
+          }
+          
+          const result = await sheetsService.adicionarBuffer(supervisor, aba, colaborador);
+          return res.status(200).json(result);
+        }
+
+        case 'getBuffer': {
+          const { supervisor, aba } = req.body;
+          
+          if (!supervisor || !aba) {
+            return res.status(400).json({ ok: false, msg: 'Supervisor e aba são obrigatórios' });
+          }
+          
+          const buffer = await sheetsService.getBuffer(supervisor, aba);
+          return res.status(200).json(buffer);
+        }
+
+        case 'removeBuffer': {
+          const { supervisor, aba, matricula } = req.body;
+          
+          if (!supervisor || !matricula) {
+            return res.status(400).json({ ok: false, msg: 'Supervisor e matrícula são obrigatórios' });
+          }
+          
+          const chave = aba || supervisor;
+          const result = await sheetsService.removerBufferPorAba(chave, matricula);
+          return res.status(200).json(result);
+        }
+
+        case 'updateStatus': {
+          const { supervisor, aba, matricula, status } = req.body;
+          
+          if (!supervisor || !matricula || status === undefined) {
+            return res.status(400).json({ ok: false, msg: 'Parâmetros incompletos' });
+          }
+          
+          const chave = aba || supervisor;
+          const result = await sheetsService.atualizarStatusBufferPorAba(chave, matricula, status);
+          return res.status(200).json(result);
+        }
+
+        case 'updateDesvio': {
+          const { supervisor, aba, matricula, desvio } = req.body;
+          
+          if (!supervisor || !matricula) {
+            return res.status(400).json({ ok: false, msg: 'Parâmetros incompletos' });
+          }
+          
+          const chave = aba || supervisor;
+          const result = await sheetsService.atualizarDesvioBufferPorAba(chave, matricula, desvio);
+          return res.status(200).json(result);
+        }
+
+        case 'saveToBase': {
+          const { dados } = req.body;
+          
+          if (!dados || !Array.isArray(dados) || dados.length === 0) {
+            return res.status(400).json({ ok: false, msg: 'Dados inválidos' });
+          }
+          
+          const result = await sheetsService.salvarNaBase(dados);
+          return res.status(200).json(result);
+        }
+
+        default:
+          return res.status(400).json({ 
+            ok: false, 
+            msg: 'Ação não reconhecida: ' + action
+          });
+      }
+    }
+
+    return res.status(405).json({ ok: false, msg: 'Método não permitido' });
+    
+  } catch (error) {
+    console.error('[COLABORADORES] Erro:', error);
+    return res.status(500).json({
+      ok: false,
+      msg: 'Erro ao processar requisição de colaboradores',
+      error: error.message
+    });
+  }
 }
 
 // ==================== HANDLER: ALOCAÇÃO BOX ====================
 async function handleAlocacaoBox(req, res) {
-  const { action, filtros, boxNum, cargaId, dados } = req.body;
-
-  if (!action) {
-    return res.status(400).json({ ok: false, msg: 'Action é obrigatória' });
-  }
-
-  console.log('[ALOCACAO] Action:', action);
-
-  switch (action) {
-    case 'listarCargas': {
-      const cargas = await sheetsService.getCargasSemBox(filtros || {});
-      return res.status(200).json({ ok: true, cargas, total: cargas.length });
+  try {
+    if (req.method !== 'POST') {
+      return res.status(405).json({ ok: false, msg: 'Método não permitido. Use POST.' });
     }
 
-    case 'listarBoxes': {
-      const boxes = await sheetsService.getEstadoBoxes();
-      return res.status(200).json({ ok: true, boxes, total: boxes.length });
+    const { action, filtros, boxNum, cargaId, dados } = req.body;
+
+    if (!action) {
+      return res.status(400).json({ ok: false, msg: 'Action é obrigatória' });
     }
 
-    case 'alocarBox': {
-      if (!boxNum || !cargaId) {
-        return res.status(400).json({ ok: false, msg: 'boxNum e cargaId são obrigatórios' });
+    console.log('[ALOCACAO] Action:', action);
+
+    switch (action) {
+      case 'listarCargas': {
+        const cargas = await sheetsService.getCargasSemBox(filtros || {});
+        return res.status(200).json({ ok: true, cargas, total: cargas.length });
       }
-      
-      const resultado = await sheetsService.alocarCargaBox(boxNum, cargaId);
-      return res.status(200).json(resultado);
-    }
 
-    case 'liberarBox': {
-      if (!boxNum) {
-        return res.status(400).json({ ok: false, msg: 'boxNum é obrigatório' });
+      case 'listarBoxes': {
+        const boxes = await sheetsService.getEstadoBoxes();
+        return res.status(200).json({ ok: true, boxes, total: boxes.length });
       }
-      
-      const resultado = await sheetsService.liberarBox(boxNum);
-      return res.status(200).json(resultado);
-    }
 
-    case 'salvarAlocacoes': {
-      if (!dados || !Array.isArray(dados)) {
-        return res.status(400).json({ ok: false, msg: 'dados deve ser um array' });
+      case 'alocarBox': {
+        if (!boxNum || !cargaId) {
+          return res.status(400).json({ ok: false, msg: 'boxNum e cargaId são obrigatórios' });
+        }
+        
+        const resultado = await sheetsService.alocarCargaBox(boxNum, cargaId);
+        return res.status(200).json(resultado);
       }
-      
-      const resultado = await sheetsService.salvarAlocacoes(dados);
-      return res.status(200).json(resultado);
-    }
 
-    default:
-      return res.status(400).json({ ok: false, msg: 'Ação inválida: ' + action });
+      case 'liberarBox': {
+        if (!boxNum) {
+          return res.status(400).json({ ok: false, msg: 'boxNum é obrigatório' });
+        }
+        
+        const resultado = await sheetsService.liberarBox(boxNum);
+        return res.status(200).json(resultado);
+      }
+
+      case 'salvarAlocacoes': {
+        if (!dados || !Array.isArray(dados)) {
+          return res.status(400).json({ ok: false, msg: 'dados deve ser um array' });
+        }
+        
+        const resultado = await sheetsService.salvarAlocacoes(dados);
+        return res.status(200).json(resultado);
+      }
+
+      default:
+        return res.status(400).json({ ok: false, msg: 'Ação inválida: ' + action });
+    }
+  } catch (error) {
+    console.error('[ALOCACAO] Erro:', error);
+    return res.status(500).json({
+      ok: false,
+      msg: 'Erro ao processar alocação de box',
+      error: error.message
+    });
   }
 }
 
 // ==================== HANDLER: MAPA DE CARGA ====================
 async function handleMapaCarga(req, res) {
-  const { action, filtros } = req.body;
+  try {
+    if (req.method !== 'POST') {
+      return res.status(405).json({ ok: false, msg: 'Método não permitido. Use POST.' });
+    }
 
-  switch (action) {
-    case 'listar':
-      const dados = await sheetsService.getMapaCarga(filtros || {});
-      return res.status(200).json({ ok: true, dados });
+    const { action, filtros } = req.body;
 
-    case 'atualizar':
-      // Implementar lógica de atualização
-      return res.status(200).json({ ok: true, msg: 'Atualizado com sucesso' });
+    if (!action) {
+      return res.status(400).json({ ok: false, msg: 'Action é obrigatória' });
+    }
 
-    default:
-      return res.status(400).json({ ok: false, msg: 'Ação inválida' });
+    console.log('[MAPA-CARGA] Action:', action);
+
+    switch (action) {
+      case 'listar': {
+        const dados = await sheetsService.getMapaCarga(filtros || {});
+        return res.status(200).json({ ok: true, dados });
+      }
+
+      case 'atualizar': {
+        // Implementar lógica de atualização
+        return res.status(200).json({ ok: true, msg: 'Atualizado com sucesso' });
+      }
+
+      default:
+        return res.status(400).json({ ok: false, msg: 'Ação inválida' });
+    }
+  } catch (error) {
+    console.error('[MAPA-CARGA] Erro:', error);
+    return res.status(500).json({
+      ok: false,
+      msg: 'Erro ao processar mapa de carga',
+      error: error.message
+    });
   }
 }
 
 // ==================== HANDLER: PRODUÇÃO ====================
-async function handleProducao(req, res, pathname) {
-  // /api/producao/base
-  if (pathname === '/api/producao/base') {
-    if (req.method !== 'GET') {
-      return res.status(405).json({ ok: false, msg: 'Método não permitido' });
-    }
+async function handleProducao(req, res, pathname, urlObj) {
+  try {
+    // /api/producao/base
+    if (pathname === '/api/producao/base') {
+      if (req.method !== 'GET') {
+        return res.status(405).json({ ok: false, msg: 'Método não permitido' });
+      }
 
-    const doc = await sheetsService.init();
-    const sheetBase = doc.sheetsByTitle['Base'];
-    
-    if (!sheetBase) {
-      return res.status(404).json({ ok: false, msg: 'Aba Base não encontrada' });
-    }
-    
-    const rowsBase = await sheetBase.getRows();
-    const sheetQLP = doc.sheetsByTitle['QLP'];
-    const mapaQLP = {};
-    
-    if (sheetQLP) {
-      const rowsQLP = await sheetQLP.getRows();
-      rowsQLP.forEach(row => {
-        const chapa = String(row.get('CHAPA1') || '').trim();
-        const secao = String(row.get('SECAO') || '').trim();
-        const turno = String(row.get('Turno') || '').trim();
+      console.log('[PRODUCAO/BASE] Iniciando...');
+
+      const doc = await sheetsService.init();
+      const sheetBase = doc.sheetsByTitle['Base'];
+      
+      if (!sheetBase) {
+        return res.status(404).json({ ok: false, msg: 'Aba Base não encontrada' });
+      }
+      
+      const rowsBase = await sheetBase.getRows();
+      const sheetQLP = doc.sheetsByTitle['QLP'];
+      const mapaQLP = {};
+      
+      if (sheetQLP) {
+        const rowsQLP = await sheetQLP.getRows();
+        rowsQLP.forEach(row => {
+          const chapa = String(row.get('CHAPA1') || '').trim();
+          const secao = String(row.get('SECAO') || '').trim();
+          const turno = String(row.get('Turno') || '').trim();
+          
+          if (chapa) {
+            mapaQLP[chapa] = { secao, turno };
+          }
+        });
+      }
+      
+      const dados = [];
+      const hoje = new Date().toLocaleDateString('pt-BR');
+      
+      rowsBase.forEach(row => {
+        const supervisor = String(row.get('Supervisor') || '').trim();
+        const aba = String(row.get('Aba') || '').trim();
+        const matricula = String(row.get('Matricula') || '').trim();
+        const nome = String(row.get('Nome') || '').trim();
+        const funcao = String(row.get('Função') || '').trim();
+        const status = String(row.get('Status') || '').trim();
+        const data = String(row.get('Data') || '').trim();
         
-        if (chapa) {
-          mapaQLP[chapa] = { secao, turno };
+        if (data !== hoje) return;
+        
+        let secao = 'Sem Seção';
+        let turno = 'Não definido';
+        
+        if (mapaQLP[matricula]) {
+          secao = mapaQLP[matricula].secao || secao;
+          turno = mapaQLP[matricula].turno || turno;
         }
+        
+        if (turno === 'Não definido' && aba) {
+          const abaLower = aba.toLowerCase();
+          if (abaLower.includes('ta')) turno = 'Turno A';
+          else if (abaLower.includes('tb')) turno = 'Turno B';
+          else if (abaLower.includes('tc')) turno = 'Turno C';
+        }
+        
+        dados.push({ supervisor, aba, matricula, nome, funcao, status, data, secao, turno });
+      });
+      
+      console.log(`[PRODUCAO/BASE] ${dados.length} registros processados`);
+      
+      return res.status(200).json({
+        ok: true,
+        dados,
+        total: dados.length,
+        dataFiltro: hoje,
+        timestamp: new Date().toISOString()
       });
     }
-    
-    const dados = [];
-    const hoje = new Date().toLocaleDateString('pt-BR');
-    
-    rowsBase.forEach(row => {
-      const supervisor = String(row.get('Supervisor') || '').trim();
-      const aba = String(row.get('Aba') || '').trim();
-      const matricula = String(row.get('Matricula') || '').trim();
-      const nome = String(row.get('Nome') || '').trim();
-      const funcao = String(row.get('Função') || '').trim();
-      const status = String(row.get('Status') || '').trim();
-      const data = String(row.get('Data') || '').trim();
+
+    // /api/producao/meta
+    if (pathname === '/api/producao/meta') {
+      if (req.method !== 'GET') {
+        return res.status(405).json({ ok: false, msg: 'Método não permitido' });
+      }
+
+      console.log('[PRODUCAO/META] Iniciando...');
+
+      const doc = await sheetsService.init();
+      const sheetMeta = doc.sheetsByTitle['Meta'];
       
-      if (data !== hoje) return;
-      
-      let secao = 'Sem Seção';
-      let turno = 'Não definido';
-      
-      if (mapaQLP[matricula]) {
-        secao = mapaQLP[matricula].secao || secao;
-        turno = mapaQLP[matricula].turno || turno;
+      if (!sheetMeta) {
+        return res.status(404).json({ ok: false, msg: 'Aba Meta não encontrada' });
       }
       
-      if (turno === 'Não definido' && aba) {
-        const abaLower = aba.toLowerCase();
-        if (abaLower.includes('ta')) turno = 'Turno A';
-        else if (abaLower.includes('tb')) turno = 'Turno B';
-        else if (abaLower.includes('tc')) turno = 'Turno C';
+      const rowsMeta = await sheetMeta.getRows();
+      const dados = [];
+      
+      rowsMeta.forEach(row => {
+        const data = String(row.get('Data') || '').trim();
+        const meta = String(row.get('Meta') || '').trim();
+        const produtividadeHora = String(row.get('Produtividade/hora') || '').trim();
+        
+        if (data && produtividadeHora) {
+          dados.push({
+            data,
+            meta: parseFloat(meta.replace(',', '.')) || 0,
+            produtividadeHora: parseFloat(produtividadeHora.replace(',', '.')) || 0
+          });
+        }
+      });
+      
+      console.log(`[PRODUCAO/META] ${dados.length} registros encontrados`);
+      
+      return res.status(200).json({
+        ok: true,
+        dados,
+        total: dados.length,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // /api/producao/produtividade
+    if (pathname === '/api/producao/produtividade') {
+      if (req.method !== 'GET') {
+        return res.status(405).json({ ok: false, msg: 'Método não permitido' });
+      }
+
+      console.log('[PRODUCAO/PRODUTIVIDADE] Iniciando...');
+
+      const doc = await sheetsService.init();
+      const sheetProd = doc.sheetsByTitle['Produtividade_Hora'];
+      
+      if (!sheetProd) {
+        return res.status(404).json({ ok: false, msg: 'Aba Produtividade_Hora não encontrada' });
       }
       
-      dados.push({ supervisor, aba, matricula, nome, funcao, status, data, secao, turno });
-    });
-    
-    return res.status(200).json({
-      ok: true,
-      dados,
-      total: dados.length,
-      dataFiltro: hoje,
-      timestamp: new Date().toISOString()
-    });
-  }
-
-  // /api/producao/meta
-  if (pathname === '/api/producao/meta') {
-    if (req.method !== 'GET') {
-      return res.status(405).json({ ok: false, msg: 'Método não permitido' });
-    }
-
-    const doc = await sheetsService.init();
-    const sheetMeta = doc.sheetsByTitle['Meta'];
-    
-    if (!sheetMeta) {
-      return res.status(404).json({ ok: false, msg: 'Aba Meta não encontrada' });
-    }
-    
-    const rowsMeta = await sheetMeta.getRows();
-    const dados = [];
-    
-    rowsMeta.forEach(row => {
-      const data = String(row.get('Data') || '').trim();
-      const meta = String(row.get('Meta') || '').trim();
-      const produtividadeHora = String(row.get('Produtividade/hora') || '').trim();
+      const rowsProd = await sheetProd.getRows();
+      const dados = [];
       
-      if (data && produtividadeHora) {
-        dados.push({
-          data,
-          meta: parseFloat(meta.replace(',', '.')) || 0,
-          produtividadeHora: parseFloat(produtividadeHora.replace(',', '.')) || 0
-        });
-      }
-    });
-    
-    return res.status(200).json({
-      ok: true,
-      dados,
-      total: dados.length,
-      timestamp: new Date().toISOString()
-    });
-  }
-
-  // /api/producao/produtividade
-  if (pathname === '/api/producao/produtividade') {
-    if (req.method !== 'GET') {
-      return res.status(405).json({ ok: false, msg: 'Método não permitido' });
-    }
-
-    const doc = await sheetsService.init();
-    const sheetProd = doc.sheetsByTitle['Produtividade_Hora'];
-    
-    if (!sheetProd) {
-      return res.status(404).json({ ok: false, msg: 'Aba Produtividade_Hora não encontrada' });
-    }
-    
-    const rowsProd = await sheetProd.getRows();
-    const dados = [];
-    
-    rowsProd.forEach(row => {
-      const funcao = String(row.get('FUNCAO') || '').trim();
-      const produtividadeHora = String(row.get('Produtividade/hora') || '').trim();
+      rowsProd.forEach(row => {
+        const funcao = String(row.get('FUNCAO') || '').trim();
+        const produtividadeHora = String(row.get('Produtividade/hora') || '').trim();
+        
+        if (funcao && produtividadeHora) {
+          dados.push({
+            funcao,
+            produtividadeHora: parseFloat(produtividadeHora.replace(',', '.')) || 0
+          });
+        }
+      });
       
-      if (funcao && produtividadeHora) {
-        dados.push({
-          funcao,
-          produtividadeHora: parseFloat(produtividadeHora.replace(',', '.')) || 0
-        });
-      }
-    });
-    
-    return res.status(200).json({
-      ok: true,
-      dados,
-      total: dados.length,
-      timestamp: new Date().toISOString()
-    });
-  }
-
-  // /api/producao/resumo-base
-// /api/producao/resumo-base
-  if (pathname === '/api/producao/resumo-base') {
-    if (req.method !== 'GET') {
-      return res.status(405).json({ ok: false, msg: 'Método não permitido' });
+      console.log(`[PRODUCAO/PRODUTIVIDADE] ${dados.length} registros encontrados`);
+      
+      return res.status(200).json({
+        ok: true,
+        dados,
+        total: dados.length,
+        timestamp: new Date().toISOString()
+      });
     }
 
-    try {
+    // /api/producao/resumo-base
+    if (pathname === '/api/producao/resumo-base') {
+      if (req.method !== 'GET') {
+        return res.status(405).json({ ok: false, msg: 'Método não permitido' });
+      }
+
       console.log('[RESUMO-BASE] Iniciando processamento...');
       
       const doc = await sheetsService.init();
@@ -573,9 +629,8 @@ async function handleProducao(req, res, pathname) {
       const rows = await sheetBase.getRows();
       console.log(`[RESUMO-BASE] Total de linhas na Base: ${rows.length}`);
       
-      // Processa data do filtro - FIX: usa new URL para pegar query params
+      // Processa data do filtro usando URLSearchParams
       let dataFiltro;
-      const urlObj = new URL(req.url, `http://${req.headers.host}`);
       const dataParam = urlObj.searchParams.get('data');
       
       if (dataParam) {
@@ -710,266 +765,286 @@ async function handleProducao(req, res, pathname) {
         },
         timestamp: new Date().toISOString()
       });
-      
-    } catch (error) {
-      console.error('[RESUMO-BASE] Erro:', error);
-      return res.status(500).json({
-        ok: false,
-        msg: 'Erro ao processar resumo',
-        error: error.message,
-        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-      });
     }
-  }
-    
-// ==================== HANDLER: QLP ====================
-async function handleQLP(req, res, pathname) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ ok: false, msg: 'Método não permitido' });
-  }
 
-  // /api/qlp/quadro ou /api/qlp/dados
-  if (pathname === '/api/qlp/quadro' || pathname === '/api/qlp/dados') {
-    const doc = await sheetsService.init();
-    const sheetQLP = doc.sheetsByTitle['QLP'];
+    return res.status(404).json({ ok: false, msg: 'Rota de produção não encontrada' });
     
-    if (!sheetQLP) {
-      return res.status(404).json({
-        ok: false,
-        msg: 'Aba QLP não encontrada',
-        abasDisponiveis: Object.keys(doc.sheetsByTitle)
-      });
+  } catch (error) {
+    console.error('[PRODUCAO] Erro:', error);
+    return res.status(500).json({
+      ok: false,
+      msg: 'Erro ao processar requisição de produção',
+      error: error.message
+    });
+  }
+}
+
+// ==================== HANDLER: QLP ====================
+async function handleQLP(req, res, pathname, urlObj) {
+  try {
+    if (req.method !== 'GET') {
+      return res.status(405).json({ ok: false, msg: 'Método não permitido' });
     }
-    
-    await sheetQLP.loadHeaderRow();
-    const headers = sheetQLP.headerValues;
-    const rows = await sheetQLP.getRows();
-    
-    if (rows.length === 0) {
+
+    // /api/qlp/quadro ou /api/qlp/dados
+    if (pathname === '/api/qlp/quadro' || pathname === '/api/qlp/dados') {
+      console.log('[QLP/QUADRO] Iniciando...');
+
+      const doc = await sheetsService.init();
+      const sheetQLP = doc.sheetsByTitle['QLP'];
+      
+      if (!sheetQLP) {
+        return res.status(404).json({
+          ok: false,
+          msg: 'Aba QLP não encontrada',
+          abasDisponiveis: Object.keys(doc.sheetsByTitle)
+        });
+      }
+      
+      await sheetQLP.loadHeaderRow();
+      const headers = sheetQLP.headerValues;
+      const rows = await sheetQLP.getRows();
+      
+      if (rows.length === 0) {
+        return res.status(200).json({
+          ok: true,
+          colaboradores: [],
+          estatisticas: {
+            total: 0, ativos: 0, inativos: 0,
+            porSecao: {}, porTurno: {}, porSupervisor: {},
+            porSituacao: {}, porFuncao: {},
+            totalSecoes: 0, totalTurnos: 0, totalSupervisores: 0, totalFuncoes: 0
+          },
+          timestamp: new Date().toISOString()
+        });
+      }
+      
+      const colaboradores = [];
+      const estatisticas = {
+        total: 0, ativos: 0, inativos: 0,
+        porSecao: {}, porTurno: {}, porSupervisor: {},
+        porSituacao: {}, porFuncao: {}
+      };
+      
+      rows.forEach(row => {
+        const getCol = (colName) => {
+          try {
+            const valor = row.get(colName);
+            return valor ? String(valor).trim() : '';
+          } catch (e) {
+            return '';
+          }
+        };
+        
+        const nome = getCol('NOME');
+        if (!nome) return;
+        
+        const chapa = getCol('CHAPA1') || 'S/N';
+        const funcao = getCol('FUNCAO');
+        const secao = getCol('SECAO');
+        const situacao = getCol('SITUACAO');
+        const supervisor = getCol('Supervisor') || 'Sem supervisor';
+        const turno = getCol('Turno') || 'Não definido';
+        
+        const situacaoLower = situacao.toLowerCase();
+        const isAtivo = situacao === 'Ativo' || 
+                       (situacaoLower.includes('ativo') && 
+                        !situacaoLower.includes('não') && 
+                        !situacaoLower.includes('af.'));
+        
+        colaboradores.push({
+          filial: getCol('FILIAL'),
+          bandeira: getCol('BANDEIRA'),
+          chapa,
+          dtAdmissao: getCol('DT_ADMISSAO'),
+          nome,
+          funcao,
+          secao,
+          situacao,
+          totalGeral: getCol('Total Geral'),
+          supervisor,
+          turno,
+          gestao: getCol('Gestão'),
+          isAtivo
+        });
+        
+        estatisticas.total++;
+        if (isAtivo) estatisticas.ativos++;
+        else estatisticas.inativos++;
+        
+        // Estatísticas por categoria
+        if (secao) {
+          if (!estatisticas.porSecao[secao]) {
+            estatisticas.porSecao[secao] = { total: 0, ativos: 0, inativos: 0 };
+          }
+          estatisticas.porSecao[secao].total++;
+          if (isAtivo) estatisticas.porSecao[secao].ativos++;
+          else estatisticas.porSecao[secao].inativos++;
+        }
+        
+        if (!estatisticas.porTurno[turno]) {
+          estatisticas.porTurno[turno] = { total: 0, ativos: 0 };
+        }
+        estatisticas.porTurno[turno].total++;
+        if (isAtivo) estatisticas.porTurno[turno].ativos++;
+        
+        if (!estatisticas.porSupervisor[supervisor]) {
+          estatisticas.porSupervisor[supervisor] = { total: 0, ativos: 0 };
+        }
+        estatisticas.porSupervisor[supervisor].total++;
+        if (isAtivo) estatisticas.porSupervisor[supervisor].ativos++;
+        
+        const situacaoNormalizada = situacao || 'Sem situação';
+        if (!estatisticas.porSituacao[situacaoNormalizada]) {
+          estatisticas.porSituacao[situacaoNormalizada] = 0;
+        }
+        estatisticas.porSituacao[situacaoNormalizada]++;
+        
+        if (funcao) {
+          if (!estatisticas.porFuncao[funcao]) {
+            estatisticas.porFuncao[funcao] = { total: 0, ativos: 0 };
+          }
+          estatisticas.porFuncao[funcao].total++;
+          if (isAtivo) estatisticas.porFuncao[funcao].ativos++;
+        }
+      });
+      
+      estatisticas.totalSecoes = Object.keys(estatisticas.porSecao).length;
+      estatisticas.totalTurnos = Object.keys(estatisticas.porTurno).length;
+      estatisticas.totalSupervisores = Object.keys(estatisticas.porSupervisor).length;
+      estatisticas.totalFuncoes = Object.keys(estatisticas.porFuncao).length;
+      
+      console.log(`[QLP/QUADRO] ${colaboradores.length} colaboradores processados`);
+      
       return res.status(200).json({
         ok: true,
-        colaboradores: [],
-        estatisticas: {
-          total: 0, ativos: 0, inativos: 0,
-          porSecao: {}, porTurno: {}, porSupervisor: {},
-          porSituacao: {}, porFuncao: {},
-          totalSecoes: 0, totalTurnos: 0, totalSupervisores: 0, totalFuncoes: 0
-        },
+        colaboradores,
+        estatisticas,
         timestamp: new Date().toISOString()
       });
     }
-    
-    const colaboradores = [];
-    const estatisticas = {
-      total: 0, ativos: 0, inativos: 0,
-      porSecao: {}, porTurno: {}, porSupervisor: {},
-      porSituacao: {}, porFuncao: {}
-    };
-    
-    rows.forEach(row => {
-      const getCol = (colName) => {
-        try {
-          const valor = row.get(colName);
-          return valor ? String(valor).trim() : '';
-        } catch (e) {
-          return '';
-        }
-      };
-      
-      const nome = getCol('NOME');
-      if (!nome) return;
-      
-      const chapa = getCol('CHAPA1') || 'S/N';
-      const funcao = getCol('FUNCAO');
-      const secao = getCol('SECAO');
-      const situacao = getCol('SITUACAO');
-      const supervisor = getCol('Supervisor') || 'Sem supervisor';
-      const turno = getCol('Turno') || 'Não definido';
-      
-      const situacaoLower = situacao.toLowerCase();
-      const isAtivo = situacao === 'Ativo' || 
-                     (situacaoLower.includes('ativo') && 
-                      !situacaoLower.includes('não') && 
-                      !situacaoLower.includes('af.'));
-      
-      colaboradores.push({
-        filial: getCol('FILIAL'),
-        bandeira: getCol('BANDEIRA'),
-        chapa,
-        dtAdmissao: getCol('DT_ADMISSAO'),
-        nome,
-        funcao,
-        secao,
-        situacao,
-        totalGeral: getCol('Total Geral'),
-        supervisor,
-        turno,
-        gestao: getCol('Gestão'),
-        isAtivo
-      });
-      
-      estatisticas.total++;
-      if (isAtivo) estatisticas.ativos++;
-      else estatisticas.inativos++;
-      
-      // Estatísticas por categoria
-      if (secao) {
-        if (!estatisticas.porSecao[secao]) {
-          estatisticas.porSecao[secao] = { total: 0, ativos: 0, inativos: 0 };
-        }
-        estatisticas.porSecao[secao].total++;
-        if (isAtivo) estatisticas.porSecao[secao].ativos++;
-        else estatisticas.porSecao[secao].inativos++;
-      }
-      
-      if (!estatisticas.porTurno[turno]) {
-        estatisticas.porTurno[turno] = { total: 0, ativos: 0 };
-      }
-      estatisticas.porTurno[turno].total++;
-      if (isAtivo) estatisticas.porTurno[turno].ativos++;
-      
-      if (!estatisticas.porSupervisor[supervisor]) {
-        estatisticas.porSupervisor[supervisor] = { total: 0, ativos: 0 };
-      }
-      estatisticas.porSupervisor[supervisor].total++;
-      if (isAtivo) estatisticas.porSupervisor[supervisor].ativos++;
-      
-      const situacaoNormalizada = situacao || 'Sem situação';
-      if (!estatisticas.porSituacao[situacaoNormalizada]) {
-        estatisticas.porSituacao[situacaoNormalizada] = 0;
-      }
-      estatisticas.porSituacao[situacaoNormalizada]++;
-      
-      if (funcao) {
-        if (!estatisticas.porFuncao[funcao]) {
-          estatisticas.porFuncao[funcao] = { total: 0, ativos: 0 };
-        }
-        estatisticas.porFuncao[funcao].total++;
-        if (isAtivo) estatisticas.porFuncao[funcao].ativos++;
-      }
-    });
-    
-    estatisticas.totalSecoes = Object.keys(estatisticas.porSecao).length;
-    estatisticas.totalTurnos = Object.keys(estatisticas.porTurno).length;
-    estatisticas.totalSupervisores = Object.keys(estatisticas.porSupervisor).length;
-    estatisticas.totalFuncoes = Object.keys(estatisticas.porFuncao).length;
-    
-    return res.status(200).json({
-      ok: true,
-      colaboradores,
-      estatisticas,
-      timestamp: new Date().toISOString()
-    });
-  }
 
-  // /api/qlp/exportar
-  if (pathname === '/api/qlp/exportar') {
-    const { formato } = req.query;
-    
-    if (!formato || !['csv', 'json'].includes(formato)) {
-      return res.status(400).json({
-        ok: false,
-        msg: 'Formato inválido. Use csv ou json'
-      });
-    }
-    
-    console.log(`[QLP/EXPORTAR] Iniciando exportação em formato: ${formato}`);
-    
-    const doc = await sheetsService.init();
-    const sheetBase = doc.sheetsByTitle['Base'];
-    
-    if (!sheetBase) {
-      return res.status(404).json({
-        ok: false,
-        msg: 'Aba Base não encontrada'
-      });
-    }
-    
-    const sheetQuadro = doc.sheetsByTitle['Quadro'];
-    const rows = await sheetBase.getRows();
-    
-    const quadroMap = {};
-    if (sheetQuadro) {
-      const quadroRows = await sheetQuadro.getRows();
-      quadroRows.forEach(row => {
-        const matricula = String(row.get('Coluna 1') || '').trim();
-        const tipoOperacional = String(row.get('Coluna 2') || '').trim();
-        if (matricula) {
-          quadroMap[matricula] = tipoOperacional || 'Não operacional';
-        }
-      });
-    }
-    
-    const dadosExportacao = [];
-    
-    rows.forEach(row => {
-      const supervisor = String(row.get('Supervisor') || '').trim();
-      const aba = String(row.get('Aba') || '').trim();
-      const matricula = String(row.get('Matricula') || '').trim();
-      const nome = String(row.get('Nome') || '').trim();
-      const funcao = String(row.get('Função') || '').trim();
-      const status = String(row.get('Status') || '').trim();
-      const data = String(row.get('Data') || '').trim();
+    // /api/qlp/exportar
+    if (pathname === '/api/qlp/exportar') {
+      const formato = urlObj.searchParams.get('formato');
       
-      if (!nome) return;
-      
-      let turno = 'Não definido';
-      if (aba.toLowerCase().includes('ta') || aba.toLowerCase().includes('turno a')) {
-        turno = 'Turno A';
-      } else if (aba.toLowerCase().includes('tb') || aba.toLowerCase().includes('turno b')) {
-        turno = 'Turno B';
-      } else if (aba.toLowerCase().includes('tc') || aba.toLowerCase().includes('turno c')) {
-        turno = 'Turno C';
+      if (!formato || !['csv', 'json'].includes(formato)) {
+        return res.status(400).json({
+          ok: false,
+          msg: 'Formato inválido. Use csv ou json'
+        });
       }
       
-      const tipoOperacional = quadroMap[matricula] || 'Não operacional';
+      console.log(`[QLP/EXPORTAR] Iniciando exportação em formato: ${formato}`);
       
-      dadosExportacao.push({
-        Matricula: matricula,
-        Nome: nome,
-        Funcao: funcao,
-        Supervisor: supervisor,
-        Aba: aba,
-        Turno: turno,
-        TipoOperacional: tipoOperacional,
-        Status: status,
-        Data: data
-      });
-    });
-    
-    if (formato === 'csv') {
-      const headers = ['Matricula', 'Nome', 'Funcao', 'Supervisor', 'Aba', 'Turno', 'TipoOperacional', 'Status', 'Data'];
-      let csv = headers.join(',') + '\n';
+      const doc = await sheetsService.init();
+      const sheetBase = doc.sheetsByTitle['Base'];
       
-      dadosExportacao.forEach(item => {
-        const linha = headers.map(header => {
-          let valor = item[header] || '';
-          if (valor.includes(',') || valor.includes('"')) {
-            valor = '"' + valor.replace(/"/g, '""') + '"';
+      if (!sheetBase) {
+        return res.status(404).json({
+          ok: false,
+          msg: 'Aba Base não encontrada'
+        });
+      }
+      
+      const sheetQuadro = doc.sheetsByTitle['Quadro'];
+      const rows = await sheetBase.getRows();
+      
+      const quadroMap = {};
+      if (sheetQuadro) {
+        const quadroRows = await sheetQuadro.getRows();
+        quadroRows.forEach(row => {
+          const matricula = String(row.get('Coluna 1') || '').trim();
+          const tipoOperacional = String(row.get('Coluna 2') || '').trim();
+          if (matricula) {
+            quadroMap[matricula] = tipoOperacional || 'Não operacional';
           }
-          return valor;
-        }).join(',');
-        csv += linha + '\n';
+        });
+      }
+      
+      const dadosExportacao = [];
+      
+      rows.forEach(row => {
+        const supervisor = String(row.get('Supervisor') || '').trim();
+        const aba = String(row.get('Aba') || '').trim();
+        const matricula = String(row.get('Matricula') || '').trim();
+        const nome = String(row.get('Nome') || '').trim();
+        const funcao = String(row.get('Função') || '').trim();
+        const status = String(row.get('Status') || '').trim();
+        const data = String(row.get('Data') || '').trim();
+        
+        if (!nome) return;
+        
+        let turno = 'Não definido';
+        if (aba.toLowerCase().includes('ta') || aba.toLowerCase().includes('turno a')) {
+          turno = 'Turno A';
+        } else if (aba.toLowerCase().includes('tb') || aba.toLowerCase().includes('turno b')) {
+          turno = 'Turno B';
+        } else if (aba.toLowerCase().includes('tc') || aba.toLowerCase().includes('turno c')) {
+          turno = 'Turno C';
+        }
+        
+        const tipoOperacional = quadroMap[matricula] || 'Não operacional';
+        
+        dadosExportacao.push({
+          Matricula: matricula,
+          Nome: nome,
+          Funcao: funcao,
+          Supervisor: supervisor,
+          Aba: aba,
+          Turno: turno,
+          TipoOperacional: tipoOperacional,
+          Status: status,
+          Data: data
+        });
       });
       
-      return res.status(200).json({
-        ok: true,
-        formato: 'csv',
-        csv: csv,
-        totalRegistros: dadosExportacao.length
-      });
-      
-    } else {
-      return res.status(200).json({
-        ok: true,
-        formato: 'json',
-        dados: dadosExportacao,
-        totalRegistros: dadosExportacao.length
-      });
+      if (formato === 'csv') {
+        const headers = ['Matricula', 'Nome', 'Funcao', 'Supervisor', 'Aba', 'Turno', 'TipoOperacional', 'Status', 'Data'];
+        let csv = headers.join(',') + '\n';
+        
+        dadosExportacao.forEach(item => {
+          const linha = headers.map(header => {
+            let valor = item[header] || '';
+            if (valor.includes(',') || valor.includes('"')) {
+              valor = '"' + valor.replace(/"/g, '""') + '"';
+            }
+            return valor;
+          }).join(',');
+          csv += linha + '\n';
+        });
+        
+        console.log(`[QLP/EXPORTAR] ${dadosExportacao.length} registros exportados em CSV`);
+        
+        return res.status(200).json({
+          ok: true,
+          formato: 'csv',
+          csv: csv,
+          totalRegistros: dadosExportacao.length
+        });
+        
+      } else {
+        console.log(`[QLP/EXPORTAR] ${dadosExportacao.length} registros exportados em JSON`);
+        
+        return res.status(200).json({
+          ok: true,
+          formato: 'json',
+          dados: dadosExportacao,
+          totalRegistros: dadosExportacao.length
+        });
+      }
     }
-  }
 
-  return res.status(404).json({ ok: false, msg: 'Rota QLP não encontrada' });
+    return res.status(404).json({ ok: false, msg: 'Rota QLP não encontrada' });
+    
+  } catch (error) {
+    console.error('[QLP] Erro:', error);
+    return res.status(500).json({
+      ok: false,
+      msg: 'Erro ao processar requisição QLP',
+      error: error.message
+    });
+  }
 }
 
 // ==================== HANDLER: TESTE DE CONEXÃO ====================
