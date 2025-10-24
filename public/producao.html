@@ -538,6 +538,12 @@
                 dadosBase = resultBase.dados || [];
                 console.log(`Base carregada: ${dadosBase.length} registros`);
                 console.log('Turnos únicos na Base:', [...new Set(dadosBase.map(d => d.turno))]);
+                
+                const contagemTurnos = {};
+                dadosBase.forEach(d => {
+                    contagemTurnos[d.turno] = (contagemTurnos[d.turno] || 0) + 1;
+                });
+                console.log('Distribuição de turnos:', contagemTurnos);
 
                 console.log('Carregando QLP...');
                 const resQLP = await fetch('/api/qlp/quadro');
@@ -579,7 +585,6 @@
             console.log('=== PROCESSANDO DADOS ===');
             console.log('Funções permitidas:', funcoesPermitidas);
             
-            // Agrupa QLP por função/turno
             const qlpPorFuncaoTurno = {};
             dadosQLP.forEach(d => {
                 if (!d.funcao || !d.isAtivo) return;
@@ -606,7 +611,6 @@
                 qlpPorFuncaoTurno[chave].colaboradores.push(d);
             });
 
-            // Agrupa Base por função/turno
             const basePorFuncaoTurno = {};
             dadosBase.forEach(d => {
                 const funcao = (d.funcao || 'Sem Função').trim();
@@ -646,10 +650,8 @@
                 else if (statusLower === 'afastado') basePorFuncaoTurno[chave].afastado++;
             });
 
-            // Combina QLP + Base
             dadosProducao = [];
             
-            // Primeiro processa os que estão na Base
             Object.keys(basePorFuncaoTurno).forEach(chave => {
                 const base = basePorFuncaoTurno[chave];
                 const qlp = qlpPorFuncaoTurno[chave] || { qlTotal: 0 };
@@ -674,7 +676,6 @@
                 });
             });
 
-            // Depois adiciona os que estão apenas no QLP (com presentes = 0)
             Object.keys(qlpPorFuncaoTurno).forEach(chave => {
                 if (!basePorFuncaoTurno[chave]) {
                     const qlp = qlpPorFuncaoTurno[chave];
@@ -714,7 +715,6 @@
             const selectFuncoes = document.getElementById('filtroFuncoes');
             selectFuncoes.innerHTML = funcoes.map(f => `<option value="${f}">${f}</option>`).join('');
 
-            // CORREÇÃO: Pega turnos direto do dadosProducao processado
             const turnos = [...new Set(dadosProducao.map(d => d.turno).filter(t => t && t !== 'Sem Turno'))].sort();
             
             console.log('Turnos para filtro:', turnos);
@@ -829,28 +829,22 @@
             const diaSemana = dataSelecionada.getDay();
             const ehSabado = diaSemana === 6;
             
-            // CORREÇÃO: Normaliza o turno antes de comparar
-            const turnoUpper = d.turno.toUpperCase().trim();
+            const turnoNormalizado = d.turno.toUpperCase().trim()
+                .replace('TURNO A', 'A')
+                .replace('TURNO B', 'B')
+                .replace('TURNO C', 'C');
             
-            console.log(`Calculando linha: Função=${d.funcao}, Turno="${d.turno}", TurnoUpper="${turnoUpper}", Dia=${diaSemana}`);
+            console.log(`Calculando: Função=${d.funcao}, Turno="${d.turno}", Normalizado="${turnoNormalizado}", Dia=${diaSemana}, Sábado=${ehSabado}`);
             
-            // CORREÇÃO: Lógica de horas melhorada para todos os turnos
-            if (turnoUpper === 'TURNO A' || turnoUpper === 'A') {
+            if (turnoNormalizado === 'A' || turnoNormalizado.includes('A')) {
                 d.horasTurno = 6.05;
-            } else if (turnoUpper === 'TURNO B' || turnoUpper === 'B') {
+            } else if (turnoNormalizado === 'B' || turnoNormalizado.includes('B')) {
                 d.horasTurno = ehSabado ? 4 : 7.05;
-            } else if (turnoUpper === 'TURNO C' || turnoUpper === 'C') {
-                d.horasTurno = 7.05;
-            } else if (turnoUpper.includes('TURNO A')) {
-                d.horasTurno = 6.05;
-            } else if (turnoUpper.includes('TURNO B')) {
-                d.horasTurno = ehSabado ? 4 : 7.05;
-            } else if (turnoUpper.includes('TURNO C')) {
+            } else if (turnoNormalizado === 'C' || turnoNormalizado.includes('C')) {
                 d.horasTurno = 7.05;
             } else {
-                // Se não reconhecer, usa padrão de 8 horas
                 d.horasTurno = 8;
-                console.warn(`Turno não reconhecido: "${d.turno}" (${turnoUpper}), usando 8 horas`);
+                console.warn(`Turno não reconhecido: "${d.turno}", usando 8 horas`);
             }
             
             console.log(`Horas calculadas: ${d.horasTurno}`);
