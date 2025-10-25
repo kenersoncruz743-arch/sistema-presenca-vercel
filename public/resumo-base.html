@@ -618,9 +618,9 @@
 
                 const dataInput = document.getElementById('filtroData').value;
                 
-                let url = '/api/producao.js';
+                let url = '/api/producao.js?action=resumo-base';
                 if (dataInput) {
-                    url += `?data=${dataInput}`;
+                    url += `&data=${dataInput}`;
                 }
 
                 console.log('Buscando resumo:', url);
