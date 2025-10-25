@@ -1,4 +1,4 @@
-// api/producao.js - API UNIFICADA DE PRODUÇÃO - CORREÇÃO FINAL DE DATA
+// api/producao.js - VERSÃO CORRIGIDA COM FILTROS FUNCIONANDO
 const sheetsService = require('../lib/sheets');
 
 module.exports = async function handler(req, res) {
@@ -69,9 +69,17 @@ module.exports = async function handler(req, res) {
           }
         }
         
-        // CORREÇÃO: Usa mesma lógica do resumo-base.js
-        const hoje = new Date().toLocaleDateString('pt-BR');
-        console.log(`[PRODUCAO/BASE] Data atual: ${hoje}`);
+        // CORREÇÃO: Obtém data do query string ou usa hoje
+        let dataFiltro;
+        if (req.query.data) {
+          // Converte de YYYY-MM-DD para DD/MM/YYYY
+          const [ano, mes, dia] = req.query.data.split('-');
+          dataFiltro = `${dia}/${mes}/${ano}`;
+        } else {
+          dataFiltro = new Date().toLocaleDateString('pt-BR');
+        }
+        
+        console.log(`[PRODUCAO/BASE] Filtrando por data: ${dataFiltro}`);
         
         // Processa dados da Base
         const dados = [];
@@ -86,8 +94,8 @@ module.exports = async function handler(req, res) {
             const status = String(row.get('Status') || '').trim();
             const data = String(row.get('Data') || '').trim();
             
-            // Filtra apenas registros de hoje
-            if (data !== hoje) return;
+            // Filtra apenas registros da data especificada
+            if (data !== dataFiltro) return;
             
             // Busca seção e turno do QLP
             let secao = 'Sem Seção';
@@ -98,7 +106,7 @@ module.exports = async function handler(req, res) {
               turno = mapaQLP[matricula].turno || turno;
             }
             
-            // CORREÇÃO COMPLETA: Lógica melhorada para determinar turno pela aba
+            // Lógica melhorada para determinar turno pela aba
             if (!turno || turno === 'Não definido' || turno === '') {
               if (aba) {
                 const abaUpper = aba.toUpperCase().trim();
@@ -134,7 +142,7 @@ module.exports = async function handler(req, res) {
               }
             }
             
-            // NORMALIZAÇÃO FINAL: Garante formato padrão "Turno X"
+            // Normalização final: Garante formato padrão "Turno X"
             const turnoUpper = turno.toUpperCase().trim();
             
             if (turnoUpper === 'A' || turnoUpper === 'TA' || turnoUpper === 'TURNO A' || turnoUpper.includes('TURNO A')) {
@@ -163,13 +171,13 @@ module.exports = async function handler(req, res) {
           }
         });
         
-        console.log(`[PRODUCAO/BASE] ${dados.length} registros processados (hoje: ${hoje})`);
+        console.log(`[PRODUCAO/BASE] ${dados.length} registros processados para ${dataFiltro}`);
         
         return res.status(200).json({
           ok: true,
           dados,
           total: dados.length,
-          dataFiltro: hoje,
+          dataFiltro: dataFiltro,
           timestamp: new Date().toISOString()
         });
       } catch (error) {
@@ -332,7 +340,7 @@ module.exports = async function handler(req, res) {
         const rows = await sheetBase.getRows();
         console.log(`[PRODUCAO/RESUMO-BASE] ${rows.length} registros na Base`);
         
-        // Obtém data do query ou usa hoje (MESMA LÓGICA DO RESUMO-BASE.JS)
+        // CORREÇÃO: Obtém data do query ou usa hoje
         let dataFiltro;
         if (req.query.data) {
           const [ano, mes, dia] = req.query.data.split('-');
