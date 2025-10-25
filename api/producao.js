@@ -1,24 +1,5 @@
-// api/producao.js - API UNIFICADA DE PRODUÇÃO - CORREÇÃO DEFINITIVA DE TIMEZONE
+// api/producao.js - API UNIFICADA DE PRODUÇÃO - CORREÇÃO FINAL DE DATA
 const sheetsService = require('../lib/sheets');
-
-// Função auxiliar para obter data no formato brasileiro com timezone correto
-function getDataBrasil() {
-  // Cria data em UTC e ajusta para Campo Grande (UTC-4)
-  const agora = new Date();
-  const offsetCampoGrande = -4 * 60; // UTC-4 em minutos
-  const offsetLocal = agora.getTimezoneOffset(); // Offset do servidor em minutos
-  const diferencaMinutos = offsetCampoGrande - offsetLocal;
-  
-  // Ajusta a data
-  const dataCampoGrande = new Date(agora.getTime() + diferencaMinutos * 60000);
-  
-  // Formata no padrão brasileiro DD/MM/YYYY
-  const dia = String(dataCampoGrande.getDate()).padStart(2, '0');
-  const mes = String(dataCampoGrande.getMonth() + 1).padStart(2, '0');
-  const ano = dataCampoGrande.getFullYear();
-  
-  return `${dia}/${mes}/${ano}`;
-}
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -88,9 +69,9 @@ module.exports = async function handler(req, res) {
           }
         }
         
-        // CORREÇÃO: Usa função auxiliar para obter data correta
-        const hoje = getDataBrasil();
-        console.log(`[PRODUCAO/BASE] Data atual (Brasil): ${hoje}`);
+        // CORREÇÃO: Usa mesma lógica do resumo-base.js
+        const hoje = new Date().toLocaleDateString('pt-BR');
+        console.log(`[PRODUCAO/BASE] Data atual: ${hoje}`);
         
         // Processa dados da Base
         const dados = [];
@@ -351,13 +332,13 @@ module.exports = async function handler(req, res) {
         const rows = await sheetBase.getRows();
         console.log(`[PRODUCAO/RESUMO-BASE] ${rows.length} registros na Base`);
         
-        // Obtém data do query ou usa hoje (com função auxiliar)
+        // Obtém data do query ou usa hoje (MESMA LÓGICA DO RESUMO-BASE.JS)
         let dataFiltro;
         if (req.query.data) {
           const [ano, mes, dia] = req.query.data.split('-');
           dataFiltro = `${dia}/${mes}/${ano}`;
         } else {
-          dataFiltro = getDataBrasil();
+          dataFiltro = new Date().toLocaleDateString('pt-BR');
         }
         
         console.log(`[PRODUCAO/RESUMO-BASE] Filtrando por data: ${dataFiltro}`);
