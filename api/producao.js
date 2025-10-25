@@ -1,4 +1,4 @@
-// api/producao.js - API UNIFICADA DE PRODUÇÃO - CORRIGIDA PARA TURNO C
+// api/producao.js - API UNIFICADA DE PRODUÇÃO - CORRIGIDA TIMEZONE
 const sheetsService = require('../lib/sheets');
 
 module.exports = async function handler(req, res) {
@@ -69,9 +69,12 @@ module.exports = async function handler(req, res) {
           }
         }
         
+        // CORREÇÃO: Usa timezone de Campo Grande (America/Campo_Grande = UTC-4)
+        const hoje = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Campo_Grande' });
+        console.log(`[PRODUCAO/BASE] Data atual (Campo Grande): ${hoje}`);
+        
         // Processa dados da Base
         const dados = [];
-        const hoje = new Date().toLocaleDateString('pt-BR');
         
         rowsBase.forEach(row => {
           try {
@@ -99,11 +102,7 @@ module.exports = async function handler(req, res) {
             if (!turno || turno === 'Não definido' || turno === '') {
               if (aba) {
                 const abaUpper = aba.toUpperCase().trim();
-                
-                // Remove espaços extras e normaliza
                 const abaNormalizada = abaUpper.replace(/\s+/g, ' ');
-                
-                console.log(`[DEBUG] Processando aba: "${aba}" -> "${abaNormalizada}"`);
                 
                 // Testa Turno C primeiro (mais específico)
                 if (abaNormalizada.includes('TURNO C') || 
@@ -132,25 +131,17 @@ module.exports = async function handler(req, res) {
                          abaNormalizada.includes('TA ')) {
                   turno = 'Turno A';
                 }
-                
-                console.log(`[DEBUG] Turno identificado: "${turno}"`);
               }
             }
             
             // NORMALIZAÇÃO FINAL: Garante formato padrão "Turno X"
             const turnoUpper = turno.toUpperCase().trim();
             
-            if (turnoUpper === 'A' || turnoUpper === 'TA' || turnoUpper === 'TURNO A') {
+            if (turnoUpper === 'A' || turnoUpper === 'TA' || turnoUpper === 'TURNO A' || turnoUpper.includes('TURNO A')) {
               turno = 'Turno A';
-            } else if (turnoUpper === 'B' || turnoUpper === 'TB' || turnoUpper === 'TURNO B') {
+            } else if (turnoUpper === 'B' || turnoUpper === 'TB' || turnoUpper === 'TURNO B' || turnoUpper.includes('TURNO B')) {
               turno = 'Turno B';
-            } else if (turnoUpper === 'C' || turnoUpper === 'TC' || turnoUpper === 'TURNO C') {
-              turno = 'Turno C';
-            } else if (turnoUpper.includes('TURNO A') || turnoUpper.includes('TA')) {
-              turno = 'Turno A';
-            } else if (turnoUpper.includes('TURNO B') || turnoUpper.includes('TB')) {
-              turno = 'Turno B';
-            } else if (turnoUpper.includes('TURNO C') || turnoUpper.includes('TC')) {
+            } else if (turnoUpper === 'C' || turnoUpper === 'TC' || turnoUpper === 'TURNO C' || turnoUpper.includes('TURNO C')) {
               turno = 'Turno C';
             } else if (!turno || turno === 'NÃO DEFINIDO' || turno === 'NAO DEFINIDO') {
               turno = 'Não definido';
@@ -172,15 +163,7 @@ module.exports = async function handler(req, res) {
           }
         });
         
-        console.log(`[PRODUCAO/BASE] ${dados.length} registros processados (hoje)`);
-        console.log('[PRODUCAO/BASE] Turnos únicos:', [...new Set(dados.map(d => d.turno))]);
-        
-        // Debug: Mostra distribuição de turnos
-        const contagemTurnos = {};
-        dados.forEach(d => {
-          contagemTurnos[d.turno] = (contagemTurnos[d.turno] || 0) + 1;
-        });
-        console.log('[PRODUCAO/BASE] Distribuição de turnos:', contagemTurnos);
+        console.log(`[PRODUCAO/BASE] ${dados.length} registros processados (hoje: ${hoje})`);
         
         return res.status(200).json({
           ok: true,
@@ -349,13 +332,13 @@ module.exports = async function handler(req, res) {
         const rows = await sheetBase.getRows();
         console.log(`[PRODUCAO/RESUMO-BASE] ${rows.length} registros na Base`);
         
-        // Obtém data do query ou usa hoje
+        // Obtém data do query ou usa hoje (com timezone correto)
         let dataFiltro;
         if (req.query.data) {
           const [ano, mes, dia] = req.query.data.split('-');
           dataFiltro = `${dia}/${mes}/${ano}`;
         } else {
-          dataFiltro = new Date().toLocaleDateString('pt-BR');
+          dataFiltro = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Campo_Grande' });
         }
         
         console.log(`[PRODUCAO/RESUMO-BASE] Filtrando por data: ${dataFiltro}`);
