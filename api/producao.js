@@ -84,7 +84,7 @@ module.exports = async function handler(req, res) {
             const data = String(row.get('Data') || '').trim();
             
             // Filtra apenas registros de hoje
-            if (data !) return;
+            if (data !== hoje) return;
             
             // Busca seção e turno do QLP
             let secao = 'Sem Seção';
