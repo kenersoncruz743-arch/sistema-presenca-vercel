@@ -1,4 +1,4 @@
-// api/producao.js - VERSÃO CORRIGIDA COM FILTROS FUNCIONANDO
+// api/producao.js - VERSÃO COMPLETA BASEADA NOS ARQUIVOS FUNCIONAIS
 const sheetsService = require('../lib/sheets');
 
 module.exports = async function handler(req, res) {
@@ -21,6 +21,7 @@ module.exports = async function handler(req, res) {
     }
 
     console.log(`[PRODUCAO] Action: ${action}`);
+    console.log(`[PRODUCAO] Query params:`, req.query);
 
     // ==================== BASE ====================
     if (action === 'base') {
@@ -32,11 +33,9 @@ module.exports = async function handler(req, res) {
         
         const sheetBase = doc.sheetsByTitle['Base'];
         if (!sheetBase) {
-          console.error('[PRODUCAO/BASE] Aba Base não encontrada');
           return res.status(404).json({
             ok: false,
-            msg: 'Aba "Base" não encontrada na planilha',
-            abasDisponiveis: Object.keys(doc.sheetsByTitle)
+            msg: 'Aba Base não encontrada'
           });
         }
         
@@ -65,26 +64,26 @@ module.exports = async function handler(req, res) {
             });
             console.log(`[PRODUCAO/BASE] ${Object.keys(mapaQLP).length} registros no mapa QLP`);
           } catch (qlpErr) {
-            console.warn('[PRODUCAO/BASE] Erro ao processar QLP (continuando sem):', qlpErr.message);
+            console.warn('[PRODUCAO/BASE] Erro ao processar QLP:', qlpErr.message);
           }
         }
         
-        // CORREÇÃO: Obtém data do query string ou usa hoje
+        // FILTRO DE DATA
         let dataFiltro;
         if (req.query.data) {
-          // Converte de YYYY-MM-DD para DD/MM/YYYY
           const [ano, mes, dia] = req.query.data.split('-');
           dataFiltro = `${dia}/${mes}/${ano}`;
+          console.log(`[PRODUCAO/BASE] Data recebida via query: ${req.query.data} -> ${dataFiltro}`);
         } else {
           dataFiltro = new Date().toLocaleDateString('pt-BR');
+          console.log(`[PRODUCAO/BASE] Usando data padrão (hoje): ${dataFiltro}`);
         }
-        
-        console.log(`[PRODUCAO/BASE] Filtrando por data: ${dataFiltro}`);
         
         // Processa dados da Base
         const dados = [];
+        let registrosProcessados = 0;
         
-        rowsBase.forEach(row => {
+        rowsBase.forEach((row, idx) => {
           try {
             const supervisor = String(row.get('Supervisor') || '').trim();
             const aba = String(row.get('Aba') || '').trim();
@@ -94,8 +93,15 @@ module.exports = async function handler(req, res) {
             const status = String(row.get('Status') || '').trim();
             const data = String(row.get('Data') || '').trim();
             
+            // Debug primeiras 5 linhas
+            if (idx < 5) {
+              console.log(`[PRODUCAO/BASE] Linha ${idx + 1}: data="${data}" | esperado="${dataFiltro}" | match=${data === dataFiltro}`);
+            }
+            
             // Filtra apenas registros da data especificada
             if (data !== dataFiltro) return;
+            
+            registrosProcessados++;
             
             // Busca seção e turno do QLP
             let secao = 'Sem Seção';
@@ -106,53 +112,16 @@ module.exports = async function handler(req, res) {
               turno = mapaQLP[matricula].turno || turno;
             }
             
-            // Lógica melhorada para determinar turno pela aba
-            if (!turno || turno === 'Não definido' || turno === '') {
-              if (aba) {
-                const abaUpper = aba.toUpperCase().trim();
-                const abaNormalizada = abaUpper.replace(/\s+/g, ' ');
-                
-                // Testa Turno C primeiro (mais específico)
-                if (abaNormalizada.includes('TURNO C') || 
-                    abaNormalizada === 'C' || 
-                    abaNormalizada.endsWith(' C') ||
-                    abaNormalizada.startsWith('C ') ||
-                    abaNormalizada.includes(' TC') ||
-                    abaNormalizada.includes('TC ')) {
-                  turno = 'Turno C';
-                }
-                // Testa Turno B
-                else if (abaNormalizada.includes('TURNO B') || 
-                         abaNormalizada === 'B' || 
-                         abaNormalizada.endsWith(' B') ||
-                         abaNormalizada.startsWith('B ') ||
-                         abaNormalizada.includes(' TB') ||
-                         abaNormalizada.includes('TB ')) {
-                  turno = 'Turno B';
-                }
-                // Testa Turno A
-                else if (abaNormalizada.includes('TURNO A') || 
-                         abaNormalizada === 'A' || 
-                         abaNormalizada.endsWith(' A') ||
-                         abaNormalizada.startsWith('A ') ||
-                         abaNormalizada.includes(' TA') ||
-                         abaNormalizada.includes('TA ')) {
-                  turno = 'Turno A';
-                }
+            // Determina turno pela aba se não tiver no QLP
+            if (turno === 'Não definido' && aba) {
+              const abaLower = aba.toLowerCase();
+              if (abaLower.includes('ta') || abaLower.includes('turno a')) {
+                turno = 'Turno A';
+              } else if (abaLower.includes('tb') || abaLower.includes('turno b')) {
+                turno = 'Turno B';
+              } else if (abaLower.includes('tc') || abaLower.includes('turno c')) {
+                turno = 'Turno C';
               }
-            }
-            
-            // Normalização final: Garante formato padrão "Turno X"
-            const turnoUpper = turno.toUpperCase().trim();
-            
-            if (turnoUpper === 'A' || turnoUpper === 'TA' || turnoUpper === 'TURNO A' || turnoUpper.includes('TURNO A')) {
-              turno = 'Turno A';
-            } else if (turnoUpper === 'B' || turnoUpper === 'TB' || turnoUpper === 'TURNO B' || turnoUpper.includes('TURNO B')) {
-              turno = 'Turno B';
-            } else if (turnoUpper === 'C' || turnoUpper === 'TC' || turnoUpper === 'TURNO C' || turnoUpper.includes('TURNO C')) {
-              turno = 'Turno C';
-            } else if (!turno || turno === 'NÃO DEFINIDO' || turno === 'NAO DEFINIDO') {
-              turno = 'Não definido';
             }
             
             dados.push({
@@ -171,7 +140,13 @@ module.exports = async function handler(req, res) {
           }
         });
         
-        console.log(`[PRODUCAO/BASE] ${dados.length} registros processados para ${dataFiltro}`);
+        console.log(`[PRODUCAO/BASE] Total de registros: ${rowsBase.length}`);
+        console.log(`[PRODUCAO/BASE] Registros processados para ${dataFiltro}: ${registrosProcessados}`);
+        console.log(`[PRODUCAO/BASE] Registros retornados: ${dados.length}`);
+        
+        // Debug turnos
+        const turnosEncontrados = [...new Set(dados.map(d => d.turno))];
+        console.log(`[PRODUCAO/BASE] Turnos encontrados:`, turnosEncontrados);
         
         return res.status(200).json({
           ok: true,
@@ -180,12 +155,14 @@ module.exports = async function handler(req, res) {
           dataFiltro: dataFiltro,
           timestamp: new Date().toISOString()
         });
+        
       } catch (error) {
         console.error('[PRODUCAO/BASE] Erro:', error);
         return res.status(500).json({
           ok: false,
           msg: 'Erro ao buscar dados da Base',
-          error: error.message
+          details: error.message,
+          stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
       }
     }
@@ -200,7 +177,7 @@ module.exports = async function handler(req, res) {
         
         const sheetMeta = doc.sheetsByTitle['Meta'];
         if (!sheetMeta) {
-          console.warn('[PRODUCAO/META] Aba Meta não encontrada - retornando array vazio');
+          console.warn('[PRODUCAO/META] Aba Meta não encontrada');
           return res.status(200).json({
             ok: true,
             dados: [],
@@ -244,6 +221,7 @@ module.exports = async function handler(req, res) {
           total: dados.length,
           timestamp: new Date().toISOString()
         });
+        
       } catch (error) {
         console.error('[PRODUCAO/META] Erro:', error);
         return res.status(200).json({
@@ -269,8 +247,7 @@ module.exports = async function handler(req, res) {
           console.error('[PRODUCAO/PRODUTIVIDADE] Aba Produtividade_Hora não encontrada');
           return res.status(404).json({
             ok: false,
-            msg: 'Aba "Produtividade_Hora" não encontrada na planilha',
-            abasDisponiveis: Object.keys(doc.sheetsByTitle),
+            msg: 'Aba Produtividade_Hora não encontrada',
             instrucoes: 'Crie uma aba chamada "Produtividade_Hora" com as colunas: FUNCAO | Produtividade/hora'
           });
         }
@@ -299,6 +276,7 @@ module.exports = async function handler(req, res) {
         });
         
         console.log(`[PRODUCAO/PRODUTIVIDADE] ${dados.length} registros processados`);
+        console.log('[PRODUCAO/PRODUTIVIDADE] Funções encontradas:', dados.map(d => d.funcao));
         
         if (dados.length === 0) {
           console.warn('[PRODUCAO/PRODUTIVIDADE] Nenhum registro válido encontrado');
@@ -310,12 +288,13 @@ module.exports = async function handler(req, res) {
           total: dados.length,
           timestamp: new Date().toISOString()
         });
+        
       } catch (error) {
         console.error('[PRODUCAO/PRODUTIVIDADE] Erro:', error);
         return res.status(500).json({
           ok: false,
           msg: 'Erro ao buscar Produtividade_Hora',
-          error: error.message,
+          details: error.message,
           stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
       }
@@ -324,6 +303,7 @@ module.exports = async function handler(req, res) {
     // ==================== RESUMO BASE ====================
     if (action === 'resumo-base') {
       console.log('[PRODUCAO/RESUMO-BASE] Iniciando geração de resumo...');
+      console.log('[PRODUCAO/RESUMO-BASE] Query params:', req.query);
       
       try {
         const doc = await sheetsService.init();
@@ -340,13 +320,15 @@ module.exports = async function handler(req, res) {
         const rows = await sheetBase.getRows();
         console.log(`[PRODUCAO/RESUMO-BASE] ${rows.length} registros na Base`);
         
-        // CORREÇÃO: Obtém data do query ou usa hoje
+        // FILTRO DE DATA
         let dataFiltro;
         if (req.query.data) {
           const [ano, mes, dia] = req.query.data.split('-');
           dataFiltro = `${dia}/${mes}/${ano}`;
+          console.log(`[PRODUCAO/RESUMO-BASE] Data recebida via query: ${req.query.data} -> ${dataFiltro}`);
         } else {
           dataFiltro = new Date().toLocaleDateString('pt-BR');
+          console.log(`[PRODUCAO/RESUMO-BASE] Usando data padrão (hoje): ${dataFiltro}`);
         }
         
         console.log(`[PRODUCAO/RESUMO-BASE] Filtrando por data: ${dataFiltro}`);
@@ -369,9 +351,14 @@ module.exports = async function handler(req, res) {
         let registrosFiltrados = 0;
         
         // Processa cada registro
-        rows.forEach(row => {
+        rows.forEach((row, idx) => {
           try {
             const dataRegistro = String(row.get('Data') || '').trim();
+            
+            // Debug primeiras 5 linhas
+            if (idx < 5) {
+              console.log(`[PRODUCAO/RESUMO-BASE] Linha ${idx + 1}: data="${dataRegistro}" | esperado="${dataFiltro}" | match=${dataRegistro === dataFiltro}`);
+            }
             
             if (dataRegistro !== dataFiltro) return;
             
@@ -537,6 +524,7 @@ module.exports = async function handler(req, res) {
               resumoGeral.outros++;
             }
             
+            // Conta desvios no geral
             if (desvio && desvio.toLowerCase() === 'desvio') {
               resumoGeral.desvio++;
             }
@@ -544,6 +532,10 @@ module.exports = async function handler(req, res) {
             console.warn('[PRODUCAO/RESUMO-BASE] Erro ao processar linha:', rowErr.message);
           }
         });
+        
+        console.log(`[PRODUCAO/RESUMO-BASE] Total de registros: ${rows.length}`);
+        console.log(`[PRODUCAO/RESUMO-BASE] Registros filtrados para ${dataFiltro}: ${registrosFiltrados}`);
+        console.log(`[PRODUCAO/RESUMO-BASE] Total no resumo: ${resumoGeral.total}, Presente: ${resumoGeral.presente}, Desvio: ${resumoGeral.desvio}`);
         
         // Calcula percentuais
         resumoGeral.percentualPresente = resumoGeral.total > 0 
@@ -553,19 +545,28 @@ module.exports = async function handler(req, res) {
           ? (((resumoGeral.total - resumoGeral.presente) / resumoGeral.total) * 100).toFixed(1) 
           : 0;
         
-        console.log(`[PRODUCAO/RESUMO-BASE] Processados ${registrosFiltrados} registros da data ${dataFiltro}`);
-        console.log(`[PRODUCAO/RESUMO-BASE] Total: ${resumoGeral.total}, Presente: ${resumoGeral.presente}, Ausente: ${resumoGeral.ausente}`);
+        // Converte objetos em arrays
+        const supervisores = Object.values(resumoPorSupervisor)
+          .sort((a, b) => a.supervisor.localeCompare(b.supervisor));
+        
+        const funcoes = Object.values(resumoPorFuncao)
+          .sort((a, b) => a.funcao.localeCompare(b.funcao));
+        
+        console.log('[PRODUCAO/RESUMO-BASE] Resumo gerado:');
+        console.log(`  - ${supervisores.length} supervisores`);
+        console.log(`  - ${funcoes.length} funções`);
         
         return res.status(200).json({
           ok: true,
           dataReferencia: dataFiltro,
           resumoGeral,
-          porSupervisor: Object.values(resumoPorSupervisor),
-          porFuncao: Object.values(resumoPorFuncao),
-          totalSupervisores: Object.keys(resumoPorSupervisor).length,
-          totalFuncoes: Object.keys(resumoPorFuncao).length,
+          porSupervisor: supervisores,
+          porFuncao: funcoes,
+          totalSupervisores: supervisores.length,
+          totalFuncoes: funcoes.length,
           timestamp: new Date().toISOString()
         });
+        
       } catch (error) {
         console.error('[PRODUCAO/RESUMO-BASE] Erro:', error);
         return res.status(500).json({
