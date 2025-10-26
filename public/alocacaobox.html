@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alocação de BOX - Gestão Perlog</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .header-left h1 {
+            color: #333;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .header-right {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .legend-panel {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        
+        .legend-box {
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            border: 2px solid #ddd;
+        }
+        
+        .legend-box.ocupado { background: #dc3545; }
+        .legend-box.vazio { background: #28a745; }
+        .legend-box.sugerido { background: #ffc107; animation: pulse 1.5s infinite; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        
+        .boxes-grid {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .boxes-grid h2 {
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .box-item {
+            aspect-ratio: 1;
+            border: 3px solid #ddd;
+            border-radius: 12px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .box-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        
+        .box-item.ocupado {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            border-color: #bd2130;
+            color: white;
+        }
+        
+        .box-item.vazio {
+            background: linear-gradient(135deg, #28a745, #218838);
+            border-color: #1e7e34;
+            color: white;
+        }
+        
+        .box-item.sugerido {
+            background: linear-gradient(135deg, #ffc107, #e0a800);
+            border-color: #d39e00;
+            color: #333;
+            animation: pulse 1.5s infinite;
+            box-shadow: 0 0 20px rgba(255, 193, 7, 0.5);
+        }
+        
+        .box-number {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .box-info {
+            font-size: 11px;
+            text-align: center;
+            margin-top: 5px;
+        }
+        
+        .box-capacity {
+            font-size: 10px;
+            text-align: center;
+            opacity: 0.8;
+            margin-top: 3px;
+        }
+        
+        .box-loja {
+            font-size: 12px;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 5px;
+            padding: 3px 6px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px;
+        }
+        
+        .box-item.sugerido .box-loja {
+            background: rgba(0,0,0,0.1);
+        }
+        
+        .sugestoes-panel {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .sugestoes-panel h2 {
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .sugestao-item {
+            background: #f8f9fa;
+            border-left: 4px solid #ffc107;
+            padding: 15px 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            display: grid;
+            grid-template-columns: 80px 100px 1fr 120px 150px;
+            gap: 15px;
+            align-items: center;
+            transition: all 0.3s;
+        }
+        
+        .sugestao-item:hover {
+            background: #fff3cd;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .sugestao-box {
+            font-size: 20px;
+            font-weight: bold;
+            color: #667eea;
+            text-align: center;
+        }
+        
+        .sugestao-loja {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .sugestao-descricao {
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .sugestao-m3 {
+            text-align: center;
+            font-weight: 600;
+            color: #28a745;
+        }
+        
+        .sugestao-data {
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .sugestao-actions {
+            display: flex;
+            gap: 5px;
+            justify-content: flex-end;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #ddd;
+        }
+        
+        .stats-mini {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .stat-mini {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+        
+        .stat-mini i {
+            font-size: 20px;
+        }
+        
+        .stat-mini .value {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .modal-header h3 {
+            color: #333;
+            font-size: 20px;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .close-modal:hover {
+            color: #333;
+        }
+        
+        .detail-grid {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .detail-item {
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            gap: 10px;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .detail-value {
+            color: #333;
+        }
+        
+        .loading {
+            display: inline-block;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 1200px) {
+            .sugestao-item {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            
+            .sugestao-actions {
+                justify-content: center;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .grid-container {
+                grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+                gap: 10px;
+            }
+            
+            .box-item {
+                padding: 10px;
+            }
+            
+            .box-number {
+                font-size: 18px;
+            }
+            
+            .header {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <h1>
+                    <i class="fas fa-warehouse"></i>
+                    Alocação Inteligente de BOX
+                </h1>
+            </div>
+            <div class="header-right">
+                <button class="btn btn-success" onclick="gerarSugestoes()">
+                    <i class="fas fa-magic"></i> Gerar Sugestões
+                </button>
+                <button class="btn btn-warning" onclick="limparAlocacoes()">
+                    <i class="fas fa-eraser"></i> Limpar Tudo
+                </button>
+                <button class="btn btn-secondary" onclick="voltarMenu()">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </button>
+            </div>
+        </div>
+
+        <!-- Legenda -->
+        <div class="legend-panel">
+            <strong><i class="fas fa-info-circle"></i> Legenda:</strong>
+            <div class="legend-item">
+                <div class="legend-box ocupado"></div>
+                <span>BOX Ocupado</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box vazio"></div>
+                <span>BOX Vazio</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box sugerido"></div>
+                <span>BOX Sugerido (Próxima Carga)</span>
+            </div>
+        </div>
+
+        <!-- Mapa de Boxes -->
+        <div class="boxes-grid">
+            <h2>
+                <i class="fas fa-th"></i>
+                Mapa de Boxes
+            </h2>
+            
+            <div class="stats-mini">
+                <div class="stat-mini">
+                    <i class="fas fa-cubes"></i>
+                    <div>
+                        <div>Total Boxes</div>
+                        <div class="value" id="totalBoxes">26</div>
+                    </div>
+                </div>
+                <div class="stat-mini">
+                    <i class="fas fa-check-circle"></i>
+                    <div>
+                        <div>Ocupados</div>
+                        <div class="value" id="boxesOcupados">0</div>
+                    </div>
+                </div>
+                <div class="stat-mini">
+                    <i class="fas fa-box-open"></i>
+                    <div>
+                        <div>Vazios</div>
+                        <div class="value" id="boxesVazios">26</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid-container" id="boxesGrid">
+                <!-- Os boxes serão gerados dinamicamente -->
+            </div>
+        </div>
+
+        <!-- Sugestões -->
+        <div class="sugestoes-panel">
+            <h2>
+                <i class="fas fa-lightbulb"></i>
+                Sugestões de Alocação (<span id="totalSugestoes">0</span>)
+            </h2>
+            <div id="sugestoesContainer">
+                <div class="empty-state">
+                    <i class="fas fa-magic"></i>
+                    <p>Clique em "Gerar Sugestões" para obter recomendações inteligentes de alocação</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Detalhes -->
+    <div class="modal" id="modalDetalhes">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-info-circle"></i> Detalhes do BOX</h3>
+                <button class="close-modal" onclick="fecharModal()">×</button>
+            </div>
+            <div class="detail-grid" id="detalhesContent">
+                <!-- Detalhes serão inseridos aqui -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuração dos Boxes com suas capacidades
+        const boxesConfig = {
+            51: 30, 50: 18, 49: 18, 48: 18, 47: 18, 46: 18, 45: 18, 44: 18,
+            43: 18, 42: 18, 41: 18, 40: 18, 39: 7, 38: 7, 37: 18, 36: 18,
+            35: 18, 34: 18, 33: 18, 32: 18, 31: 18, 30: 18, 29: 18, 28: 18,
+            27: 18, 26: 18
+        };
+
+        // Estado dos boxes (número do box -> dados da carga alocada)
+        let boxesState = {};
+
+        // Dados de cargas disponíveis (carregados da API)
+        let cargasDisponiveis = [];
+
+        let sugestoesAtuais = [];
+        
+        // URL da API
+        const API_URL = '/api/alocacaobox';
+        
+        // Função para carregar cargas da API
+        async function carregarCargasAPI() {
+            try {
+                mostrarNotificacao('Carregando cargas...', 'info');
+                
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        action: 'listarCargas',
+                        filtros: {}
+                    })
+                });
+                
+                const data = await response.json();
+                
+                console.log('[DEBUG] Resposta da API:', data);
+                
+                if (data.ok && data.cargas) {
+                    cargasDisponiveis = data.cargas.map(c => ({
+                        carga: c.carga,
+                        descricao: c.descricao,
+                        tipoLoja: c.tipoLoja,
+                        segmento: c.segmento,
+                        loja: c.loja,
+                        m3: typeof c.m3 === 'number' ? c.m3 : parseFloat(c.m3 || 0),
+                        dataRot: c.dataRot,
+                        valor: c.valor,
+                        statusSep: c.statusSep,
+                        statusConf: c.statusConf,
+                        visitasPendente: typeof c.visitasPendente === 'number' ? c.visitasPendente : parseInt(c.visitasPendente || 0),
+                        prioridade: c.prioridade,
+                        box: c.box || null
+                    }));
+                    
+                    console.log('[DEBUG] Cargas processadas:', cargasDisponiveis.length);
+                    console.log('[DEBUG] Exemplo de carga:', cargasDisponiveis[0]);
+                    
+                    mostrarNotificacao(`${cargasDisponiveis.length} cargas carregadas!`, 'success');
+                    return true;
+                } else {
+                    console.error('[DEBUG] Erro ao carregar cargas:', data.msg);
+                    mostrarNotificacao('Erro ao carregar cargas: ' + data.msg, 'error');
+                    return false;
+                }
+            } catch (error) {
+                console.error('[DEBUG] Erro na requisição:', error);
+                mostrarNotificacao('Erro ao conectar com a API', 'error');
+                return false;
+            }
+        }
+        
+        // Função para carregar estado dos boxes da API
+        async function carregarBoxesAPI() {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'listarBoxes' })
+                });
+                
+                const data = await response.json();
+                
+                console.log('[DEBUG] Boxes da API:', data);
+                
+                if (data.ok && data.boxes) {
+                    boxesState = {};
+                    
+                    data.boxes.forEach(box => {
+                        const boxNum = parseInt(box.box);
+                        if (boxNum && boxesConfig[boxNum]) {
+                            boxesState[boxNum] = {
+                                carga: box.carga,
+                                descricao: box.descricao,
+                                tipoLoja: box.tipoLoja,
+                                loja: box.loja,
+                                m3: typeof box.m3 === 'number' ? box.m3 : parseFloat(box.m3 || 0),
+                                dataRot: box.dataRot,
+                                valor: box.valor
+                            };
+                        }
+                    });
+                    
+                    console.log('[DEBUG] Boxes ocupados:', Object.keys(boxesState).length);
+                    return true;
+                } else {
+                    console.error('[DEBUG] Erro ao carregar boxes:', data.msg);
+                    return false;
+                }
+            } catch (error) {
+                console.error('[DEBUG] Erro ao carregar boxes:', error);
+                return false;
+            }
+        }
+        
+        // Função para alocar carga via API
+        async function alocarCargaAPI(boxNum, cargaId) {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        action: 'alocarBox',
+                        boxNum: boxNum,
+                        cargaId: cargaId
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.ok) {
+                    console.log('[DEBUG] Carga alocada com sucesso via API');
+                    return true;
+                } else {
+                    console.error('[DEBUG] Erro ao alocar carga:', data.msg);
+                    mostrarNotificacao('Erro ao alocar: ' + data.msg, 'error');
+                    return false;
+                }
+            } catch (error) {
+                console.error('[DEBUG] Erro ao alocar carga:', error);
+                mostrarNotificacao('Erro ao conectar com a API', 'error');
+                return false;
+            }
+        }
+        
+        // Função para liberar box via API
+        async function liberarBoxAPI(boxNum) {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        action: 'liberarBox',
+                        boxNum: boxNum
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.ok) {
+                    console.log('[DEBUG] BOX liberado com sucesso via API');
+                    return true;
+                } else {
+                    console.error('[DEBUG] Erro ao liberar BOX:', data.msg);
+                    mostrarNotificacao('Erro ao liberar: ' + data.msg, 'error');
+                    return false;
+                }
+            } catch (error) {
+                console.error('[DEBUG] Erro ao liberar BOX:', error);
+                mostrarNotificacao('Erro ao conectar com a API', 'error');
+                return false;
+            }
+        }
+
+        function inicializarBoxes() {
+            const grid = document.getElementById('boxesGrid');
+            grid.innerHTML = '';
+            
+            const boxNumbers = Object.keys(boxesConfig).map(Number).sort((a, b) => b - a);
+            
+            boxNumbers.forEach(boxNum => {
+                const capacity = boxesConfig[boxNum];
+                const isOcupado = boxesState[boxNum] !== undefined;
+                const isSugerido = sugestoesAtuais.some(s => s.boxSugerido === boxNum);
+                
+                const boxDiv = document.createElement('div');
+                boxDiv.className = `box-item ${isOcupado ? 'ocupado' : (isSugerido ? 'sugerido' : 'vazio')}`;
+                boxDiv.onclick = () => verDetalhesBox(boxNum);
+                
+                let content = `
+                    <div class="box-number">BOX ${boxNum}</div>
+                    <div class="box-capacity">≤ ${capacity} m³</div>
+                `;
+                
+                if (isOcupado) {
+                    const carga = boxesState[boxNum];
+                    content += `
+                        <div class="box-info">${carga.m3.toFixed(1)} m³</div>
+                        <div class="box-loja">${carga.loja}</div>
+                    `;
+                } else if (isSugerido) {
+                    const sugestao = sugestoesAtuais.find(s => s.boxSugerido === boxNum);
+                    content += `
+                        <div class="box-info">${sugestao.carga.m3.toFixed(1)} m³</div>
+                        <div class="box-loja">${sugestao.carga.loja}</div>
+                    `;
+                } else {
+                    content += `<div class="box-info">Disponível</div>`;
+                }
+                
+                boxDiv.innerHTML = content;
+                grid.appendChild(boxDiv);
+            });
+            
+            atualizarEstatisticas();
+        }
+
+        function atualizarEstatisticas() {
+            const total = Object.keys(boxesConfig).length;
+            const ocupados = Object.keys(boxesState).length;
+            const vazios = total - ocupados;
+            
+            document.getElementById('totalBoxes').textContent = total;
+            document.getElementById('boxesOcupados').textContent = ocupados;
+            document.getElementById('boxesVazios').textContent = vazios;
+        }
+
+        function gerarSugestoes() {
+            const btn = event.target;
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner loading"></i> Processando...';
+            
+            carregarCargasAPI().then(success => {
+                if (success) {
+                    setTimeout(() => {
+                        sugestoesAtuais = calcularSugestoesInteligentes();
+                        renderizarSugestoes();
+                        inicializarBoxes();
+                        
+                        btn.disabled = false;
+                        btn.innerHTML = originalHTML;
+                        
+                        mostrarNotificacao(`${sugestoesAtuais.length} sugestões geradas!`, 'success');
+                    }, 500);
+                } else {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHTML;
+                }
+            });
+        }
+
+        function calcularSugestoesInteligentes() {
+            console.log('[SUGESTÃO] Iniciando cálculo de sugestões...');
+            console.log('[SUGESTÃO] Cargas disponíveis:', cargasDisponiveis.length);
+            console.log('[SUGESTÃO] Boxes ocupados:', Object.keys(boxesState).length);
+            
+            const sugestoes = [];
+            
+            // 1. Filtra cargas elegíveis (sem BOX)
+            let cargasElegiveis = cargasDisponiveis.filter(c => !c.box);
+            
+            console.log('[SUGESTÃO] Cargas elegíveis (sem BOX):', cargasElegiveis.length);
+            
+            if (cargasElegiveis.length === 0) {
+                console.log('[SUGESTÃO] Nenhuma carga elegível encontrada');
+                return [];
+            }
+            
+            // 2. Ordena cargas por critérios (data mais antiga primeiro, depois por m³)
+            cargasElegiveis.sort((a, b) => {
+                // Primeiro por data
+                const dateA = new Date(a.dataRot || '9999-12-31');
+                const dateB = new Date(b.dataRot || '9999-12-31');
+                if (dateA < dateB) return -1;
+                if (dateA > dateB) return 1;
+                // Se mesma data, por m³ (maior primeiro para otimizar espaço)
+                return b.m3 - a.m3;
+            });
+            
+            console.log('[SUGESTÃO] Cargas após ordenação:', cargasElegiveis.slice(0, 3));
+            
+            // 3. Pega boxes vazios ordenados por capacidade (maior primeiro)
+            const boxesVazios = Object.keys(boxesConfig)
+                .map(Number)
+                .filter(boxNum => !boxesState[boxNum])
+                .sort((a, b) => boxesConfig[b] - boxesConfig[a]);
+            
+            console.log('[SUGESTÃO] Boxes vazios:', boxesVazios.length);
+            console.log('[SUGESTÃO] Boxes disponíveis:', boxesVazios);
+            
+            // 4. Algoritmo de alocação melhorado
+            const lojasAlocadas = new Set();
+            const cargasUsadas = new Set();
+            
+            for (const box of boxesVazios) {
+                const capacidade = boxesConfig[box];
+                
+                // Busca melhor carga para este box
+                const cargaIndex = cargasElegiveis.findIndex((c, idx) => {
+                    // Já foi usada
+                    if (cargasUsadas.has(idx)) return false;
+                    
+                    // Verifica se cabe
+                    if (c.m3 > capacidade) return false;
+                    
+                    // Prioriza lojas não repetidas (mas permite se necessário)
+                    const lojaNaoRepetida = !lojasAlocadas.has(c.loja);
+                    
+                    // Se tem poucas cargas restantes, aceita qualquer uma que caiba
+                    if (cargasElegiveis.length - cargasUsadas.size <= boxesVazios.length - sugestoes.length) {
+                        return true;
+                    }
+                    
+                    // Caso contrário, prioriza lojas não repetidas
+                    return lojaNaoRepetida;
+                });
+                
+                if (cargaIndex !== -1) {
+                    const carga = cargasElegiveis[cargaIndex];
+                    
+                    const sugestao = {
+                        boxSugerido: box,
+                        capacidadeBox: capacidade,
+                        carga: carga,
+                        ocupacao: ((carga.m3 / capacidade) * 100).toFixed(1),
+                        motivo: `BOX ${box} (${capacidade}m³) para ${carga.loja} (${carga.m3.toFixed(1)}m³) - ${formatarData(carga.dataRot)}`
+                    };
+                    
+                    sugestoes.push(sugestao);
+                    lojasAlocadas.add(carga.loja);
+                    cargasUsadas.add(cargaIndex);
+                    
+                    console.log('[SUGESTÃO] Adicionada:', sugestao);
+                    
+                    // Limita a 15 sugestões
+                    if (sugestoes.length >= 15) break;
+                }
+            }
+            
+            console.log('[SUGESTÃO] Total de sugestões geradas:', sugestoes.length);
+            
+            return sugestoes;
+        }
+
+        function renderizarSugestoes() {
+            const container = document.getElementById('sugestoesContainer');
+            const totalElement = document.getElementById('totalSugestoes');
+            
+            if (totalElement) {
+                totalElement.textContent = sugestoesAtuais.length;
+            }
+            
+            if (sugestoesAtuais.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-check-circle"></i>
+                        <p>Nenhuma sugestão disponível. Todas as cargas podem já estar alocadas.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = sugestoesAtuais.map((sug, index) => `
+                <div class="sugestao-item">
+                    <div class="sugestao-box">
+                        <i class="fas fa-cube"></i><br>
+                        BOX ${sug.boxSugerido}
+                    </div>
+                    <div class="sugestao-loja">${sug.carga.loja}</div>
+                    <div class="sugestao-descricao">
+                        <strong>${sug.carga.carga}</strong><br>
+                        ${sug.carga.descricao}<br>
+                        <small>Ocupação: ${sug.ocupacao}%</small>
+                    </div>
+                    <div class="sugestao-m3">
+                        <i class="fas fa-cube"></i><br>
+                        ${sug.carga.m3.toFixed(1)} m³
+                    </div>
+                    <div class="sugestao-data">
+                        <i class="fas fa-calendar"></i><br>
+                        ${formatarData(sug.carga.dataRot)}
+                    </div>
+                    <div class="sugestao-actions">
+                        <button class="btn btn-success" onclick="alocarCarga(${index})" title="Alocar">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        <button class="btn btn-primary" onclick="verDetalhesSugestao(${index})" title="Detalhes">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function alocarCarga(sugestaoIndex) {
+            const sugestao = sugestoesAtuais[sugestaoIndex];
+            
+            if (confirm(`Confirma a alocação da carga ${sugestao.carga.carga} no BOX ${sugestao.boxSugerido}?`)) {
+                const btn = event.target.closest('button');
+                const originalHTML = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner loading"></i>';
+                
+                alocarCargaAPI(sugestao.boxSugerido, sugestao.carga.carga).then(success => {
+                    if (success) {
+                        boxesState[sugestao.boxSugerido] = sugestao.carga;
+                        sugestao.carga.box = sugestao.boxSugerido;
+                        
+                        sugestoesAtuais.splice(sugestaoIndex, 1);
+                        
+                        renderizarSugestoes();
+                        inicializarBoxes();
+                        
+                        mostrarNotificacao(`Carga ${sugestao.carga.carga} alocada no BOX ${sugestao.boxSugerido}!`, 'success');
+                    } else {
+                        btn.disabled = false;
+                        btn.innerHTML = originalHTML;
+                    }
+                });
+            }
+        }
+
+        function limparAlocacoes() {
+            if (confirm('Deseja realmente limpar todas as alocações?')) {
+                boxesState = {};
+                sugestoesAtuais = [];
+                
+                cargasDisponiveis.forEach(c => c.box = null);
+                
+                renderizarSugestoes();
+                inicializarBoxes();
+                
+                mostrarNotificacao('Todas as alocações foram limpas!', 'success');
+            }
+        }
+
+        function verDetalhesBox(boxNum) {
+            const modal = document.getElementById('modalDetalhes');
+            const content = document.getElementById('detalhesContent');
+            const capacidade = boxesConfig[boxNum];
+            const carga = boxesState[boxNum];
+            
+            let detalhesHTML = `
+                <div class="detail-item">
+                    <div class="detail-label">BOX:</div>
+                    <div class="detail-value"><strong>BOX ${boxNum}</strong></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Capacidade:</div>
+                    <div class="detail-value">≤ ${capacidade} m³</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Status:</div>
+                    <div class="detail-value">
+                        <span style="padding: 5px 10px; border-radius: 5px; background: ${carga ? '#dc3545' : '#28a745'}; color: white;">
+                            ${carga ? 'Ocupado' : 'Disponível'}
+                        </span>
+                    </div>
+                </div>
+            `;
+            
+            if (carga) {
+                detalhesHTML += `
+                    <div class="detail-item">
+                        <div class="detail-label">Carga:</div>
+                        <div class="detail-value"><strong>${carga.carga}</strong></div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Descrição:</div>
+                        <div class="detail-value">${carga.descricao}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Loja:</div>
+                        <div class="detail-value">${carga.loja}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Tipo:</div>
+                        <div class="detail-value">${carga.tipoLoja}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Volume (m³):</div>
+                        <div class="detail-value"><strong>${carga.m3.toFixed(1)} m³</strong></div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Ocupação:</div>
+                        <div class="detail-value">${((carga.m3 / capacidade) * 100).toFixed(1)}% da capacidade</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Data Roteirização:</div>
+                        <div class="detail-value">${formatarData(carga.dataRot)}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Valor:</div>
+                        <div class="detail-value"><strong>${carga.valor}</strong></div>
+                    </div>
+                `;
+                
+                detalhesHTML += `
+                    <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #f0f0f0;">
+                        <button class="btn btn-warning" onclick="liberarBox(${boxNum})" style="width: 100%;">
+                            <i class="fas fa-times"></i> Liberar BOX
+                        </button>
+                    </div>
+                `;
+            } else {
+                detalhesHTML += `
+                    <div class="detail-item">
+                        <div class="detail-label">Informação:</div>
+                        <div class="detail-value">Este BOX está disponível para alocação</div>
+                    </div>
+                `;
+            }
+            
+            content.innerHTML = detalhesHTML;
+            modal.classList.add('active');
+        }
+
+        function verDetalhesSugestao(sugestaoIndex) {
+            const sugestao = sugestoesAtuais[sugestaoIndex];
+            const modal = document.getElementById('modalDetalhes');
+            const content = document.getElementById('detalhesContent');
+            
+            content.innerHTML = `
+                <div class="detail-item">
+                    <div class="detail-label">BOX Sugerido:</div>
+                    <div class="detail-value"><strong>BOX ${sugestao.boxSugerido}</strong></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Capacidade BOX:</div>
+                    <div class="detail-value">≤ ${sugestao.capacidadeBox} m³</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Carga:</div>
+                    <div class="detail-value"><strong>${sugestao.carga.carga}</strong></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Descrição:</div>
+                    <div class="detail-value">${sugestao.carga.descricao}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Loja:</div>
+                    <div class="detail-value">${sugestao.carga.loja}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Tipo Loja:</div>
+                    <div class="detail-value">${sugestao.carga.tipoLoja}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Volume:</div>
+                    <div class="detail-value"><strong>${sugestao.carga.m3.toFixed(1)} m³</strong></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Ocupação:</div>
+                    <div class="detail-value">${sugestao.ocupacao}% da capacidade</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Data Roteirização:</div>
+                    <div class="detail-value">${formatarData(sugestao.carga.dataRot)}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Valor:</div>
+                    <div class="detail-value"><strong>${sugestao.carga.valor}</strong></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Motivo:</div>
+                    <div class="detail-value" style="color: #28a745; font-weight: 600;">
+                        <i class="fas fa-lightbulb"></i> ${sugestao.motivo}
+                    </div>
+                </div>
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #f0f0f0;">
+                    <button class="btn btn-success" onclick="alocarCarga(${sugestaoIndex}); fecharModal();" style="width: 100%;">
+                        <i class="fas fa-check"></i> Alocar Agora
+                    </button>
+                </div>
+            `;
+            
+            modal.classList.add('active');
+        }
+
+        function liberarBox(boxNum) {
+            if (confirm(`Deseja realmente liberar o BOX ${boxNum}?`)) {
+                liberarBoxAPI(boxNum).then(success => {
+                    if (success) {
+                        const carga = boxesState[boxNum];
+                        if (carga) {
+                            carga.box = null;
+                        }
+                        delete boxesState[boxNum];
+                        
+                        fecharModal();
+                        inicializarBoxes();
+                        
+                        mostrarNotificacao(`BOX ${boxNum} liberado com sucesso!`, 'success');
+                    }
+                });
+            }
+        }
+
+        function fecharModal() {
+            document.getElementById('modalDetalhes').classList.remove('active');
+        }
+
+        function formatarData(dataStr) {
+            if (!dataStr) return 'N/A';
+            try {
+                const data = new Date(dataStr + 'T00:00:00');
+                return data.toLocaleDateString('pt-BR');
+            } catch (e) {
+                return dataStr;
+            }
+        }
+
+        function mostrarNotificacao(mensagem, tipo = 'success') {
+            const cores = {
+                success: '#28a745',
+                error: '#dc3545',
+                warning: '#ffc107',
+                info: '#17a2b8'
+            };
+            
+            const notif = document.createElement('div');
+            notif.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${cores[tipo]};
+                color: white;
+                padding: 15px 25px;
+                border-radius: 8px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                z-index: 9999;
+                animation: slideIn 0.3s ease-out;
+                max-width: 400px;
+            `;
+            
+            const icones = {
+                success: 'fa-check-circle',
+                error: 'fa-times-circle',
+                warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle'
+            };
+            
+            notif.innerHTML = `<i class="fas ${icones[tipo]}"></i> ${mensagem}`;
+            document.body.appendChild(notif);
+            
+            setTimeout(() => {
+                notif.style.animation = 'slideOut 0.3s ease-in';
+                setTimeout(() => notif.remove(), 300);
+            }, 3000);
+        }
+
+        function voltarMenu() {
+            if (confirm('Deseja voltar ao menu? As alterações não salvas serão perdidas.')) {
+                window.location.href = '/menu';
+            }
+        }
+
+        // Fechar modal ao clicar fora
+        document.getElementById('modalDetalhes').addEventListener('click', function(e) {
+            if (e.target === this) {
+                fecharModal();
+            }
+        });
+
+        // Atalhos de teclado
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                fecharModal();
+            }
+            if (e.ctrlKey && e.key === 'g') {
+                e.preventDefault();
+                gerarSugestoes();
+            }
+        });
+
+        // Animações CSS
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    transform: translateX(400px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            
+            @keyframes slideOut {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(400px);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Inicialização
+        window.onload = async function() {
+            const usuario = sessionStorage.getItem('usuario');
+            
+            if (!usuario) {
+                alert('Sessão expirada. Faça login novamente.');
+                window.location.href = '/';
+                return;
+            }
+            
+            mostrarNotificacao('Inicializando sistema...', 'info');
+            
+            const cargasOk = await carregarCargasAPI();
+            const boxesOk = await carregarBoxesAPI();
+            
+            if (cargasOk && boxesOk) {
+                inicializarBoxes();
+                mostrarNotificacao('Sistema carregado! Use Ctrl+G para gerar sugestões.', 'success');
+                
+                console.log('[INIT] Sistema inicializado');
+                console.log('[INIT] Boxes configurados:', Object.keys(boxesConfig).length);
+                console.log('[INIT] Cargas disponíveis:', cargasDisponiveis.length);
+                console.log('[INIT] Boxes ocupados:', Object.keys(boxesState).length);
+            } else {
+                mostrarNotificacao('Erro ao carregar dados. Verifique a conexão.', 'error');
+            }
+        };
+    </script>
+</body>
+</html>

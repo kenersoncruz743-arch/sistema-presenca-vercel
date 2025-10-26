@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise de Produção por Função</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .header h1 {
+            color: #667eea;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-info { background: #17a2b8; color: white; }
+        .btn-warning { background: #ffc107; color: #212529; }
+        .btn-secondary { background: #6c757d; color: white; }
+        
+        .config-panel {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .config-panel h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+        }
+        
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .filter-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #495057;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .filter-group input, .filter-group select {
+            padding: 10px 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .filter-group select[multiple] {
+            min-height: 120px;
+            background: #f8f9fa;
+        }
+        
+        .filter-group select[multiple] option {
+            padding: 8px 10px;
+            border-radius: 4px;
+            margin: 2px 0;
+        }
+        
+        .filter-group select[multiple] option:checked {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-weight: 600;
+        }
+        
+        .filter-group input:focus, .filter-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .filter-hint {
+            font-size: 11px;
+            color: #6c757d;
+            font-style: italic;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        
+        .resumo-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .resumo-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .resumo-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+        
+        .resumo-card h3 {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .resumo-card .valor {
+            font-size: 36px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+        
+        .resumo-card .subtexto {
+            font-size: 13px;
+            color: #6c757d;
+        }
+        
+        .resumo-card.success .valor { color: #28a745; }
+        .resumo-card.warning .valor { color: #ffc107; }
+        .resumo-card.danger .valor { color: #dc3545; }
+        
+        .secao {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .secao-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .secao-header h2 {
+            color: #667eea;
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-primary { background: #e3f2fd; color: #1976d2; }
+        
+        .tabela-container {
+            overflow-x: auto;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        tbody tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+        
+        input[type="number"].input-calculo {
+            width: 90px;
+            padding: 6px 10px;
+            border: 2px solid #ced4da;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        input[type="number"].input-calculo:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .valor-calculado {
+            background: #e3f2fd;
+            font-weight: bold;
+            text-align: center;
+            color: #1976d2;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 80px 20px;
+            color: white;
+        }
+        
+        .loading i {
+            font-size: 64px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .status-message {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .status-success { background: #d4edda; color: #155724; }
+        .status-error { background: #f8d7da; color: #721c24; }
+        .status-info { background: #d1ecf1; color: #0c5460; }
+        
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .header h1 {
+                font-size: 22px;
+            }
+            
+            .config-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .resumo-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            table {
+                font-size: 12px;
+            }
+            
+            th, td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <i class="fas fa-chart-line"></i>
+                Análise de Produção por Função
+            </h1>
+            <div class="header-actions">
+                <button class="btn btn-success" onclick="calcularTudo()">
+                    <i class="fas fa-calculator"></i> Calcular
+                </button>
+                <button class="btn btn-primary" onclick="salvarProducao()">
+                    <i class="fas fa-save"></i> Salvar
+                </button>
+                <button class="btn btn-info" onclick="exportarCSV()">
+                    <i class="fas fa-file-csv"></i> Exportar
+                </button>
+                <button class="btn btn-warning" onclick="location.reload()">
+                    <i class="fas fa-sync-alt"></i> Atualizar
+                </button>
+                <button class="btn btn-secondary" onclick="window.location.href='/ferramentas'">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </button>
+            </div>
+        </div>
+
+        <div class="config-panel">
+            <h3><i class="fas fa-cogs"></i> Configurações e Filtros</h3>
+            
+            <div class="config-grid">
+                <div class="filter-group">
+                    <label><i class="fas fa-calendar-alt"></i> Data de Referência</label>
+                    <input type="date" id="dataReferencia" value="">
+                </div>
+                
+                <div class="filter-group">
+                    <label><i class="fas fa-clock"></i> Horas Trabalhadas</label>
+                    <input type="number" id="horasTrabalhadas" value="8" min="1" max="24" step="0.5">
+                </div>
+                
+                <div class="filter-group">
+                    <label><i class="fas fa-briefcase"></i> Funções</label>
+                    <select id="filtroFuncoes" multiple>
+                        <option value="">Carregando...</option>
+                    </select>
+                    <span class="filter-hint">Segure Ctrl para múltiplas seleções</span>
+                </div>
+                
+                <div class="filter-group">
+                    <label><i class="fas fa-clock"></i> Turnos</label>
+                    <select id="filtroTurnos" multiple>
+                        <option value="">Carregando...</option>
+                    </select>
+                    <span class="filter-hint">Segure Ctrl para múltiplas seleções</span>
+                </div>
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="aplicarFiltros()">
+                    <i class="fas fa-filter"></i> Aplicar Filtros
+                </button>
+                <button class="btn btn-secondary" onclick="limparFiltros()">
+                    <i class="fas fa-eraser"></i> Limpar Filtros
+                </button>
+            </div>
+        </div>
+
+        <div id="statusDiv"></div>
+
+        <div id="loadingDiv" class="loading">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p style="margin-top: 20px; font-size: 18px;">Carregando dados da Base...</p>
+        </div>
+
+        <div id="contentDiv" style="display: none;">
+            <div class="resumo-cards" id="resumoCards"></div>
+
+            <div class="secao">
+                <div class="secao-header">
+                    <h2><i class="fas fa-table"></i> Análise por Função</h2>
+                    <span class="badge badge-primary" id="totalFuncoes">0 funções</span>
+                </div>
+                <div class="tabela-container">
+                    <table id="tabelaProducao">
+                        <thead>
+                            <tr>
+                                <th>Função</th>
+                                <th>Turno</th>
+                                <th>QL Total</th>
+                                <th>Presente</th>
+                                <th>Desvio</th>
+                                <th>Afastado</th>
+                                <th>Ausente</th>
+                                <th>Férias/Folga</th>
+                                <th>Deficit</th>
+                                <th>Produtividade/Hora</th>
+                                <th>Horas Turno</th>
+                                <th>Capacidade</th>
+                                <th>Realizado</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let dadosBase = [];
+        let dadosQLP = [];
+        let dadosProducao = [];
+        let dadosMeta = {};
+        let dadosProdutividade = {};
+        let funcoesPermitidas = [];
+        let funcoesFiltradas = [];
+
+        function showStatus(msg, type = 'info') {
+            const div = document.getElementById('statusDiv');
+            const icon = type === 'success' ? 'check-circle' : 
+                         type === 'error' ? 'exclamation-triangle' : 'info-circle';
+            
+            div.innerHTML = `
+                <div class="status-message status-${type}">
+                    <i class="fas fa-${icon}"></i>
+                    <span>${msg}</span>
+                </div>
+            `;
+            
+            setTimeout(() => {
+                div.innerHTML = '';
+            }, 5000);
+        }
+
+        async function carregarDados() {
+            try {
+                document.getElementById('loadingDiv').style.display = 'block';
+                document.getElementById('contentDiv').style.display = 'none';
+
+                const hoje = new Date().toISOString().split('T')[0];
+                document.getElementById('dataReferencia').value = hoje;
+
+                console.log('Carregando Produtividade_Hora...');
+                const resProdutividade = await fetch('/api/producao/produtividade');
+                const resultProdutividade = await resProdutividade.json();
+                
+                if (resultProdutividade.ok && resultProdutividade.dados) {
+                    resultProdutividade.dados.forEach(p => {
+                        if (p.funcao && p.produtividadeHora) {
+                            dadosProdutividade[p.funcao] = parseFloat(p.produtividadeHora) || 0;
+                            funcoesPermitidas.push(p.funcao);
+                        }
+                    });
+                    console.log(`Produtividade carregada para ${funcoesPermitidas.length} funções:`, funcoesPermitidas);
+                } else {
+                    throw new Error('Aba Produtividade_Hora não encontrada ou vazia');
+                }
+
+                console.log('Carregando Meta...');
+                const resMeta = await fetch('/api/producao/meta');
+                const resultMeta = await resMeta.json();
+                
+                if (resultMeta.ok && resultMeta.dados) {
+                    resultMeta.dados.forEach(m => {
+                        if (m.data) {
+                            dadosMeta[m.data] = {
+                                meta: parseFloat(m.meta) || 0,
+                                produtividadeHora: parseFloat(m.produtividadeHora) || 0
+                            };
+                        }
+                    });
+                    console.log(`Meta carregada para ${Object.keys(dadosMeta).length} datas`);
+                }
+
+                console.log('Carregando dados da Base...');
+                const resBase = await fetch('/api/producao/base');
+                const resultBase = await resBase.json();
+                
+                if (!resultBase.ok) {
+                    throw new Error(resultBase.msg || 'Erro ao carregar Base');
+                }
+                
+                dadosBase = resultBase.dados || [];
+                console.log(`Base carregada: ${dadosBase.length} registros`);
+
+                console.log('Carregando QLP...');
+                const resQLP = await fetch('/api/qlp/quadro');
+                const resultQLP = await resQLP.json();
+                
+                if (!resultQLP.ok) {
+                    throw new Error('Erro ao carregar QLP');
+                }
+                
+                dadosQLP = resultQLP.colaboradores || [];
+                console.log(`QLP carregado: ${dadosQLP.length} colaboradores`);
+
+                processarDados();
+                preencherFiltros();
+                calcularTudo();
+                renderTabela();
+                atualizarResumo();
+
+                document.getElementById('loadingDiv').style.display = 'none';
+                document.getElementById('contentDiv').style.display = 'block';
+
+                showStatus(`Dados carregados: ${dadosBase.length} registros da Base, ${funcoesPermitidas.length} funções permitidas`, 'success');
+
+            } catch (error) {
+                console.error('Erro:', error);
+                document.getElementById('loadingDiv').innerHTML = `
+                    <i class="fas fa-exclamation-triangle" style="color: #dc3545;"></i>
+                    <p style="margin-top: 20px; color: #dc3545;">Erro ao carregar dados</p>
+                    <p style="font-size: 14px; color: white; margin-top: 10px;">${error.message}</p>
+                    <button class="btn btn-warning" onclick="location.reload()" style="margin-top: 20px;">
+                        <i class="fas fa-sync-alt"></i> Tentar Novamente
+                    </button>
+                `;
+                showStatus(error.message, 'error');
+            }
+        }
+
+        function processarDados() {
+            console.log('Processando dados...');
+            console.log('Funções permitidas:', funcoesPermitidas);
+            
+            // Agrupa QLP por função E turno
+            const qlpPorFuncaoTurno = {};
+            dadosQLP.forEach(d => {
+                if (!d.funcao || !d.isAtivo) return;
+                
+                const funcao = d.funcao.trim();
+                const turno = (d.turno || 'Sem Turno').trim();
+                
+                if (!funcoesPermitidas.includes(funcao)) {
+                    return;
+                }
+                
+                const chave = `${funcao}|${turno}`;
+                
+                if (!qlpPorFuncaoTurno[chave]) {
+                    qlpPorFuncaoTurno[chave] = {
+                        funcao: funcao,
+                        turno: turno,
+                        qlTotal: 0,
+                        colaboradores: []
+                    };
+                }
+                
+                qlpPorFuncaoTurno[chave].qlTotal++;
+                qlpPorFuncaoTurno[chave].colaboradores.push(d);
+            });
+
+            const basePorFuncaoTurno = {};
+            dadosBase.forEach(d => {
+                const funcao = (d.funcao || 'Sem Função').trim();
+                const turno = (d.turno || 'Sem Turno').trim();
+                const status = (d.status || '').trim();
+                
+                if (!funcoesPermitidas.includes(funcao)) {
+                    return;
+                }
+                
+                const chave = `${funcao}|${turno}`;
+                
+                if (!basePorFuncaoTurno[chave]) {
+                    basePorFuncaoTurno[chave] = {
+                        funcao: funcao,
+                        turno: turno,
+                        presente: 0,
+                        desvio: 0,
+                        ausente: 0,
+                        atestado: 0,
+                        ferias: 0,
+                        folga: 0,
+                        afastado: 0,
+                        total: 0
+                    };
+                }
+                
+                basePorFuncaoTurno[chave].total++;
+                
+                const statusLower = status.toLowerCase();
+                if (statusLower === 'presente') basePorFuncaoTurno[chave].presente++;
+                else if (statusLower === 'desvio') basePorFuncaoTurno[chave].desvio++;
+                else if (statusLower === 'ausente') basePorFuncaoTurno[chave].ausente++;
+                else if (statusLower === 'atestado') basePorFuncaoTurno[chave].atestado++;
+                else if (statusLower.includes('férias') || statusLower.includes('ferias')) basePorFuncaoTurno[chave].ferias++;
+                else if (statusLower === 'folga') basePorFuncaoTurno[chave].folga++;
+                else if (statusLower === 'afastado') basePorFuncaoTurno[chave].afastado++;
+            });
+
+            dadosProducao = [];
+            
+            Object.keys(basePorFuncaoTurno).forEach(chave => {
+                const base = basePorFuncaoTurno[chave];
+                const qlp = qlpPorFuncaoTurno[chave] || { qlTotal: 0 };
+                
+                dadosProducao.push({
+                    funcao: base.funcao,
+                    turno: base.turno,
+                    qlTotal: qlp.qlTotal,
+                    presente: base.presente,
+                    desvio: base.desvio,
+                    afastado: base.afastado,
+                    ausente: base.ausente + base.atestado,
+                    feriasFolga: base.ferias + base.folga,
+                    produtividadeHora: dadosProdutividade[base.funcao] || 0,
+                    horasTurno: 0,
+                    capacidade: 0,
+                    meta: 0,
+                    deficit: 0,
+                    realizado: 0
+                });
+            });
+
+            dadosProducao.sort((a, b) => {
+                if (a.funcao !== b.funcao) return a.funcao.localeCompare(b.funcao);
+                return a.turno.localeCompare(b.turno);
+            });
+            
+            console.log(`Dados processados: ${dadosProducao.length} registros`);
+        }
+
+        function preencherFiltros() {
+            const funcoes = [...new Set(dadosProducao.map(d => d.funcao))].sort();
+            const selectFuncoes = document.getElementById('filtroFuncoes');
+            selectFuncoes.innerHTML = funcoes.map(f => `<option value="${f}">${f}</option>`).join('');
+
+            const turnos = [...new Set(dadosBase.filter(d => funcoesPermitidas.includes(d.funcao)).map(d => d.turno).filter(t => t))].sort();
+            const selectTurnos = document.getElementById('filtroTurnos');
+            selectTurnos.innerHTML = turnos.map(t => `<option value="${t}">${t}</option>`).join('');
+        }
+
+        function aplicarFiltros() {
+            const funcoesSelecionadas = Array.from(document.getElementById('filtroFuncoes').selectedOptions).map(o => o.value);
+            const turnosSelecionados = Array.from(document.getElementById('filtroTurnos').selectedOptions).map(o => o.value);
+
+            funcoesFiltradas = funcoesSelecionadas.length > 0 ? funcoesSelecionadas : [];
+
+            if (turnosSelecionados.length > 0) {
+                const baseFiltrada = dadosBase.filter(d => turnosSelecionados.includes(d.turno) && funcoesPermitidas.includes(d.funcao));
+                
+                const basePorFuncaoTurno = {};
+                baseFiltrada.forEach(d => {
+                    const funcao = (d.funcao || 'Sem Função').trim();
+                    const turno = (d.turno || 'Sem Turno').trim();
+                    const status = (d.status || '').trim();
+                    const chave = `${funcao}|${turno}`;
+                    
+                    if (!basePorFuncaoTurno[chave]) {
+                        basePorFuncaoTurno[chave] = {
+                            funcao, turno, presente: 0, desvio: 0, ausente: 0, 
+                            atestado: 0, ferias: 0, folga: 0, afastado: 0, total: 0
+                        };
+                    }
+                    
+                    basePorFuncaoTurno[chave].total++;
+                    const statusLower = status.toLowerCase();
+                    if (statusLower === 'presente') basePorFuncaoTurno[chave].presente++;
+                    else if (statusLower === 'desvio') basePorFuncaoTurno[chave].desvio++;
+                    else if (statusLower === 'ausente') basePorFuncaoTurno[chave].ausente++;
+                    else if (statusLower === 'atestado') basePorFuncaoTurno[chave].atestado++;
+                    else if (statusLower.includes('férias') || statusLower.includes('ferias')) basePorFuncaoTurno[chave].ferias++;
+                    else if (statusLower === 'folga') basePorFuncaoTurno[chave].folga++;
+                    else if (statusLower === 'afastado') basePorFuncaoTurno[chave].afastado++;
+                });
+
+                dadosProducao.forEach(d => {
+                    const chave = `${d.funcao}|${d.turno}`;
+                    if (basePorFuncaoTurno[chave]) {
+                        const base = basePorFuncaoTurno[chave];
+                        d.presente = base.presente;
+                        d.desvio = base.desvio;
+                        d.afastado = base.afastado;
+                        d.ausente = base.ausente + base.atestado;
+                        d.feriasFolga = base.ferias + base.folga;
+                    }
+                });
+            }
+
+            calcularTudo();
+            renderTabela();
+            atualizarResumo();
+            showStatus('Filtros aplicados!', 'success');
+        }
+
+        function limparFiltros() {
+            document.getElementById('filtroFuncoes').selectedIndex = -1;
+            document.getElementById('filtroTurnos').selectedIndex = -1;
+            funcoesFiltradas = [];
+            processarDados();
+            calcularTudo();
+            renderTabela();
+            atualizarResumo();
+            showStatus('Filtros removidos!', 'info');
+        }
+
+        function renderTabela() {
+            const tbody = document.querySelector('#tabelaProducao tbody');
+            tbody.innerHTML = '';
+
+            let dados = funcoesFiltradas.length > 0 ? dadosProducao.filter(d => funcoesFiltradas.includes(d.funcao)) : dadosProducao;
+            document.getElementById('totalFuncoes').textContent = `${dados.length} registros`;
+
+            dados.forEach(d => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${d.funcao}</strong></td>
+                    <td><span style="background: #e3f2fd; padding: 4px 8px; border-radius: 4px; font-weight: 600; color: #1976d2;">${d.turno}</span></td>
+                    <td class="valor-calculado">${d.qlTotal}</td>
+                    <td class="valor-calculado">${d.presente}</td>
+                    <td class="valor-calculado">${d.desvio}</td>
+                    <td class="valor-calculado">${d.afastado}</td>
+                    <td class="valor-calculado">${d.ausente}</td>
+                    <td class="valor-calculado">${d.feriasFolga}</td>
+                    <td class="valor-calculado" style="background: #fff3cd; color: #856404; font-weight: 600;">${d.deficit}</td>
+                    <td class="valor-calculado" style="background: #e1f5fe; color: #0277bd;">${d.produtividadeHora.toFixed(2)}</td>
+                    <td class="valor-calculado" style="background: #f3e5f5; color: #6a1b9a;">${d.horasTurno.toFixed(2)}</td>
+                    <td class="valor-calculado" style="background: #e8f5e9; color: #2e7d32; font-weight: 600; font-size: 15px;">${d.capacidade.toFixed(2)}</td>
+                    <td><input type="number" class="input-calculo" value="${d.realizado}" onchange="atualizarRealizado(${dadosProducao.indexOf(d)}, this.value)" min="0" step="0.01"></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function atualizarRealizado(idx, valor) {
+            dadosProducao[idx].realizado = parseFloat(valor) || 0;
+            atualizarResumo();
+        }
+
+        function calcularLinha(idx) {
+            const d = dadosProducao[idx];
+            d.produtividadeHora = dadosProdutividade[d.funcao] || 0;
+            
+            const dataRef = document.getElementById('dataReferencia').value;
+            const dataSelecionada = new Date(dataRef + 'T12:00:00');
+            const diaSemana = dataSelecionada.getDay();
+            const ehSabado = diaSemana === 6;
+            const turnoUpper = d.turno.toUpperCase();
+            
+            if (turnoUpper.includes('TURNO A') || turnoUpper === 'A') {
+                d.horasTurno = 6.05;
+            } else if (turnoUpper.includes('TURNO B') || turnoUpper === 'B') {
+                d.horasTurno = ehSabado ? 4 : 7.05;
+            } else if (turnoUpper.includes('TURNO C') || turnoUpper === 'C') {
+                d.horasTurno = 7.05;
+            } else {
+                d.horasTurno = 8;
+            }
+            
+            d.capacidade = d.presente * d.produtividadeHora * d.horasTurno;
+            d.meta = d.capacidade;
+            d.deficit = d.desvio;
+        }
+
+        function calcularTudo() {
+            dadosProducao.forEach((d, idx) => calcularLinha(idx));
+            renderTabela();
+            atualizarResumo();
+            showStatus('Cálculos atualizados!', 'success');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const inputData = document.getElementById('dataReferencia');
+            if (inputData) {
+                inputData.addEventListener('change', () => calcularTudo());
+            }
+        });
+
+        function atualizarResumo() {
+            let dados = funcoesFiltradas.length > 0 ? dadosProducao.filter(d => funcoesFiltradas.includes(d.funcao)) : dadosProducao;
+            
+            const totalQL = dados.reduce((s, d) => s + d.qlTotal, 0);
+            const totalCapacidade = dados.reduce((s, d) => s + d.capacidade, 0);
+            const totalPresente = dados.reduce((s, d) => s + d.presente, 0);
+            const totalDesvio = dados.reduce((s, d) => s + d.desvio, 0);
+            const totalAfastado = dados.reduce((s, d) => s + d.afastado, 0);
+            const totalDeficit = dados.reduce((s, d) => s + d.deficit, 0);
+            const totalRealizado = dados.reduce((s, d) => s + d.realizado, 0);
+            const percentualAtingido = totalCapacidade > 0 ? ((totalRealizado / totalCapacidade) * 100).toFixed(1) : 0;
+            
+            document.getElementById('resumoCards').innerHTML = `
+                <div class="resumo-card">
+                    <h3>QL Total</h3>
+                    <div class="valor">${totalQL}</div>
+                    <div class="subtexto">Quadro de Lotação</div>
+                </div>
+                <div class="resumo-card success">
+                    <h3>Presente</h3>
+                    <div class="valor">${totalPresente}</div>
+                    <div class="subtexto">Trabalhando</div>
+                </div>
+                <div class="resumo-card danger">
+                    <h3>Desvio</h3>
+                    <div class="valor">${totalDesvio}</div>
+                    <div class="subtexto">Função Incorreta</div>
+                </div>
+                <div class="resumo-card warning">
+                    <h3>Deficit</h3>
+                    <div class="valor">${totalDeficit}</div>
+                    <div class="subtexto">Falta de Pessoal</div>
+                </div>
+                <div class="resumo-card">
+                    <h3>Afastado</h3>
+                    <div class="valor">${totalAfastado}</div>
+                    <div class="subtexto">Afastamentos</div>
+                </div>
+                <div class="resumo-card" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">
+                    <h3>Capacidade</h3>
+                    <div class="valor" style="color: white;">${totalCapacidade.toFixed(0)}</div>
+                    <div class="subtexto" style="color: rgba(255,255,255,0.9);">Produção Esperada</div>
+                </div>
+                <div class="resumo-card ${percentualAtingido >= 100 ? 'success' : percentualAtingido >= 80 ? 'warning' : 'danger'}">
+                    <h3>Realizado</h3>
+                    <div class="valor">${totalRealizado.toFixed(0)}</div>
+                    <div class="subtexto">${percentualAtingido}% da Capacidade</div>
+                </div>
+            `;
+        }
+
+        async function salvarProducao() {
+            if (dadosProducao.length === 0) {
+                showStatus('Nenhum dado para salvar', 'error');
+                return;
+            }
+            if (!confirm('Deseja salvar os dados de produção?')) return;
+
+            try {
+                const dataRef = document.getElementById('dataReferencia').value;
+                const horas = parseFloat(document.getElementById('horasTrabalhadas').value) || 8;
+
+                const dadosParaSalvar = dadosProducao.map(d => ({
+                    funcao: d.funcao,
+                    turno: d.turno,
+                    qlTotal: d.qlTotal,
+                    capacidade: d.capacidade,
+                    presente: d.presente,
+                    desvio: d.desvio,
+                    afastado: d.afastado,
+                    ausente: d.ausente,
+                    feriasFolga: d.feriasFolga,
+                    deficit: d.deficit,
+                    produtividadeHora: d.produtividadeHora,
+                    horasTurno: d.horasTurno,
+                    meta: d.meta,
+                    realizado: d.realizado
+                }));
+
+                const response = await fetch('/api/producao/salvar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ dados: dadosParaSalvar, dataReferencia: dataRef, horasTrabalhadas: horas })
+                });
+
+                const result = await response.json();
+                if (result.ok) {
+                    showStatus(result.msg || 'Dados salvos com sucesso!', 'success');
+                } else {
+                    throw new Error(result.msg || 'Erro ao salvar');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showStatus('Erro ao salvar: ' + error.message, 'error');
+            }
+        }
+
+        function exportarCSV() {
+            let dados = funcoesFiltradas.length > 0 ? dadosProducao.filter(d => funcoesFiltradas.includes(d.funcao)) : dadosProducao;
+            
+            if (dados.length === 0) {
+                showStatus('Nenhum dado para exportar', 'error');
+                return;
+            }
+
+            const headers = ['Função', 'Turno', 'QL Total', 'Presente', 'Desvio', 'Afastado', 'Ausente', 'Férias/Folga', 'Deficit', 'Produtividade/Hora', 'Horas Turno', 'Capacidade', 'Realizado'];
+            let csv = headers.join(',') + '\n';
+            
+            dados.forEach(d => {
+                csv += [
+                    `"${d.funcao}"`, `"${d.turno}"`, d.qlTotal, d.presente, d.desvio, d.afastado, d.ausente, 
+                    d.feriasFolga, d.deficit, d.produtividadeHora.toFixed(2), d.horasTurno.toFixed(2), 
+                    d.capacidade.toFixed(2), d.realizado.toFixed(2)
+                ].join(',') + '\n';
+            });
+
+            csv += '\nRESUMO\n';
+            const totalQL = dados.reduce((s, d) => s + d.qlTotal, 0);
+            const totalPresente = dados.reduce((s, d) => s + d.presente, 0);
+            const totalDesvio = dados.reduce((s, d) => s + d.desvio, 0);
+            const totalAfastado = dados.reduce((s, d) => s + d.afastado, 0);
+            const totalDeficit = dados.reduce((s, d) => s + d.deficit, 0);
+            const totalCapacidade = dados.reduce((s, d) => s + d.capacidade, 0);
+            const totalRealizado = dados.reduce((s, d) => s + d.realizado, 0);
+            
+            csv += `"TOTAL","",${totalQL},${totalPresente},${totalDesvio},${totalAfastado},,,${totalDeficit},,,${totalCapacidade.toFixed(2)},${totalRealizado.toFixed(2)}\n`;
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            const dataRef = document.getElementById('dataReferencia').value || 'hoje';
+            link.download = `Producao_por_Funcao_${dataRef}.csv`;
+            link.click();
+            showStatus('CSV exportado com sucesso!', 'success');
+        }
+
+        window.onload = function() {
+            const usuario = sessionStorage.getItem('usuario');
+            if (!usuario) {
+                showStatus('Sessão expirada', 'error');
+                setTimeout(() => window.location.href = '/', 2000);
+                return;
+            }
+            carregarDados();
+        };
+
+        console.log('Análise de Produção por Função carregada');
+    </script>
+</body>
+</html>
