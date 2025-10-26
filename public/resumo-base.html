@@ -444,9 +444,6 @@
                 <button class="btn btn-success" onclick="carregarResumo()">
                     <i class="fas fa-sync-alt"></i> Atualizar
                 </button>
-                <button class="btn btn-warning" onclick="verificarBase()">
-                    <i class="fas fa-database"></i> Verificar Base
-                </button>
                 <button class="btn btn-info" onclick="exportarResumo()">
                     <i class="fas fa-file-excel"></i> Exportar
                 </button>
@@ -621,24 +618,17 @@
 
                 const dataInput = document.getElementById('filtroData').value;
                 
-                let url = '/api/producao.js?action=resumo-base';
+                let url = '/api/producao/resumo-base';
                 if (dataInput) {
-                    url += `&data=${dataInput}`;
+                    url += `?data=${dataInput}`;
                 }
 
                 console.log('Buscando resumo:', url);
 
                 const response = await fetch(url);
-                
-                if (!response.ok) {
-                    throw new Error(`Erro HTTP: ${response.status}`);
-                }
-                
                 const result = await response.json();
 
                 console.log('Resposta recebida:', result);
-                console.log('Status OK:', result.ok);
-                console.log('Total registros:', result.resumoGeral?.total);
 
                 if (!result.ok) {
                     throw new Error(result.msg || 'Erro ao carregar resumo');
@@ -653,11 +643,7 @@
                 document.getElementById('loadingDiv').style.display = 'none';
                 document.getElementById('contentDiv').style.display = 'block';
 
-                const totalMsg = dadosResumo.resumoGeral.total === 0 
-                    ? 'Nenhum colaborador encontrado para esta data'
-                    : `${dadosResumo.resumoGeral.total} colaboradores`;
-                    
-                showStatus(`Resumo carregado: ${totalMsg}`, dadosResumo.resumoGeral.total === 0 ? 'info' : 'success');
+                showStatus(`Resumo carregado: ${dadosResumo.resumoGeral.total} colaboradores`, 'success');
 
             } catch (error) {
                 console.error('Erro:', error);
@@ -670,35 +656,6 @@
                     </button>
                 `;
                 showStatus(error.message, 'error');
-            }
-        }
-
-        async function verificarBase() {
-            try {
-                showStatus('Verificando base de dados...', 'info');
-                
-                const response = await fetch('/api/producao.js?action=base');
-                const result = await response.json();
-                
-                console.log('===== VERIFICAÇÃO DA BASE =====');
-                console.log('Total de registros:', result.total);
-                console.log('Data filtrada:', result.dataFiltro);
-                console.log('Dados completos:', result);
-                
-                if (result.dados && result.dados.length > 0) {
-                    console.log('Primeiros 5 registros:', result.dados.slice(0, 5));
-                    
-                    const datasUnicas = [...new Set(result.dados.map(d => d.data))];
-                    console.log('Datas disponíveis na base:', datasUnicas);
-                    
-                    showStatus(`✅ Base verificada: ${result.total} registros encontrados para hoje. Confira o console para mais detalhes.`, 'success');
-                } else {
-                    showStatus('⚠️ Nenhum registro encontrado na base para hoje. Verifique se há dados cadastrados na planilha.', 'info');
-                }
-                
-            } catch (error) {
-                console.error('Erro ao verificar base:', error);
-                showStatus(`Erro ao verificar base: ${error.message}`, 'error');
             }
         }
 
@@ -1155,10 +1112,8 @@
                 return;
             }
 
-            const hoje = new Date();
-            hoje.setDate(hoje.getDate());
-            const dataFormatada = hoje.toISOString().split('T')[0];
-            document.getElementById('filtroData').value = dataFormatada;
+            const hoje = new Date().toISOString().split('T')[0];
+            document.getElementById('filtroData').value = hoje;
 
             carregarResumo();
         };
