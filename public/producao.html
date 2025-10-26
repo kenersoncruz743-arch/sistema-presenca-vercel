@@ -541,11 +541,11 @@
 
                 // ===== CORREÇÃO: Adiciona data na URL =====
                 console.log('[PRODUCAO] Carregando dados da Base...');
-                let urlBase = '/api/producao/base';
+                let urlBase = '/api/producao/resumo-base?modo=dados';
                 
                 const dataRef = document.getElementById('dataReferencia').value;
                 if (dataRef) {
-                    urlBase += `?data=${dataRef}`;
+                    urlBase += `&data=${dataRef}`;
                     console.log('[PRODUCAO] URL Base:', urlBase);
                 }
                 
