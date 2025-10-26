@@ -347,10 +347,13 @@
                     window.location.href = '/mapacarga';
                 } else if (areaLower.includes('alocação box') || areaLower.includes('alocacao box')) {
                     window.location.href = '/alocacaobox';
+                } else if (areaLower.includes('alocação box') || areaLower.includes('alocacao box')) {
+                    window.location.href = '/alocacaobox';
                 } 
+                    
                 // Áreas com múltiplas ferramentas
                 else {
-                    const areasComFerramentas = ['pcp', 'separação', 'separacao', 'gestão', 'gestao', 'wms'];
+                    const areasComFerramentas = ['gestão', 'gestao'];
                     const temFerramentas = areasComFerramentas.some(area => areaLower.includes(area));
                     
                     if (temFerramentas) {
