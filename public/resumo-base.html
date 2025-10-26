@@ -616,22 +616,35 @@
                 document.getElementById('loadingDiv').style.display = 'block';
                 document.getElementById('contentDiv').style.display = 'none';
 
+                // ===== CORREÇÃO: Envia data no formato YYYY-MM-DD =====
                 const dataInput = document.getElementById('filtroData').value;
                 
                 let url = '/api/producao/resumo-base';
+                
                 if (dataInput) {
                     url += `?data=${dataInput}`;
+                    console.log('[RESUMO] Data selecionada:', dataInput);
+                } else {
+                    console.log('[RESUMO] Sem data selecionada, usando hoje');
                 }
 
-                console.log('Buscando resumo:', url);
+                console.log('[RESUMO] URL final:', url);
 
                 const response = await fetch(url);
                 const result = await response.json();
 
-                console.log('Resposta recebida:', result);
+                console.log('[RESUMO] Resposta recebida:', result);
 
                 if (!result.ok) {
                     throw new Error(result.msg || 'Erro ao carregar resumo');
+                }
+
+                // Mostra informações de debug
+                if (result.debug) {
+                    console.log('[RESUMO] Debug da API:', result.debug);
+                    console.log(`[RESUMO] Total de linhas: ${result.debug.totalLinhas}`);
+                    console.log(`[RESUMO] Registros filtrados: ${result.debug.registrosFiltrados}`);
+                    console.log(`[RESUMO] Registros ignorados: ${result.debug.registrosIgnorados}`);
                 }
 
                 dadosOriginais = JSON.parse(JSON.stringify(result));
@@ -643,10 +656,11 @@
                 document.getElementById('loadingDiv').style.display = 'none';
                 document.getElementById('contentDiv').style.display = 'block';
 
-                showStatus(`Resumo carregado: ${dadosResumo.resumoGeral.total} colaboradores`, 'success');
+                const msg = `Resumo carregado: ${dadosResumo.resumoGeral.total} colaboradores (Data: ${dadosResumo.dataReferencia})`;
+                showStatus(msg, 'success');
 
             } catch (error) {
-                console.error('Erro:', error);
+                console.error('[RESUMO] Erro:', error);
                 document.getElementById('loadingDiv').innerHTML = `
                     <i class="fas fa-exclamation-triangle" style="color: #dc3545;"></i>
                     <p style="margin-top: 20px; color: #dc3545;">Erro ao carregar resumo</p>
@@ -690,7 +704,7 @@
             const funcoesSelecionadas = Array.from(document.getElementById('filtroFuncao').selectedOptions).map(o => o.value);
             const turnosSelecionados = Array.from(document.getElementById('filtroTurno').selectedOptions).map(o => o.value);
 
-            console.log('Filtros aplicados:', { supervisoresSelecionados, funcoesSelecionadas, turnosSelecionados });
+            console.log('[RESUMO] Filtros aplicados:', { supervisoresSelecionados, funcoesSelecionadas, turnosSelecionados });
 
             atualizarTagsFiltros(supervisoresSelecionados, funcoesSelecionadas, turnosSelecionados);
 
@@ -741,7 +755,7 @@
                     ferias: colabs.filter(c => c.status.toLowerCase().includes('férias') || c.status.toLowerCase().includes('ferias')).length,
                     folga: colabs.filter(c => c.status.toLowerCase() === 'folga').length,
                     afastado: colabs.filter(c => c.status.toLowerCase() === 'afastado').length,
-                    desvio: colabs.filter(c => c.status.toLowerCase() === 'desvio').length,
+                    desvio: colabs.filter(c => c.desvio && c.desvio.toLowerCase() === 'desvio').length,
                     outros: colabs.filter(c => {
                         const st = c.status.toLowerCase();
                         return st !== 'presente' && st !== 'ausente' && st !== 'atestado' && !st.includes('férias') && !st.includes('ferias') && st !== 'folga' && st !== 'afastado' && st !== 'desvio';
@@ -760,7 +774,7 @@
                     ferias: colabs.filter(c => c.status.toLowerCase().includes('férias') || c.status.toLowerCase().includes('ferias')).length,
                     folga: colabs.filter(c => c.status.toLowerCase() === 'folga').length,
                     afastado: colabs.filter(c => c.status.toLowerCase() === 'afastado').length,
-                    desvio: colabs.filter(c => c.status.toLowerCase() === 'desvio').length,
+                    desvio: colabs.filter(c => c.desvio && c.desvio.toLowerCase() === 'desvio').length,
                     outros: colabs.filter(c => {
                         const st = c.status.toLowerCase();
                         return st !== 'presente' && st !== 'ausente' && st !== 'atestado' && !st.includes('férias') && !st.includes('ferias') && st !== 'folga' && st !== 'afastado' && st !== 'desvio';
@@ -951,8 +965,8 @@
                             ${sup.colaboradores.map(c => `
                                 <div class="colaborador-item">
                                     <strong>${c.nome}</strong> (${c.matricula}) - <strong>${c.funcao}</strong> - Turno: ${c.turno} - 
-                                    <span style="color: ${c.status === 'Presente' ? '#28a745' : c.status === 'Desvio' ? '#dc3545' : '#6c757d'};">
-                                        ${c.status}
+                                    <span style="color: ${c.status === 'Presente' ? '#28a745' : c.desvio === 'Desvio' ? '#dc3545' : '#6c757d'};">
+                                        ${c.status}${c.desvio === 'Desvio' ? ' (DESVIO)' : ''}
                                     </span>
                                 </div>
                             `).join('')}
@@ -1001,8 +1015,8 @@
                             ${func.colaboradores.map(c => `
                                 <div class="colaborador-item">
                                     <strong>${c.nome}</strong> (${c.matricula}) - ${c.supervisor} - Turno: ${c.turno} - 
-                                    <span style="color: ${c.status === 'Presente' ? '#28a745' : c.status === 'Desvio' ? '#dc3545' : '#6c757d'};">
-                                        ${c.status}
+                                    <span style="color: ${c.status === 'Presente' ? '#28a745' : c.desvio === 'Desvio' ? '#dc3545' : '#6c757d'};">
+                                        ${c.status}${c.desvio === 'Desvio' ? ' (DESVIO)' : ''}
                                     </span>
                                 </div>
                             `).join('')}
@@ -1021,7 +1035,7 @@
             
             dadosResumo.porSupervisor.forEach(sup => {
                 sup.colaboradores.forEach(colab => {
-                    if (colab.status.toLowerCase() === 'desvio') {
+                    if (colab.desvio && colab.desvio.toLowerCase() === 'desvio') {
                         desvios.push({
                             ...colab,
                             supervisor: sup.supervisor
@@ -1089,7 +1103,7 @@
 
             dadosResumo.porSupervisor.forEach(sup => {
                 sup.colaboradores.forEach(colab => {
-                    if (colab.status.toLowerCase() === 'desvio') {
+                    if (colab.desvio && colab.desvio.toLowerCase() === 'desvio') {
                         csv += `"${colab.nome}",${colab.matricula},"${colab.funcao}","${sup.supervisor}","${colab.turno}","${colab.status}","${colab.observacao || '-'}"\n`;
                     }
                 });
@@ -1104,6 +1118,17 @@
             showStatus('Resumo exportado com sucesso!', 'success');
         }
 
+        // ===== CORREÇÃO: Event listener para mudança de data =====
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputData = document.getElementById('filtroData');
+            if (inputData) {
+                inputData.addEventListener('change', function() {
+                    console.log('[RESUMO] Data alterada para:', this.value);
+                    carregarResumo();
+                });
+            }
+        });
+
         window.onload = function() {
             const usuario = sessionStorage.getItem('usuario');
             if (!usuario) {
@@ -1112,13 +1137,21 @@
                 return;
             }
 
-            const hoje = new Date().toISOString().split('T')[0];
-            document.getElementById('filtroData').value = hoje;
+            // ===== CORREÇÃO: Define data de hoje no input =====
+            const hoje = new Date();
+            const ano = hoje.getFullYear();
+            const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+            const dia = String(hoje.getDate()).padStart(2, '0');
+            const dataHoje = `${ano}-${mes}-${dia}`;
+            
+            document.getElementById('filtroData').value = dataHoje;
+            console.log('[RESUMO] Data inicial definida:', dataHoje);
 
+            // Carrega resumo automaticamente
             carregarResumo();
         };
 
-        console.log('Resumo Base carregado');
+        console.log('[RESUMO] Script carregado');
     </script>
 </body>
 </html>
