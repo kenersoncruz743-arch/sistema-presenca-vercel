@@ -534,15 +534,22 @@
             try {
                 document.getElementById('loadingDiv').style.display = 'block';
                 document.getElementById('contentDiv').style.display = 'none';
-
-                const hoje = new Date();
-                const ano = hoje.getFullYear();
-                const mes = String(hoje.getMonth() + 1).padStart(2, '0');
-                const dia = String(hoje.getDate()).padStart(2, '0');
-                const dataHoje = `${ano}-${mes}-${dia}`;
+        
+                // ===== CORREÇÃO: Verifica se já tem data selecionada =====
+                let dataInput = document.getElementById('dataReferencia').value;
                 
-                document.getElementById('dataReferencia').value = dataHoje;
-                console.log('[PRODUCAO] Data inicial:', dataHoje);
+                if (!dataInput) {
+                    // Se não tem, usa data de hoje
+                    const hoje = new Date();
+                    const ano = hoje.getFullYear();
+                    const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+                    const dia = String(hoje.getDate()).padStart(2, '0');
+                    dataInput = `${ano}-${mes}-${dia}`;
+                    document.getElementById('dataReferencia').value = dataInput;
+                    console.log('[PRODUCAO] Data inicial (hoje):', dataInput);
+                } else {
+                    console.log('[PRODUCAO] Data já selecionada:', dataInput);
+                }
 
                 console.log('[PRODUCAO] Carregando Produtividade_Hora...');
                 const resProdutividade = await fetch('/api/producao/produtividade');
