@@ -497,10 +497,17 @@
                 document.getElementById('loadingDiv').style.display = 'block';
                 document.getElementById('contentDiv').style.display = 'none';
 
-                const hoje = new Date().toISOString().split('T')[0];
-                document.getElementById('dataReferencia').value = hoje;
+                // ===== CORREÇÃO: Define data de hoje =====
+                const hoje = new Date();
+                const ano = hoje.getFullYear();
+                const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+                const dia = String(hoje.getDate()).padStart(2, '0');
+                const dataHoje = `${ano}-${mes}-${dia}`;
+                
+                document.getElementById('dataReferencia').value = dataHoje;
+                console.log('[PRODUCAO] Data inicial:', dataHoje);
 
-                console.log('Carregando Produtividade_Hora...');
+                console.log('[PRODUCAO] Carregando Produtividade_Hora...');
                 const resProdutividade = await fetch('/api/producao/produtividade');
                 const resultProdutividade = await resProdutividade.json();
                 
@@ -511,12 +518,12 @@
                             funcoesPermitidas.push(p.funcao);
                         }
                     });
-                    console.log(`Produtividade carregada para ${funcoesPermitidas.length} funções:`, funcoesPermitidas);
+                    console.log(`[PRODUCAO] ✓ Produtividade carregada para ${funcoesPermitidas.length} funções`);
                 } else {
                     throw new Error('Aba Produtividade_Hora não encontrada ou vazia');
                 }
 
-                console.log('Carregando Meta...');
+                console.log('[PRODUCAO] Carregando Meta...');
                 const resMeta = await fetch('/api/producao/meta');
                 const resultMeta = await resMeta.json();
                 
@@ -529,21 +536,35 @@
                             };
                         }
                     });
-                    console.log(`Meta carregada para ${Object.keys(dadosMeta).length} datas`);
+                    console.log(`[PRODUCAO] ✓ Meta carregada para ${Object.keys(dadosMeta).length} datas`);
                 }
 
-                console.log('Carregando dados da Base...');
-                const resBase = await fetch('/api/producao/base');
+                // ===== CORREÇÃO: Adiciona data na URL =====
+                console.log('[PRODUCAO] Carregando dados da Base...');
+                let urlBase = '/api/producao/base';
+                
+                const dataRef = document.getElementById('dataReferencia').value;
+                if (dataRef) {
+                    urlBase += `?data=${dataRef}`;
+                    console.log('[PRODUCAO] URL Base:', urlBase);
+                }
+                
+                const resBase = await fetch(urlBase);
                 const resultBase = await resBase.json();
                 
                 if (!resultBase.ok) {
                     throw new Error(resultBase.msg || 'Erro ao carregar Base');
                 }
                 
+                // Mostra debug
+                if (resultBase.debug) {
+                    console.log('[PRODUCAO] Debug Base:', resultBase.debug);
+                }
+                
                 dadosBase = resultBase.dados || [];
-                console.log(`Base carregada: ${dadosBase.length} registros`);
+                console.log(`[PRODUCAO] ✓ Base carregada: ${dadosBase.length} registros (Data: ${resultBase.dataFiltro})`);
 
-                console.log('Carregando QLP...');
+                console.log('[PRODUCAO] Carregando QLP...');
                 const resQLP = await fetch('/api/qlp/quadro');
                 const resultQLP = await resQLP.json();
                 
@@ -552,7 +573,7 @@
                 }
                 
                 dadosQLP = resultQLP.colaboradores || [];
-                console.log(`QLP carregado: ${dadosQLP.length} colaboradores`);
+                console.log(`[PRODUCAO] ✓ QLP carregado: ${dadosQLP.length} colaboradores`);
 
                 processarDados();
                 preencherFiltros();
@@ -563,10 +584,10 @@
                 document.getElementById('loadingDiv').style.display = 'none';
                 document.getElementById('contentDiv').style.display = 'block';
 
-                showStatus(`Dados carregados: ${dadosBase.length} registros da Base, ${funcoesPermitidas.length} funções permitidas`, 'success');
+                showStatus(`Dados carregados: ${dadosBase.length} registros da Base (${resultBase.dataFiltro})`, 'success');
 
             } catch (error) {
-                console.error('Erro:', error);
+                console.error('[PRODUCAO] Erro:', error);
                 document.getElementById('loadingDiv').innerHTML = `
                     <i class="fas fa-exclamation-triangle" style="color: #dc3545;"></i>
                     <p style="margin-top: 20px; color: #dc3545;">Erro ao carregar dados</p>
@@ -580,10 +601,8 @@
         }
 
         function processarDados() {
-            console.log('Processando dados...');
-            console.log('Funções permitidas:', funcoesPermitidas);
+            console.log('[PRODUCAO] Processando dados...');
             
-            // Agrupa QLP por função E turno
             const qlpPorFuncaoTurno = {};
             dadosQLP.forEach(d => {
                 if (!d.funcao || !d.isAtivo) return;
@@ -591,9 +610,7 @@
                 const funcao = d.funcao.trim();
                 const turno = (d.turno || 'Sem Turno').trim();
                 
-                if (!funcoesPermitidas.includes(funcao)) {
-                    return;
-                }
+                if (!funcoesPermitidas.includes(funcao)) return;
                 
                 const chave = `${funcao}|${turno}`;
                 
@@ -616,9 +633,7 @@
                 const turno = (d.turno || 'Sem Turno').trim();
                 const status = (d.status || '').trim();
                 
-                if (!funcoesPermitidas.includes(funcao)) {
-                    return;
-                }
+                if (!funcoesPermitidas.includes(funcao)) return;
                 
                 const chave = `${funcao}|${turno}`;
                 
@@ -678,7 +693,7 @@
                 return a.turno.localeCompare(b.turno);
             });
             
-            console.log(`Dados processados: ${dadosProducao.length} registros`);
+            console.log(`[PRODUCAO] ✓ Dados processados: ${dadosProducao.length} registros`);
         }
 
         function preencherFiltros() {
@@ -820,13 +835,6 @@
             showStatus('Cálculos atualizados!', 'success');
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const inputData = document.getElementById('dataReferencia');
-            if (inputData) {
-                inputData.addEventListener('change', () => calcularTudo());
-            }
-        });
-
         function atualizarResumo() {
             let dados = funcoesFiltradas.length > 0 ? dadosProducao.filter(d => funcoesFiltradas.includes(d.funcao)) : dadosProducao;
             
@@ -919,7 +927,7 @@
                     throw new Error(result.msg || 'Erro ao salvar');
                 }
             } catch (error) {
-                console.error('Erro:', error);
+                console.error('[PRODUCAO] Erro:', error);
                 showStatus('Erro ao salvar: ' + error.message, 'error');
             }
         }
@@ -963,6 +971,17 @@
             showStatus('CSV exportado com sucesso!', 'success');
         }
 
+        // ===== CORREÇÃO: Event listener para mudança de data =====
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputData = document.getElementById('dataReferencia');
+            if (inputData) {
+                inputData.addEventListener('change', function() {
+                    console.log('[PRODUCAO] Data alterada para:', this.value);
+                    carregarDados();
+                });
+            }
+        });
+
         window.onload = function() {
             const usuario = sessionStorage.getItem('usuario');
             if (!usuario) {
@@ -973,7 +992,7 @@
             carregarDados();
         };
 
-        console.log('Análise de Produção por Função carregada');
+        console.log('[PRODUCAO] Script carregado');
     </script>
 </body>
 </html>
