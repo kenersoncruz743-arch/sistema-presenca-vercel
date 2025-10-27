@@ -1,4 +1,4 @@
-// api/coletores.js - API para controle de coletores (CORRIGIDA)
+// api/coletores.js - VERSÃO CORRIGIDA COM VALIDAÇÕES
 const sheetsColetorService = require('../lib/sheets_2');
 
 module.exports = async function handler(req, res) {
@@ -13,7 +13,7 @@ module.exports = async function handler(req, res) {
     return res.status(200).end();
   }
 
-  console.log('[API COLETORES] Request:', {
+  console.log('[API COLETORES] Request recebido:', {
     method: req.method,
     action: req.body?.action || req.query?.action,
     body: req.body
@@ -34,8 +34,7 @@ module.exports = async function handler(req, res) {
           'obterColetorStatus',
           'obterResumoColetores',
           'obterResumoPorSupervisor',
-          'testarConexao',
-          'atualizarDadosPresenca'
+          'testarConexao'
         ]
       });
     }
@@ -70,28 +69,64 @@ module.exports = async function handler(req, res) {
       case 'salvarRegistro': {
         const { chapa, nome, funcao, numeroColetor, tipoOperacao, situacoes } = req.body;
         
-        console.log('[API COLETORES] Salvando registro:', {
-          chapa, nome, numeroColetor, tipoOperacao, situacoes
+        console.log('[API COLETORES] Dados recebidos:', {
+          chapa, 
+          nome, 
+          funcao,
+          numeroColetor, 
+          tipoOperacao, 
+          situacoes,
+          tipoSituacoes: Array.isArray(situacoes) ? 'array' : typeof situacoes
         });
         
         // ===== VALIDAÇÃO COMPLETA =====
-        if (!chapa || !numeroColetor || !situacoes) {
-          console.error('[API COLETORES] Parâmetros obrigatórios faltando');
+        if (!chapa) {
+          console.error('[API COLETORES] Chapa não fornecida');
           return res.status(400).json({ 
             ok: false, 
-            msg: 'Chapa, número do coletor e situação são obrigatórios' 
+            msg: 'Chapa é obrigatória' 
           });
         }
 
-        // Valida array de situações
-        if (!Array.isArray(situacoes) || situacoes.length === 0) {
+        if (!numeroColetor) {
+          console.error('[API COLETORES] Número do coletor não fornecido');
           return res.status(400).json({ 
             ok: false, 
-            msg: 'Situações deve ser um array com pelo menos um item' 
+            msg: 'Número do coletor é obrigatório' 
           });
         }
 
-        // Valida número do coletor
+        if (!situacoes) {
+          console.error('[API COLETORES] Situação não fornecida');
+          return res.status(400).json({ 
+            ok: false, 
+            msg: 'Situação é obrigatória' 
+          });
+        }
+
+        // ===== NORMALIZA SITUAÇÕES PARA ARRAY =====
+        let situacoesArray;
+        
+        if (Array.isArray(situacoes)) {
+          situacoesArray = situacoes;
+        } else if (typeof situacoes === 'string') {
+          situacoesArray = [situacoes];
+        } else {
+          console.error('[API COLETORES] Formato de situações inválido:', situacoes);
+          return res.status(400).json({ 
+            ok: false, 
+            msg: 'Formato de situações inválido. Envie um array ou string.' 
+          });
+        }
+
+        if (situacoesArray.length === 0) {
+          return res.status(400).json({ 
+            ok: false, 
+            msg: 'Selecione pelo menos uma situação' 
+          });
+        }
+
+        // ===== VALIDA NÚMERO DO COLETOR =====
         const numColetor = parseInt(numeroColetor);
         if (isNaN(numColetor) || numColetor < 1 || numColetor > 140) {
           return res.status(400).json({ 
@@ -99,15 +134,33 @@ module.exports = async function handler(req, res) {
             msg: 'Número do coletor deve estar entre 1 e 140' 
           });
         }
+
+        // ===== VALIDA TIPO DE OPERAÇÃO =====
+        if (!tipoOperacao || (tipoOperacao !== 'Entrega' && tipoOperacao !== 'Retirada')) {
+          console.error('[API COLETORES] Tipo de operação inválido:', tipoOperacao);
+          return res.status(400).json({ 
+            ok: false, 
+            msg: 'Tipo de operação deve ser "Entrega" ou "Retirada"' 
+          });
+        }
+        
+        console.log('[API COLETORES] Dados validados:', {
+          chapa,
+          nome: nome || 'Não fornecido',
+          funcao: funcao || 'Não fornecida',
+          numeroColetor: numColetor,
+          tipoOperacao,
+          situacoesArray
+        });
         
         try {
           const resultado = await sheetsColetorService.salvarRegistro(
             chapa, 
-            nome, 
-            funcao, 
+            nome || '', 
+            funcao || '', 
             numColetor, 
             tipoOperacao, 
-            situacoes
+            situacoesArray
           );
           
           console.log('[API COLETORES] Resultado salvamento:', resultado);
@@ -119,6 +172,7 @@ module.exports = async function handler(req, res) {
           }
         } catch (error) {
           console.error('[API COLETORES] Erro ao salvar registro:', error);
+          console.error('[API COLETORES] Stack:', error.stack);
           return res.status(500).json({ 
             ok: false, 
             msg: 'Erro ao salvar registro: ' + error.message 
@@ -198,46 +252,36 @@ module.exports = async function handler(req, res) {
         console.log('[API COLETORES] Testando conexão...');
         
         try {
-          const doc = await sheetsColetorService.init();
-          const sheets = Object.keys(doc.sheetsByTitle);
+          const { docHistorico, docAtual } = await sheetsColetorService.init();
           
-          console.log(`[API COLETORES] ✓ Conectado: ${doc.title}`);
-          console.log(`[API COLETORES] Abas encontradas:`, sheets);
+          const sheetsHistorico = Object.keys(docHistorico.sheetsByTitle);
+          const sheetsAtual = Object.keys(docAtual.sheetsByTitle);
+          
+          console.log(`[API COLETORES] ✓ Planilha Histórico: ${docHistorico.title}`);
+          console.log(`[API COLETORES] Abas:`, sheetsHistorico);
+          console.log(`[API COLETORES] ✓ Planilha Atual: ${docAtual.title}`);
+          console.log(`[API COLETORES] Abas:`, sheetsAtual);
           
           return res.status(200).json({
             ok: true,
-            msg: `Conectado à planilha: ${doc.title}`,
-            sheets: sheets,
-            totalSheets: sheets.length
+            msg: 'Conectado com sucesso às duas planilhas',
+            historico: {
+              titulo: docHistorico.title,
+              abas: sheetsHistorico,
+              totalAbas: sheetsHistorico.length
+            },
+            atual: {
+              titulo: docAtual.title,
+              abas: sheetsAtual,
+              totalAbas: sheetsAtual.length
+            }
           });
         } catch (error) {
           console.error('[API COLETORES] Erro no teste de conexão:', error);
           return res.status(500).json({
             ok: false,
-            msg: 'Erro ao conectar com planilha de coletores',
+            msg: 'Erro ao conectar com as planilhas',
             details: error.message
-          });
-        }
-      }
-
-      // ===== ATUALIZAR DADOS DA PRESENÇA =====
-      case 'atualizarDadosPresenca': {
-        console.log('[API COLETORES] Atualizando dados da Presença...');
-        
-        try {
-          await sheetsColetorService.atualizarDadosPresencaNaBase();
-          
-          console.log('[API COLETORES] ✓ Dados da Presença atualizados');
-          
-          return res.status(200).json({ 
-            ok: true, 
-            msg: 'Dados da Presença atualizados com sucesso' 
-          });
-        } catch (error) {
-          console.error('[API COLETORES] Erro ao atualizar dados da Presença:', error);
-          return res.status(500).json({ 
-            ok: false, 
-            msg: 'Erro ao atualizar dados da Presença: ' + error.message 
           });
         }
       }
@@ -253,13 +297,13 @@ module.exports = async function handler(req, res) {
             'obterColetorStatus',
             'obterResumoColetores',
             'obterResumoPorSupervisor',
-            'testarConexao',
-            'atualizarDadosPresenca'
+            'testarConexao'
           ]
         });
     }
   } catch (error) {
     console.error('[API COLETORES] Erro geral:', error);
+    console.error('[API COLETORES] Stack:', error.stack);
     return res.status(500).json({ 
       ok: false, 
       msg: 'Erro interno do servidor: ' + error.message,
