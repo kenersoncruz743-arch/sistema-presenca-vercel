@@ -364,15 +364,22 @@
     </div>
   </div>
 
+// ===== CORREÇÃO CRÍTICA NO SCRIPT DO HTML =====
+// Substitua a seção do script no controle-coletores.html:
+
   <script>
-    // Configure a URL da sua API aqui
-    const API_URL = 'https://seu-dominio.vercel.app/api/coletores';
+    // ===== CORREÇÃO: URL DA API CORRIGIDA =====
+    const API_URL = `${window.location.origin}/api/coletores`;
+    
+    console.log('[COLETORES] URL da API:', API_URL);
     
     let dadosColaboradores = [];
     
     // Função para fazer requisições à API
     async function apiRequest(action, data = {}) {
       try {
+        console.log('[COLETORES] Fazendo requisição:', { action, data });
+        
         const response = await fetch(API_URL, {
           method: 'POST',
           headers: {
@@ -385,9 +392,12 @@
           throw new Error(`Erro HTTP: ${response.status}`);
         }
         
-        return await response.json();
+        const result = await response.json();
+        console.log('[COLETORES] Resposta:', result);
+        
+        return result;
       } catch (error) {
-        console.error('Erro na requisição:', error);
+        console.error('[COLETORES] Erro na requisição:', error);
         throw error;
       }
     }
@@ -395,13 +405,19 @@
     // Carrega dados dos colaboradores
     async function carregarColaboradores() {
       try {
+        console.log('[COLETORES] Carregando colaboradores...');
+        
         const resultado = await apiRequest('obterDados');
+        
         if (resultado.ok) {
           dadosColaboradores = resultado.dados;
-          console.log(`${resultado.total} colaboradores carregados`);
+          console.log(`[COLETORES] ${resultado.total} colaboradores carregados`);
+        } else {
+          console.error('[COLETORES] Erro:', resultado.msg);
         }
       } catch (error) {
-        console.error('Erro ao carregar colaboradores:', error);
+        console.error('[COLETORES] Erro ao carregar colaboradores:', error);
+        mostrarMensagem('Erro ao carregar colaboradores', 'erro');
       }
     }
     
@@ -424,6 +440,7 @@
       } else {
         nomeInput.value = "";
         funcaoInput.value = "";
+        mostrarMensagem('Colaborador não encontrado', 'erro');
       }
     });
     
@@ -446,7 +463,7 @@
       const tipo = document.getElementById("tipo").value;
       const situacaoSelecionada = document.querySelector("input[name='situacao']:checked");
       
-      // Validações
+      // ===== VALIDAÇÕES MELHORADAS =====
       if (!chapa) {
         mostrarMensagem("Preencha a chapa do colaborador.", "erro");
         botaoSalvar.disabled = false;
@@ -478,6 +495,10 @@
       const situacoes = [situacaoSelecionada.value];
       
       try {
+        console.log('[COLETORES] Enviando registro:', {
+          chapa, nome, funcao, numeroColetor: numero, tipoOperacao: tipo, situacoes
+        });
+        
         const resultado = await apiRequest('salvarRegistro', {
           chapa,
           nome,
@@ -496,7 +517,7 @@
         }
       } catch (error) {
         mostrarMensagem("Erro ao salvar registro. Tente novamente.", "erro");
-        console.error(error);
+        console.error('[COLETORES] Erro:', error);
       } finally {
         botaoSalvar.disabled = false;
         botaoSalvar.textContent = "Salvar";
@@ -530,6 +551,8 @@
     // Função para carregar status dos coletores
     async function carregarStatusColetores() {
       try {
+        console.log('[COLETORES] Carregando status dos coletores...');
+        
         const [statusResult, supervisorResult] = await Promise.all([
           apiRequest('obterColetorStatus'),
           apiRequest('obterResumoPorSupervisor')
@@ -543,7 +566,7 @@
           renderizarResumoPorSupervisor(supervisorResult.resumoPorSupervisor);
         }
       } catch (error) {
-        console.error('Erro ao carregar status:', error);
+        console.error('[COLETORES] Erro ao carregar status:', error);
         document.getElementById("coletorBlocos").innerHTML = 
           '<div class="loading">Erro ao carregar coletores. Tente recarregar a página.</div>';
       }
@@ -648,11 +671,15 @@
     
     // Inicialização ao carregar a página
     window.onload = async () => {
+      console.log('[COLETORES] Inicializando aplicação...');
+      
       await carregarColaboradores();
       await carregarStatusColetores();
       
       // Auto-refresh a cada 30 segundos
       setInterval(carregarStatusColetores, 30000);
+      
+      console.log('[COLETORES] ✓ Aplicação inicializada');
     };
   </script>
 </body>
