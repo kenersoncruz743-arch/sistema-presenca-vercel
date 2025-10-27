@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Controle de Coletores RFID</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      display: flex;
+      background-color: #f5f5f5;
+    }
+    
+    .form-container {
+      width: 300px;
+      margin-right: 30px;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 20px;
+      align-self: flex-start;
+    }
+    
+    h2 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+    
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 15px;
+      color: #555;
+    }
+    
+    input, select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+    
+    input:disabled {
+      background-color: #f0f0f0;
+      cursor: not-allowed;
+    }
+    
+    .situacao-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+      margin-bottom: 15px;
+    }
+    
+    .situacao-group input[type="radio"] {
+      display: none;
+    }
+    
+    .situacao-group label {
+      background-color: #f0f0f0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 8px 12px;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.3s;
+      font-size: 13px;
+    }
+    
+    .situacao-group label:hover {
+      background-color: #e0e0e0;
+    }
+    
+    .situacao-group input[type="radio"]:checked + label {
+      background-color: #007BFF;
+      color: white;
+      border-color: #007BFF;
+    }
+    
+    #ok:checked + label {
+      background-color: #28a745 !important;
+      border-color: #28a745 !important;
+    }
+    
+    .situacao-group input[type="radio"]:checked + label:not([for="ok"]) {
+      background-color: #dc3545 !important;
+      border-color: #dc3545 !important;
+    }
+    
+    button {
+      background-color: #007BFF;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-top: 10px;
+      width: 48%;
+      transition: background-color 0.3s;
+    }
+    
+    button:hover:not(:disabled) {
+      background-color: #0056b3;
+    }
+    
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    
+    .button-group {
+      display: flex;
+      justify-content: space-between;
+      gap: 4%;
+    }
+    
+    .painel-central {
+      display: flex;
+      flex: 1;
+      gap: 30px;
+    }
+    
+    .coletor-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .coletor-container > h3 {
+      color: #333;
+      margin-bottom: 20px;
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .blocos-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    
+    .bloco {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      background: white;
+    }
+    
+    .coletor {
+      width: 35px;
+      height: 35px;
+      background-color: #e0e0e0;
+      border: 2px solid #aaa;
+      border-radius: 5px;
+      text-align: center;
+      line-height: 35px;
+      cursor: default;
+      position: relative;
+      font-size: 13px;
+      font-weight: bold;
+      transition: transform 0.2s;
+    }
+    
+    .coletor:hover {
+      transform: scale(1.1);
+      z-index: 5;
+    }
+    
+    .coletor[data-status="azul"] {
+      background-color: #003366;
+      color: white;
+      border-color: #002244;
+    }
+    
+    .coletor[data-status="laranja"] {
+      background-color: #FFA500;
+      color: black;
+      border-color: #cc8400;
+    }
+    
+    .coletor[data-status="vermelho"] {
+      background-color: #cc0000;
+      color: white;
+      border-color: #990000;
+    }
+    
+    .coletor:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      top: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 5px;
+      white-space: pre-line;
+      font-size: 12px;
+      z-index: 10;
+      min-width: 150px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    
+    .resumo-container {
+      width: 280px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      background-color: white;
+      font-size: 14px;
+      position: sticky;
+      top: 20px;
+      align-self: flex-start;
+    }
+    
+    .resumo-container h3 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      color: #333;
+      border-bottom: 2px solid #007BFF;
+      padding-bottom: 10px;
+    }
+    
+    .resumo-item {
+      margin-bottom: 12px;
+      padding: 8px;
+      background-color: #f9f9f9;
+      border-radius: 5px;
+    }
+    
+    .resumo-item strong {
+      color: #007BFF;
+    }
+    
+    #resumoPorSupervisor {
+      margin-top: 25px;
+      padding-top: 20px;
+      border-top: 2px solid #e0e0e0;
+    }
+    
+    #resumoPorSupervisor h4 {
+      margin: 0 0 15px;
+      font-weight: bold;
+      color: #007BFF;
+      font-size: 16px;
+    }
+    
+    #mensagem {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 5px;
+      font-weight: bold;
+      text-align: center;
+    }
+    
+    #mensagem.sucesso {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    
+    #mensagem.erro {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h2>Registro de Situação</h2>
+
+    <label for="chapa">Chapa:</label>
+    <input type="number" id="chapa" placeholder="Digite a chapa">
+
+    <label for="nome">Nome:</label>
+    <input type="text" id="nome" disabled>
+
+    <label for="funcao">Função:</label>
+    <input type="text" id="funcao" disabled>
+
+    <label for="numero">Número do Coletor:</label>
+    <input type="number" id="numero" min="1" max="140" step="1" placeholder="1 a 140">
+
+    <label for="tipo">Tipo de Operação:</label>
+    <select id="tipo">
+      <option value="Entrega">Entrega</option>
+      <option value="Retirada">Retirada</option>
+    </select>
+
+    <label>Situação:</label>
+    <div class="situacao-group">
+      <input type="radio" name="situacao" id="ok" value="OK">
+      <label for="ok">OK</label>
+      
+      <input type="radio" name="situacao" id="tela" value="Tela quebrada">
+      <label for="tela">Tela quebrada</label>
+      
+      <input type="radio" name="situacao" id="botao" value="Botão travado">
+      <label for="botao">Botão travado</label>
+      
+      <input type="radio" name="situacao" id="carregador" value="Sem carregador">
+      <label for="carregador">Sem carregador</label>
+      
+      <input type="radio" name="situacao" id="outro" value="Outro">
+      <label for="outro">Outro</label>
+    </div>
+
+    <div class="button-group">
+      <button onclick="salvar()">Salvar</button>
+      <button onclick="limparCampos()">Limpar</button>
+    </div>
+
+    <div id="mensagem"></div>
+  </div>
+
+  <div class="painel-central">
+    <div class="coletor-container">
+      <h3>Status dos Coletores</h3>
+      <div class="blocos-container" id="coletorBlocos">
+        <div class="loading">Carregando coletores...</div>
+      </div>
+    </div>
+
+    <div class="resumo-container">
+      <h3>Resumo</h3>
+      <div id="resumo">
+        <div class="loading">Carregando...</div>
+      </div>
+      
+      <div id="resumoPorSupervisor">
+        <h4>Retiradas por Supervisor</h4>
+        <div id="supervisorCounts">
+          <div class="loading">Carregando...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Configure a URL da sua API aqui
+    const API_URL = 'https://seu-dominio.vercel.app/api/coletores';
+    
+    let dadosColaboradores = [];
+    
+    // Função para fazer requisições à API
+    async function apiRequest(action, data = {}) {
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ action, ...data })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Erro HTTP: ${response.status}`);
+        }
+        
+        return await response.json();
+      } catch (error) {
+        console.error('Erro na requisição:', error);
+        throw error;
+      }
+    }
+    
+    // Carrega dados dos colaboradores
+    async function carregarColaboradores() {
+      try {
+        const resultado = await apiRequest('obterDados');
+        if (resultado.ok) {
+          dadosColaboradores = resultado.dados;
+          console.log(`${resultado.total} colaboradores carregados`);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar colaboradores:', error);
+      }
+    }
+    
+    // Event listener para o campo chapa
+    document.getElementById("chapa").addEventListener("blur", () => {
+      const chapa = document.getElementById("chapa").value.trim();
+      const nomeInput = document.getElementById("nome");
+      const funcaoInput = document.getElementById("funcao");
+      
+      if (!chapa) {
+        nomeInput.value = "";
+        funcaoInput.value = "";
+        return;
+      }
+      
+      const colaborador = dadosColaboradores.find(p => p.chapa === chapa);
+      if (colaborador) {
+        nomeInput.value = colaborador.nome;
+        funcaoInput.value = colaborador.funcao;
+      } else {
+        nomeInput.value = "";
+        funcaoInput.value = "";
+      }
+    });
+    
+    // Função para salvar registro
+    async function salvar() {
+      const botaoSalvar = document.querySelector("button[onclick='salvar()']");
+      const mensagemDiv = document.getElementById("mensagem");
+      
+      if (botaoSalvar.disabled) return;
+      
+      botaoSalvar.disabled = true;
+      botaoSalvar.textContent = "Salvando...";
+      mensagemDiv.className = "";
+      mensagemDiv.textContent = "";
+      
+      const chapa = document.getElementById("chapa").value.trim();
+      const nome = document.getElementById("nome").value.trim();
+      const funcao = document.getElementById("funcao").value.trim();
+      const numero = parseInt(document.getElementById("numero").value, 10);
+      const tipo = document.getElementById("tipo").value;
+      const situacaoSelecionada = document.querySelector("input[name='situacao']:checked");
+      
+      // Validações
+      if (!chapa) {
+        mostrarMensagem("Preencha a chapa do colaborador.", "erro");
+        botaoSalvar.disabled = false;
+        botaoSalvar.textContent = "Salvar";
+        return;
+      }
+      
+      if (!nome) {
+        mostrarMensagem("Colaborador não encontrado. Verifique a chapa.", "erro");
+        botaoSalvar.disabled = false;
+        botaoSalvar.textContent = "Salvar";
+        return;
+      }
+      
+      if (isNaN(numero) || numero < 1 || numero > 140) {
+        mostrarMensagem("Número do coletor deve ser entre 1 e 140.", "erro");
+        botaoSalvar.disabled = false;
+        botaoSalvar.textContent = "Salvar";
+        return;
+      }
+      
+      if (!situacaoSelecionada) {
+        mostrarMensagem("Selecione uma situação.", "erro");
+        botaoSalvar.disabled = false;
+        botaoSalvar.textContent = "Salvar";
+        return;
+      }
+      
+      const situacoes = [situacaoSelecionada.value];
+      
+      try {
+        const resultado = await apiRequest('salvarRegistro', {
+          chapa,
+          nome,
+          funcao,
+          numeroColetor: numero,
+          tipoOperacao: tipo,
+          situacoes
+        });
+        
+        if (resultado.ok) {
+          mostrarMensagem(resultado.msg, "sucesso");
+          limparCampos();
+          await carregarStatusColetores();
+        } else {
+          mostrarMensagem(resultado.msg, "erro");
+        }
+      } catch (error) {
+        mostrarMensagem("Erro ao salvar registro. Tente novamente.", "erro");
+        console.error(error);
+      } finally {
+        botaoSalvar.disabled = false;
+        botaoSalvar.textContent = "Salvar";
+      }
+    }
+    
+    // Função para limpar campos
+    function limparCampos() {
+      document.getElementById("chapa").value = "";
+      document.getElementById("nome").value = "";
+      document.getElementById("funcao").value = "";
+      document.getElementById("numero").value = "";
+      document.getElementById("tipo").value = "Entrega";
+      const situacoes = document.querySelectorAll("input[name='situacao']");
+      situacoes.forEach(r => r.checked = false);
+      
+      const mensagemDiv = document.getElementById("mensagem");
+      setTimeout(() => {
+        mensagemDiv.className = "";
+        mensagemDiv.textContent = "";
+      }, 3000);
+    }
+    
+    // Função para mostrar mensagem
+    function mostrarMensagem(texto, tipo) {
+      const mensagemDiv = document.getElementById("mensagem");
+      mensagemDiv.textContent = texto;
+      mensagemDiv.className = tipo;
+    }
+    
+    // Função para carregar status dos coletores
+    async function carregarStatusColetores() {
+      try {
+        const [statusResult, supervisorResult] = await Promise.all([
+          apiRequest('obterColetorStatus'),
+          apiRequest('obterResumoPorSupervisor')
+        ]);
+        
+        if (statusResult.ok) {
+          renderizarColetores(statusResult.statusMap);
+        }
+        
+        if (supervisorResult.ok) {
+          renderizarResumoPorSupervisor(supervisorResult.resumoPorSupervisor);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar status:', error);
+        document.getElementById("coletorBlocos").innerHTML = 
+          '<div class="loading">Erro ao carregar coletores. Tente recarregar a página.</div>';
+      }
+    }
+    
+    // Função para renderizar coletores
+    function renderizarColetores(statusMap) {
+      const blocosContainer = document.getElementById("coletorBlocos");
+      blocosContainer.innerHTML = "";
+      
+      const coletoresPorBloco = 20;
+      
+      for (let bloco = 0; bloco < 7; bloco++) {
+        const divBloco = document.createElement("div");
+        divBloco.className = "bloco";
+        
+        for (let i = 1; i <= coletoresPorBloco; i++) {
+          const numero = bloco * coletoresPorBloco + i;
+          const div = document.createElement("div");
+          div.className = "coletor";
+          div.textContent = numero;
+          
+          const info = statusMap[numero];
+          if (info) {
+            const status = info.situacao.includes("OK")
+              ? (info.tipo === "Entrega" ? "azul" : "laranja")
+              : "vermelho";
+            div.setAttribute("data-status", status);
+            
+            let tooltip = `Coletor ${numero}\n`;
+            tooltip += `${info.nome} (${info.chapa})\n`;
+            tooltip += `${info.tipo}\n`;
+            tooltip += `Situação: ${info.situacao}`;
+            if (info.supervisor) {
+              tooltip += `\nSupervisor: ${info.supervisor}`;
+            }
+            tooltip += `\n${info.data}`;
+            
+            div.setAttribute("data-tooltip", tooltip);
+          }
+          
+          divBloco.appendChild(div);
+        }
+        
+        blocosContainer.appendChild(divBloco);
+      }
+      
+      // Atualiza o resumo principal
+      const resumoDiv = document.getElementById("resumo");
+      resumoDiv.innerHTML = "";
+      
+      const statusContagem = { azul: 0, laranja: 0, vermelho: 0 };
+      
+      Object.values(statusMap).forEach(info => {
+        const status = info.situacao.includes("OK")
+          ? (info.tipo === "Entrega" ? "azul" : "laranja")
+          : "vermelho";
+        statusContagem[status]++;
+      });
+      
+      const resumoHTML = `
+        <div class="resumo-item">
+          <strong style="color:#003366;">🔵 Disponíveis:</strong> ${statusContagem.azul}
+        </div>
+        <div class="resumo-item">
+          <strong style="color:#FFA500;">🟠 Em Retirada:</strong> ${statusContagem.laranja}
+        </div>
+        <div class="resumo-item">
+          <strong style="color:#cc0000;">🔴 Com Problema:</strong> ${statusContagem.vermelho}
+        </div>
+        <div class="resumo-item">
+          <strong>Total de Coletores:</strong> ${Object.keys(statusMap).length}
+        </div>
+      `;
+      
+      resumoDiv.innerHTML = resumoHTML;
+    }
+    
+    // Função para renderizar resumo por supervisor
+    function renderizarResumoPorSupervisor(resumoPorSupervisor) {
+      const supervisorDiv = document.getElementById("supervisorCounts");
+      
+      if (!resumoPorSupervisor || Object.keys(resumoPorSupervisor).length === 0) {
+        supervisorDiv.innerHTML = "<p style='color:#999;'>Nenhum registro de retirada hoje.</p>";
+        return;
+      }
+      
+      let supHTML = "";
+      const supervisores = Object.entries(resumoPorSupervisor)
+        .sort((a, b) => b[1].retiradaContada - a[1].retiradaContada);
+      
+      for (const [sup, dados] of supervisores) {
+        supHTML += `
+          <div class="resumo-item">
+            <strong>${sup}:</strong> ${dados.retiradaContada}
+          </div>
+        `;
+      }
+      
+      supervisorDiv.innerHTML = supHTML;
+    }
+    
+    // Inicialização ao carregar a página
+    window.onload = async () => {
+      await carregarColaboradores();
+      await carregarStatusColetores();
+      
+      // Auto-refresh a cada 30 segundos
+      setInterval(carregarStatusColetores, 30000);
+    };
+  </script>
+</body>
+</html>
