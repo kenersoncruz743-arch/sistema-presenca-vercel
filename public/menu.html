@@ -274,6 +274,8 @@
                 'QLP': 'fas fa-chart-bar',
                 'Mapa de Carga': 'fas fa-truck-loading',
                 'Alocação BOX': 'fas fa-warehouse',
+                'Coletores': 'fas fa-mobile-alt',
+                'Controle RFID': 'fas fa-mobile-alt',
                 'default': 'fas fa-building'
             };
             
@@ -347,8 +349,8 @@
                     window.location.href = '/mapacarga';
                 } else if (areaLower.includes('alocação box') || areaLower.includes('alocacao box')) {
                     window.location.href = '/alocacaobox';
-                } else if (areaLower.includes('alocação box') || areaLower.includes('alocacao box')) {
-                    window.location.href = '/alocacaobox';
+                } else if (areaLower.includes('coletor') || areaLower.includes('rfid')) {
+                    window.location.href = '/controle-coletores';
                 } 
                     
                 // Áreas com múltiplas ferramentas
