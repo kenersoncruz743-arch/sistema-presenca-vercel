@@ -1,31 +1,46 @@
-// api/coletores.js - API para controle de coletores (RFID)
+// api/coletores.js - API para controle de coletores (RFID) com CORS configurado
 const sheetsColetorService = require('../lib/sheets_2');
 
 module.exports = async function handler(req, res) {
-  // CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  // CORS Headers - configuração completa
+  const origin = req.headers.origin || '*';
+  
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Max-Age', '86400'); // 24 horas
 
+  // Responde requisições OPTIONS (preflight)
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
   console.log('[API COLETORES] Request:', {
     method: req.method,
-    action: req.body?.action,
-    body: req.body
+    action: req.body?.action || req.query?.action,
+    origin: origin
   });
 
   try {
-    const { action } = req.body || req.query;
+    // Aceita action tanto por POST (body) quanto por GET (query)
+    const { action } = req.method === 'POST' ? req.body : req.query;
 
     // Valida action
     if (!action) {
       console.error('[API COLETORES] Action não fornecida');
       return res.status(400).json({ 
         ok: false, 
-        msg: 'Action é obrigatória' 
+        msg: 'Action é obrigatória',
+        acoesDisponiveis: [
+          'obterDados',
+          'salvarRegistro',
+          'obterColetorStatus',
+          'obterResumoColetores',
+          'obterResumoPorSupervisor',
+          'testarConexao',
+          'atualizarDadosPresenca'
+        ]
       });
     }
 
