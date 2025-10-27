@@ -30,6 +30,10 @@ const nextConfig = {
         source: '/coletores',
         destination: '/coletores.html',
       },
+      {
+        source: '/controle-coletores',
+        destination: '/controle-coletores.html',
+      },
       
       // QLP e análises
       {
@@ -59,5 +63,4 @@ const nextConfig = {
     ];
   },
 }
-
 module.exports = nextConfig;
