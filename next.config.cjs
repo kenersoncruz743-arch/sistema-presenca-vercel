@@ -1,7 +1,22 @@
-// next.config.js - Configuração completa de rotas
+// next.config.js - Configuração completa de rotas e CORS
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
+  
+  // Headers globais para CORS
+  async headers() {
+    return [
+      {
+        source: '/api/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET, POST, PUT, DELETE, OPTIONS' },
+          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization, X-Requested-With, Accept' },
+          { key: 'Access-Control-Allow-Credentials', value: 'true' },
+        ],
+      },
+    ];
+  },
   
   async rewrites() {
     return [
@@ -63,4 +78,5 @@ const nextConfig = {
     ];
   },
 }
+
 module.exports = nextConfig;
