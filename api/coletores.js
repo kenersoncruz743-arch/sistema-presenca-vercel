@@ -1,15 +1,17 @@
-// api/coletores.js - API para controle de coletores (RFID) com CORS configurado
-const sheetsColetorService = require('../lib/sheets_2');
+// pages/api/coletores.js - API para controle de coletores (Next.js Pages Router)
+const sheetsColetorService = require('../../lib/sheets_2');
 
-module.exports = async function handler(req, res) {
-  // CORS Headers - configuração completa
-  const origin = req.headers.origin || '*';
-  
-  res.setHeader('Access-Control-Allow-Origin', origin);
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
+// Função auxiliar para CORS
+function setCorsHeaders(res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Max-Age', '86400'); // 24 horas
+}
+
+export default async function handler(req, res) {
+  // Configura CORS
+  setCorsHeaders(res);
 
   // Responde requisições OPTIONS (preflight)
   if (req.method === 'OPTIONS') {
@@ -18,8 +20,7 @@ module.exports = async function handler(req, res) {
 
   console.log('[API COLETORES] Request:', {
     method: req.method,
-    action: req.body?.action || req.query?.action,
-    origin: origin
+    action: req.body?.action || req.query?.action
   });
 
   try {
@@ -253,4 +254,4 @@ module.exports = async function handler(req, res) {
       stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
-};
+}
