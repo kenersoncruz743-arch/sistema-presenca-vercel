@@ -1,33 +1,28 @@
-// pages/api/coletores.js - API para controle de coletores (Next.js Pages Router)
-const sheetsColetorService = require('../../lib/sheets_2');
+// api/coletores.js - API para controle de coletores (CORRIGIDA)
+const sheetsColetorService = require('../lib/sheets_2');
 
-// Função auxiliar para CORS
-function setCorsHeaders(res) {
+module.exports = async function handler(req, res) {
+  // ===== CORS CONFIGURADO CORRETAMENTE =====
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-}
 
-export default async function handler(req, res) {
-  // Configura CORS
-  setCorsHeaders(res);
-
-  // Responde requisições OPTIONS (preflight)
+  // Responde OPTIONS (preflight)
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
   console.log('[API COLETORES] Request:', {
     method: req.method,
-    action: req.body?.action || req.query?.action
+    action: req.body?.action || req.query?.action,
+    body: req.body
   });
 
   try {
-    // Aceita action tanto por POST (body) quanto por GET (query)
-    const { action } = req.method === 'POST' ? req.body : req.query;
+    // ===== ACEITA ACTION POR POST OU GET =====
+    const action = req.method === 'POST' ? req.body?.action : req.query?.action;
 
-    // Valida action
     if (!action) {
       console.error('[API COLETORES] Action não fornecida');
       return res.status(400).json({ 
@@ -48,7 +43,7 @@ export default async function handler(req, res) {
     console.log('[API COLETORES] Processando action:', action);
 
     switch (action) {
-      // ===== BUSCAR COLABORADORES (aba Quadro) =====
+      // ===== BUSCAR COLABORADORES =====
       case 'obterDados': {
         console.log('[API COLETORES] Buscando dados do quadro...');
         
@@ -71,7 +66,7 @@ export default async function handler(req, res) {
         }
       }
 
-      // ===== SALVAR REGISTRO DE MOVIMENTAÇÃO =====
+      // ===== SALVAR REGISTRO =====
       case 'salvarRegistro': {
         const { chapa, nome, funcao, numeroColetor, tipoOperacao, situacoes } = req.body;
         
@@ -79,12 +74,29 @@ export default async function handler(req, res) {
           chapa, nome, numeroColetor, tipoOperacao, situacoes
         });
         
-        // Validação básica
+        // ===== VALIDAÇÃO COMPLETA =====
         if (!chapa || !numeroColetor || !situacoes) {
           console.error('[API COLETORES] Parâmetros obrigatórios faltando');
           return res.status(400).json({ 
             ok: false, 
             msg: 'Chapa, número do coletor e situação são obrigatórios' 
+          });
+        }
+
+        // Valida array de situações
+        if (!Array.isArray(situacoes) || situacoes.length === 0) {
+          return res.status(400).json({ 
+            ok: false, 
+            msg: 'Situações deve ser um array com pelo menos um item' 
+          });
+        }
+
+        // Valida número do coletor
+        const numColetor = parseInt(numeroColetor);
+        if (isNaN(numColetor) || numColetor < 1 || numColetor > 140) {
+          return res.status(400).json({ 
+            ok: false, 
+            msg: 'Número do coletor deve estar entre 1 e 140' 
           });
         }
         
@@ -93,7 +105,7 @@ export default async function handler(req, res) {
             chapa, 
             nome, 
             funcao, 
-            numeroColetor, 
+            numColetor, 
             tipoOperacao, 
             situacoes
           );
@@ -114,7 +126,7 @@ export default async function handler(req, res) {
         }
       }
 
-      // ===== OBTER STATUS DOS COLETORES =====
+      // ===== STATUS DOS COLETORES =====
       case 'obterColetorStatus': {
         console.log('[API COLETORES] Obtendo status dos coletores...');
         
@@ -137,7 +149,7 @@ export default async function handler(req, res) {
         }
       }
 
-      // ===== OBTER RESUMO DE COLETORES =====
+      // ===== RESUMO DE COLETORES =====
       case 'obterResumoColetores': {
         console.log('[API COLETORES] Gerando resumo de coletores...');
         
@@ -159,7 +171,7 @@ export default async function handler(req, res) {
         }
       }
 
-      // ===== OBTER RESUMO POR SUPERVISOR =====
+      // ===== RESUMO POR SUPERVISOR =====
       case 'obterResumoPorSupervisor': {
         console.log('[API COLETORES] Gerando resumo por supervisor...');
         
@@ -208,7 +220,7 @@ export default async function handler(req, res) {
         }
       }
 
-      // ===== ATUALIZAR DADOS DA PRESENÇA NA BASE =====
+      // ===== ATUALIZAR DADOS DA PRESENÇA =====
       case 'atualizarDadosPresenca': {
         console.log('[API COLETORES] Atualizando dados da Presença...');
         
@@ -254,4 +266,4 @@ export default async function handler(req, res) {
       stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
-}
+};
