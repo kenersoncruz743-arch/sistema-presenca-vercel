@@ -1,4 +1,4 @@
-// api/coletores.js - VERSÃO CORRIGIDA COM VALIDAÇÕES
+// api/coletores.js - VERSÃO COMPLETA COM COLETORES E CHAVES
 const sheetsColetorService = require('../lib/sheets_2');
 
 module.exports = async function handler(req, res) {
@@ -34,6 +34,10 @@ module.exports = async function handler(req, res) {
           'obterColetorStatus',
           'obterResumoColetores',
           'obterResumoPorSupervisor',
+          'salvarRegistroChave',
+          'obterChaveStatus',
+          'obterResumoChaves',
+          'obterResumoPorSupervisorChaves',
           'testarConexao'
         ]
       });
@@ -42,6 +46,8 @@ module.exports = async function handler(req, res) {
     console.log('[API COLETORES] Processando action:', action);
 
     switch (action) {
+      // ==================== ROTAS PARA COLETORES ====================
+      
       // ===== BUSCAR COLABORADORES =====
       case 'obterDados': {
         console.log('[API COLETORES] Buscando dados do quadro...');
@@ -247,6 +253,190 @@ module.exports = async function handler(req, res) {
         }
       }
 
+      // ==================== ROTAS PARA CHAVES ====================
+      
+      // ===== SALVAR REGISTRO DE CHAVE =====
+      case 'salvarRegistroChave': {
+        const { chapa, nome, funcao, numeroChave, tipoOperacao, situacoes } = req.body;
+        
+        console.log('[API CHAVES] Dados recebidos:', {
+          chapa, 
+          nome, 
+          funcao,
+          numeroChave, 
+          tipoOperacao, 
+          situacoes,
+          tipoSituacoes: Array.isArray(situacoes) ? 'array' : typeof situacoes
+        });
+        
+        // ===== VALIDAÇÃO COMPLETA =====
+        if (!chapa) {
+          console.error('[API CHAVES] Chapa não fornecida');
+          return res.status(400).json({ 
+            ok: false, 
+            msg: 'Chapa é obrigatória' 
+          });
+        }
+
+        if (!numeroChave) {
+          console.error('[API CHAVES] Número da chave não fornecido');
+          return res.status(400).json({ 
+            ok: false, 
+            msg: 'Número da chave é obrigatório' 
+          });
+        }
+
+        if (!situacoes) {
+          console.error('[API CHAVES] Situação não fornecida');
+          return res.status(400).json({ 
+            ok: false, 
+            msg: 'Situação é obrigatória' 
+          });
+        }
+
+        // ===== NORMALIZA SITUAÇÕES PARA ARRAY =====
+        let situacoesArray;
+        
+        if (Array.isArray(situacoes)) {
+          situacoesArray = situacoes;
+        } else if (typeof situacoes === 'string') {
+          situacoesArray = [situacoes];
+        } else {
+          console.error('[API CHAVES] Formato de situações inválido:', situacoes);
+          return res.status(400).json({ 
+            ok: false, 
+            msg: 'Formato de situações inválido. Envie um array ou string.' 
+          });
+        }
+
+        if (situacoesArray.length === 0) {
+          return res.status(400).json({ 
+            ok: false, 
+            msg: 'Selecione pelo menos uma situação' 
+          });
+        }
+
+        // ===== VALIDA NÚMERO DA CHAVE =====
+        const numChave = parseInt(numeroChave);
+        if (isNaN(numChave) || numChave < 1 || numChave > 60) {
+          return res.status(400).json({ 
+            ok: false, 
+            msg: 'Número da chave deve estar entre 1 e 60' 
+          });
+        }
+
+        // ===== VALIDA TIPO DE OPERAÇÃO =====
+        if (!tipoOperacao || (tipoOperacao !== 'Entrega' && tipoOperacao !== 'Retirada')) {
+          console.error('[API CHAVES] Tipo de operação inválido:', tipoOperacao);
+          return res.status(400).json({ 
+            ok: false, 
+            msg: 'Tipo de operação deve ser "Entrega" ou "Retirada"' 
+          });
+        }
+        
+        console.log('[API CHAVES] Dados validados:', {
+          chapa,
+          nome: nome || 'Não fornecido',
+          funcao: funcao || 'Não fornecida',
+          numeroChave: numChave,
+          tipoOperacao,
+          situacoesArray
+        });
+        
+        try {
+          const resultado = await sheetsColetorService.salvarRegistroChave(
+            chapa, 
+            nome || '', 
+            funcao || '', 
+            numChave, 
+            tipoOperacao, 
+            situacoesArray
+          );
+          
+          console.log('[API CHAVES] Resultado salvamento:', resultado);
+          
+          if (resultado.ok) {
+            return res.status(200).json(resultado);
+          } else {
+            return res.status(400).json(resultado);
+          }
+        } catch (error) {
+          console.error('[API CHAVES] Erro ao salvar registro:', error);
+          console.error('[API CHAVES] Stack:', error.stack);
+          return res.status(500).json({ 
+            ok: false, 
+            msg: 'Erro ao salvar registro: ' + error.message 
+          });
+        }
+      }
+
+      // ===== STATUS DAS CHAVES =====
+      case 'obterChaveStatus': {
+        console.log('[API CHAVES] Obtendo status das chaves...');
+        
+        try {
+          const statusMap = await sheetsColetorService.obterChaveStatus();
+          
+          console.log('[API CHAVES] Status obtido:', Object.keys(statusMap).length, 'chaves');
+          
+          return res.status(200).json({ 
+            ok: true, 
+            statusMap: statusMap,
+            total: Object.keys(statusMap).length
+          });
+        } catch (error) {
+          console.error('[API CHAVES] Erro ao obter status:', error);
+          return res.status(500).json({ 
+            ok: false, 
+            msg: 'Erro ao obter status das chaves: ' + error.message 
+          });
+        }
+      }
+
+      // ===== RESUMO DE CHAVES =====
+      case 'obterResumoChaves': {
+        console.log('[API CHAVES] Gerando resumo de chaves...');
+        
+        try {
+          const resumo = await sheetsColetorService.gerarResumoChaves();
+          
+          console.log('[API CHAVES] Resumo gerado:', resumo);
+          
+          return res.status(200).json({ 
+            ok: true, 
+            resumo: resumo
+          });
+        } catch (error) {
+          console.error('[API CHAVES] Erro ao gerar resumo:', error);
+          return res.status(500).json({ 
+            ok: false, 
+            msg: 'Erro ao gerar resumo: ' + error.message 
+          });
+        }
+      }
+
+      // ===== RESUMO POR SUPERVISOR (CHAVES) =====
+      case 'obterResumoPorSupervisorChaves': {
+        console.log('[API CHAVES] Gerando resumo por supervisor (chaves)...');
+        
+        try {
+          const resumoSup = await sheetsColetorService.gerarResumoPorSupervisorChaves();
+          
+          console.log('[API CHAVES] Resumo por supervisor gerado');
+          
+          return res.status(200).json({ 
+            ok: true, 
+            resumoPorSupervisor: resumoSup
+          });
+        } catch (error) {
+          console.error('[API CHAVES] Erro ao gerar resumo por supervisor:', error);
+          return res.status(500).json({ 
+            ok: false, 
+            msg: 'Erro ao gerar resumo por supervisor: ' + error.message 
+          });
+        }
+      }
+
       // ===== TESTE DE CONEXÃO =====
       case 'testarConexao': {
         console.log('[API COLETORES] Testando conexão...');
@@ -297,6 +487,10 @@ module.exports = async function handler(req, res) {
             'obterColetorStatus',
             'obterResumoColetores',
             'obterResumoPorSupervisor',
+            'salvarRegistroChave',
+            'obterChaveStatus',
+            'obterResumoChaves',
+            'obterResumoPorSupervisorChaves',
             'testarConexao'
           ]
         });
