@@ -47,7 +47,7 @@
             gap: 10px;
         }
         
-        .header-left .user-badge {
+        .user-badge {
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             padding: 8px 15px;
@@ -81,7 +81,6 @@
         .btn-primary:hover {
             background: #5a6fd8;
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
         }
         
         .btn-secondary {
@@ -267,15 +266,6 @@
             color: #155724;
         }
         
-        .priority-high {
-            color: #dc3545;
-            font-weight: bold;
-        }
-        
-        .priority-normal {
-            color: #666;
-        }
-        
         .action-btns {
             display: flex;
             gap: 5px;
@@ -297,15 +287,6 @@
         
         .btn-info:hover {
             background: #138496;
-        }
-        
-        .btn-edit {
-            background: #ffc107;
-            color: #333;
-        }
-        
-        .btn-edit:hover {
-            background: #e0a800;
         }
         
         .empty-state {
@@ -403,6 +384,55 @@
             color: #333;
         }
         
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            z-index: 9999;
+            animation: slideIn 0.3s ease-out;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .notification.success {
+            border-left: 4px solid #28a745;
+        }
+        
+        .notification.error {
+            border-left: 4px solid #dc3545;
+        }
+        
+        .notification.info {
+            border-left: 4px solid #17a2b8;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+        
         @media (max-width: 768px) {
             .header {
                 flex-direction: column;
@@ -462,17 +492,18 @@
                     <label>Tipo Loja</label>
                     <select id="filtroTipo">
                         <option value="">Todos</option>
-                        <option value="LJ COMPER">LJ COMPER</option>
-                        <option value="LJ FORT">LJ FORT</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Segmento</label>
+                    <select id="filtroSegmento">
+                        <option value="">Todos</option>
                     </select>
                 </div>
                 <div class="filter-group">
                     <label>Status Separação</label>
                     <select id="filtroStatus">
                         <option value="">Todos</option>
-                        <option value="Há iniciar separação">Há iniciar separação</option>
-                        <option value="Em separação">Em separação</option>
-                        <option value="Concluído">Concluído</option>
                     </select>
                 </div>
                 <div class="filter-group">
@@ -503,9 +534,9 @@
                 <div class="label">Concluídas</div>
             </div>
             <div class="stat-card">
-                <i class="fas fa-dollar-sign"></i>
-                <div class="value" id="valorTotal">R$ 0,00</div>
-                <div class="label">Valor Total</div>
+                <i class="fas fa-cube"></i>
+                <div class="value" id="volumeTotal">0 m³</div>
+                <div class="label">Volume Total</div>
             </div>
         </div>
 
@@ -525,16 +556,20 @@
                             <th>Descrição</th>
                             <th>Tipo Loja</th>
                             <th>Loja</th>
-                            <th>Volume</th>
-                            <th>Valor</th>
+                            <th>M³</th>
                             <th>Data Rot.</th>
                             <th>Status Sep.</th>
-                            <th>Status Conf.</th>
+                            <th>BOX</th>
                             <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody id="tabelaBody">
-                        <!-- Dados serão inseridos aqui -->
+                        <tr>
+                            <td colspan="9" class="empty-state">
+                                <i class="fas fa-spinner loading"></i>
+                                <p>Carregando dados...</p>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -555,18 +590,16 @@
     </div>
 
     <script>
-        const API_BASE = window.location.origin;
+        const API_URL = '/api/mapacarga';
         let dadosOriginais = [];
         let dadosFiltrados = [];
-
-        const API_URL = '/api/mapacarga';
 
         function carregarDadosUsuario() {
             const usuario = sessionStorage.getItem('usuario');
             
             if (!usuario) {
-                alert('Sessão expirada. Faça login novamente.');
-                window.location.href = '/';
+                mostrarNotificacao('Sessão expirada. Faça login novamente.', 'error');
+                setTimeout(() => window.location.href = '/', 2000);
                 return false;
             }
             
@@ -574,31 +607,80 @@
             return true;
         }
 
-        function carregarDados() {
-            // Por enquanto usa dados mockados
-            // TODO: Integrar com Google Sheets quando necessário
-            dadosOriginais = [...dadosMockados];
-            dadosFiltrados = [...dadosOriginais];
+        async function carregarDados() {
+            try {
+                console.log('[MAPA CARGA] Carregando dados...');
+                
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'listar', filtros: {} })
+                });
+                
+                const result = await response.json();
+                
+                console.log('[MAPA CARGA] Resposta:', result);
+                
+                if (result.ok && result.dados) {
+                    dadosOriginais = result.dados;
+                    dadosFiltrados = [...dadosOriginais];
+                    
+                    preencherFiltros();
+                    atualizarEstatisticas();
+                    renderizarTabela();
+                    
+                    mostrarNotificacao(`${dadosOriginais.length} cargas carregadas!`, 'success');
+                } else {
+                    throw new Error(result.msg || 'Erro ao carregar dados');
+                }
+            } catch (error) {
+                console.error('[MAPA CARGA] Erro:', error);
+                mostrarNotificacao('Erro ao carregar dados: ' + error.message, 'error');
+                
+                document.getElementById('tabelaBody').innerHTML = `
+                    <tr>
+                        <td colspan="9" class="empty-state">
+                            <i class="fas fa-exclamation-triangle" style="color: #dc3545;"></i>
+                            <p>Erro ao carregar dados</p>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        function preencherFiltros() {
+            // Tipo Loja
+            const tipos = [...new Set(dadosOriginais.map(d => d.tipoLoja).filter(Boolean))].sort();
+            document.getElementById('filtroTipo').innerHTML = '<option value="">Todos</option>' + 
+                tipos.map(t => `<option value="${t}">${t}</option>`).join('');
             
-            atualizarEstatisticas();
-            renderizarTabela();
+            // Segmento
+            const segmentos = [...new Set(dadosOriginais.map(d => d.segmento).filter(Boolean))].sort();
+            document.getElementById('filtroSegmento').innerHTML = '<option value="">Todos</option>' + 
+                segmentos.map(s => `<option value="${s}">${s}</option>`).join('');
+            
+            // Status
+            const status = [...new Set(dadosOriginais.map(d => d.statusSep).filter(Boolean))].sort();
+            document.getElementById('filtroStatus').innerHTML = '<option value="">Todos</option>' + 
+                status.map(st => `<option value="${st}">${st}</option>`).join('');
         }
 
         function atualizarEstatisticas() {
             const total = dadosFiltrados.length;
-            const pendentes = dadosFiltrados.filter(d => d.statusSep === "Há iniciar separação").length;
+            const pendentes = dadosFiltrados.filter(d => 
+                d.statusSep === "Há iniciar separação" || d.statusSep === "Em separação"
+            ).length;
             const concluidas = dadosFiltrados.filter(d => d.statusSep === "Concluído").length;
             
-            const valorTotal = dadosFiltrados.reduce((acc, d) => {
-                const valor = parseFloat(d.valor.replace('R$', '').replace('.', '').replace(',', '.').trim());
-                return acc + (isNaN(valor) ? 0 : valor);
+            const volumeTotal = dadosFiltrados.reduce((acc, d) => {
+                const m3 = parseFloat(d.m3) || 0;
+                return acc + m3;
             }, 0);
             
             document.getElementById('totalCargas').textContent = total;
             document.getElementById('pendentes').textContent = pendentes;
             document.getElementById('concluidas').textContent = concluidas;
-            document.getElementById('valorTotal').textContent = 
-                'R$ ' + valorTotal.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            document.getElementById('volumeTotal').textContent = volumeTotal.toFixed(2) + ' m³';
             document.getElementById('totalRegistros').textContent = total;
         }
 
@@ -614,7 +696,7 @@
             if (dadosFiltrados.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="10" class="empty-state">
+                        <td colspan="9" class="empty-state">
                             <i class="fas fa-inbox"></i>
                             <p>Nenhuma carga encontrada</p>
                         </td>
@@ -629,18 +711,14 @@
                     <td style="max-width: 300px; white-space: normal;">${item.descricao}</td>
                     <td>${item.tipoLoja}</td>
                     <td>${item.loja}</td>
-                    <td>${item.volume}</td>
-                    <td><strong>${item.valor}</strong></td>
+                    <td><strong>${typeof item.m3 === 'number' ? item.m3.toFixed(2) : item.m3}</strong></td>
                     <td>${item.dataRot}</td>
                     <td><span class="status-badge ${getStatusClass(item.statusSep)}">${item.statusSep}</span></td>
-                    <td><span class="status-badge ${getStatusClass(item.statusConf)}">${item.statusConf}</span></td>
+                    <td>${item.box || '-'}</td>
                     <td>
                         <div class="action-btns">
                             <button class="btn-icon btn-info" onclick="verDetalhes(${index})" title="Ver detalhes">
                                 <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="btn-icon btn-edit" onclick="editarCarga(${index})" title="Editar">
-                                <i class="fas fa-edit"></i>
                             </button>
                         </div>
                     </td>
@@ -651,20 +729,23 @@
         function aplicarFiltros() {
             const loja = document.getElementById('filtroLoja').value.toLowerCase();
             const tipo = document.getElementById('filtroTipo').value;
+            const segmento = document.getElementById('filtroSegmento').value;
             const status = document.getElementById('filtroStatus').value;
             const data = document.getElementById('filtroData').value;
             
             dadosFiltrados = dadosOriginais.filter(item => {
                 const matchLoja = !loja || item.loja.toLowerCase().includes(loja) || item.descricao.toLowerCase().includes(loja);
                 const matchTipo = !tipo || item.tipoLoja === tipo;
+                const matchSegmento = !segmento || item.segmento === segmento;
                 const matchStatus = !status || item.statusSep === status;
                 const matchData = !data || item.dataRot.includes(data.split('-').reverse().join('/'));
                 
-                return matchLoja && matchTipo && matchStatus && matchData;
+                return matchLoja && matchTipo && matchSegmento && matchStatus && matchData;
             });
             
             atualizarEstatisticas();
             renderizarTabela();
+            mostrarNotificacao(`${dadosFiltrados.length} cargas encontradas`, 'info');
         }
 
         function verDetalhes(index) {
@@ -694,24 +775,12 @@
                     <div class="detail-value">${item.loja}</div>
                 </div>
                 <div class="detail-item">
-                    <div class="detail-label">Empresa:</div>
-                    <div class="detail-value">${item.empresa}</div>
+                    <div class="detail-label">Volume (m³):</div>
+                    <div class="detail-value"><strong>${typeof item.m3 === 'number' ? item.m3.toFixed(2) : item.m3} m³</strong></div>
                 </div>
                 <div class="detail-item">
                     <div class="detail-label">Volume:</div>
                     <div class="detail-value">${item.volume}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Toneladas:</div>
-                    <div class="detail-value">${item.ton}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">M³:</div>
-                    <div class="detail-value">${item.m3}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Visita Pendente:</div>
-                    <div class="detail-value"><strong style="color: ${item.visitaPendente === 'Sim' ? '#dc3545' : '#28a745'}">${item.visitaPendente}</strong></div>
                 </div>
                 <div class="detail-item">
                     <div class="detail-label">Valor:</div>
@@ -729,10 +798,22 @@
                     <div class="detail-label">Status Conferência:</div>
                     <div class="detail-value"><span class="status-badge ${getStatusClass(item.statusConf)}">${item.statusConf}</span></div>
                 </div>
+                ${item.box ? `
+                <div class="detail-item">
+                    <div class="detail-label">BOX Alocado:</div>
+                    <div class="detail-value"><strong style="color: #667eea;">BOX ${item.box}</strong></div>
+                </div>
+                ` : ''}
                 ${item.prioridade ? `
                 <div class="detail-item">
                     <div class="detail-label">Prioridade:</div>
-                    <div class="detail-value"><span class="priority-high">${item.prioridade}</span></div>
+                    <div class="detail-value"><span style="color: #dc3545; font-weight: 600;">${item.prioridade}</span></div>
+                </div>
+                ` : ''}
+                ${item.visitasPendente ? `
+                <div class="detail-item">
+                    <div class="detail-label">Visitas Pendentes:</div>
+                    <div class="detail-value">${item.visitasPendente}</div>
                 </div>
                 ` : ''}
             `;
@@ -741,14 +822,7 @@
         }
 
         function fecharModal() {
-            const modal = document.getElementById('modalDetalhes');
-            modal.classList.remove('active');
-        }
-
-        function editarCarga(index) {
-            const item = dadosFiltrados[index];
-            alert(`Função de edição em desenvolvimento.\nCarga: ${item.carga}`);
-            // TODO: Implementar modal de edição
+            document.getElementById('modalDetalhes').classList.remove('active');
         }
 
         function atualizarDados() {
@@ -758,25 +832,42 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner loading"></i> Atualizando...';
             
-            // Simula carregamento
-            setTimeout(() => {
-                carregarDados();
+            carregarDados().then(() => {
                 btn.disabled = false;
                 btn.innerHTML = originalHTML;
-                
-                // Feedback visual
-                const stats = document.querySelector('.stats-panel');
-                stats.style.animation = 'pulse 0.5s';
-                setTimeout(() => {
-                    stats.style.animation = '';
-                }, 500);
-            }, 1000);
+            });
         }
 
         function voltarMenu() {
             if (confirm('Deseja voltar ao menu principal?')) {
                 window.location.href = '/menu';
             }
+        }
+
+        function mostrarNotificacao(mensagem, tipo = 'success') {
+            const cores = {
+                success: '#28a745',
+                error: '#dc3545',
+                warning: '#ffc107',
+                info: '#17a2b8'
+            };
+            
+            const icones = {
+                success: 'fa-check-circle',
+                error: 'fa-times-circle',
+                warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle'
+            };
+            
+            const notif = document.createElement('div');
+            notif.className = `notification ${tipo}`;
+            notif.innerHTML = `<i class="fas ${icones[tipo]}"></i> ${mensagem}`;
+            document.body.appendChild(notif);
+            
+            setTimeout(() => {
+                notif.style.animation = 'slideOut 0.3s ease-in';
+                setTimeout(() => notif.remove(), 300);
+            }, 3000);
         }
 
         // Fechar modal ao clicar fora
@@ -795,23 +886,12 @@
 
         // Inicialização
         window.onload = function() {
-            console.log('Mapa de Carga carregando...');
+            console.log('[MAPA CARGA] Inicializando...');
             
             if (carregarDadosUsuario()) {
                 carregarDados();
-                console.log('Mapa de Carga carregado com sucesso!');
             }
         };
-
-        // Animação de pulse
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes pulse {
-                0%, 100% { transform: scale(1); }
-                50% { transform: scale(1.02); }
-            }
-        `;
-        document.head.appendChild(style);
     </script>
 </body>
 </html>
