@@ -382,7 +382,24 @@
                     <i class="fas fa-arrow-right"></i> Abrir Resumo
                 </button>
             </div>
-
+            <!-- Resumo de Equipamentos - NOVO -->
+            <div class="tool-card" onclick="abrirFerramenta('resumo-equipamentos')">
+                <span class="badge badge-new">Novo</span>
+                <div class="tool-icon" style="background: linear-gradient(135deg, #ff9a9e, #fecfef);">
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                <h3>Resumo de Equipamentos</h3>
+                <p>Análise completa de coletores e chaves por função e setor com controle de atrasos.</p>
+                <ul class="tool-features">
+                    <li><i class="fas fa-check"></i> Resumo por função e setor</li>
+                    <li><i class="fas fa-check"></i> Detecção automática de atrasos</li>
+                    <li><i class="fas fa-check"></i> Controle em tempo real (GMT-4)</li>
+                    <li><i class="fas fa-check"></i> Alertas de equipamentos não devolvidos</li>
+                </ul>
+                <button class="btn btn-primary">
+                    <i class="fas fa-arrow-right"></i> Abrir Resumo
+                </button>
+            </div>
             <!-- Mapa de Carga -->
             <div class="tool-card" onclick="abrirFerramenta('mapacarga')">
                 <span class="badge badge-popular">Logística</span>
@@ -521,6 +538,7 @@
                 'resumo-base': '/resumo-base',
                 'mapacarga': '/mapacarga',
                 'alocacaobox': '/alocacaobox',
+                'resumo-equipamentos': '/resumo-equipamentos', 
                 'controle-coletores': '/controle-coletores'
             };
             
@@ -531,7 +549,8 @@
                 'resumo-base': 'Abrindo Resumo Base...',
                 'mapacarga': 'Abrindo Mapa de Carga...',
                 'alocacaobox': 'Abrindo Alocação BOX...',
-                'controle-coletores': 'Abrindo Gestão de controle de Equipamentos...'
+                'controle-coletores': 'Abrindo Gestão de controle de Equipamentos...',
+                'resumo-equipamentos': 'Abrindo Resumo de Equipamentos...'
             };
 
             const nomesFerramenta = {
@@ -541,7 +560,8 @@
                 'resumo-base': 'Resumo Base',
                 'mapacarga': 'Mapa de Carga',
                 'alocacaobox': 'Alocação BOX',
-                'controle-coletores': 'Controle de Equipamentos'
+                'controle-coletores': 'Controle de Equipamentos',
+                'resumo-equipamentos': 'Resumo de Equipamentos'
             };
             
             if (!destinos[ferramenta]) {
