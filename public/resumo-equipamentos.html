@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resumo de Equipamentos - Gestão Perlog</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .header h1 {
+            color: #667eea;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .clock-display {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .btn-success { background: #28a745; color: white; }
+        .btn-info { background: #17a2b8; color: white; }
+        .btn-warning { background: #ffc107; color: #212529; }
+        .btn-secondary { background: #6c757d; color: white; }
+        
+        .tabs {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+        }
+        
+        .tab-btn {
+            padding: 12px 24px;
+            border: none;
+            background: transparent;
+            color: #6c757d;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab-btn:hover {
+            color: #667eea;
+        }
+        
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+        
+        .stat-card h3 {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-card .valor {
+            font-size: 36px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+        
+        .stat-card.coletores .valor { color: #17a2b8; }
+        .stat-card.chaves .valor { color: #ffc107; }
+        .stat-card.atrasados .valor { color: #dc3545; }
+        .stat-card.ok .valor { color: #28a745; }
+        
+        .secao {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .secao-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .secao-header h2 {
+            color: #667eea;
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-primary { background: #e3f2fd; color: #1976d2; }
+        .badge-danger { background: #f8d7da; color: #721c24; }
+        .badge-warning { background: #fff3cd; color: #856404; }
+        .badge-success { background: #d4edda; color: #155724; }
+        
+        .tabela-container {
+            overflow-x: auto;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+            max-height: 600px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        tbody tr.atrasado {
+            background-color: #fff3cd !important;
+        }
+        
+        tbody tr.muito-atrasado {
+            background-color: #f8d7da !important;
+        }
+        
+        .status-icon {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-icon.ok {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-icon.atrasado {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-icon.muito-atrasado {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .colab-toggle {
+            cursor: pointer;
+            color: #667eea;
+            font-size: 12px;
+            text-decoration: underline;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .colab-toggle:hover {
+            color: #5a6fd8;
+        }
+        
+        .colaboradores-lista {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+        
+        .colaboradores-lista.show {
+            display: block;
+        }
+        
+        .colaborador-item {
+            padding: 8px;
+            border-bottom: 1px solid #e9ecef;
+            display: grid;
+            grid-template-columns: 150px 80px 100px 120px 1fr;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .colaborador-item:last-child {
+            border-bottom: none;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 80px 20px;
+            color: white;
+        }
+        
+        .loading i {
+            font-size: 64px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .status-message {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .status-success { background: #d4edda; color: #155724; }
+        .status-error { background: #f8d7da; color: #721c24; }
+        .status-info { background: #d1ecf1; color: #0c5460; }
+        
+        @media (max-width: 768px) {
+            .header { flex-direction: column; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .colaborador-item { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <i class="fas fa-chart-bar"></i>
+                Resumo de Equipamentos
+            </h1>
+            <div class="clock-display" id="clockDisplay">
+                <i class="fas fa-clock"></i>
+                <span>Carregando...</span>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-success" onclick="carregarDados()">
+                    <i class="fas fa-sync-alt"></i> Atualizar
+                </button>
+                <button class="btn btn-info" onclick="exportarCSV()">
+                    <i class="fas fa-file-csv"></i> Exportar
+                </button>
+                <button class="btn btn-warning" onclick="window.print()">
+                    <i class="fas fa-print"></i> Imprimir
+                </button>
+                <button class="btn btn-secondary" onclick="window.location.href='/controle-coletores'">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </button>
+            </div>
+        </div>
+
+        <div id="statusDiv"></div>
+
+        <div id="loadingDiv" class="loading">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p style="margin-top: 20px; font-size: 18px;">Carregando dados...</p>
+        </div>
+
+        <div id="contentDiv" style="display: none;">
+            <div class="tabs">
+                <div class="tab-buttons">
+                    <button class="tab-btn active" onclick="mudarTab('coletores')">
+                        <i class="fas fa-mobile-alt"></i> Coletores
+                    </button>
+                    <button class="tab-btn" onclick="mudarTab('chaves')">
+                        <i class="fas fa-key"></i> Chaves
+                    </button>
+                    <button class="tab-btn" onclick="mudarTab('atrasados')">
+                        <i class="fas fa-exclamation-triangle"></i> Atrasados
+                    </button>
+                </div>
+
+                <!-- Tab Coletores -->
+                <div id="tab-coletores" class="tab-content active">
+                    <div class="stats-grid" id="statsColetores"></div>
+                    
+                    <div class="secao">
+                        <div class="secao-header">
+                            <h2><i class="fas fa-briefcase"></i> Por Função</h2>
+                            <span class="badge badge-primary" id="totalFuncoesColetores">0 funções</span>
+                        </div>
+                        <div class="tabela-container">
+                            <table id="tabelaFuncoesColetores">
+                                <thead>
+                                    <tr>
+                                        <th>Função</th>
+                                        <th>Total</th>
+                                        <th>Em Uso</th>
+                                        <th>No Prazo</th>
+                                        <th>Atrasados</th>
+                                        <th>% Atraso</th>
+                                        <th>Colaboradores</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="secao">
+                        <div class="secao-header">
+                            <h2><i class="fas fa-building"></i> Por Setor</h2>
+                            <span class="badge badge-primary" id="totalSetoresColetores">0 setores</span>
+                        </div>
+                        <div class="tabela-container">
+                            <table id="tabelaSetoresColetores">
+                                <thead>
+                                    <tr>
+                                        <th>Setor (Aba)</th>
+                                        <th>Supervisor</th>
+                                        <th>Turno</th>
+                                        <th>Horário</th>
+                                        <th>Total</th>
+                                        <th>Em Uso</th>
+                                        <th>Atrasados</th>
+                                        <th>Colaboradores</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Chaves -->
+                <div id="tab-chaves" class="tab-content">
+                    <div class="stats-grid" id="statsChaves"></div>
+                    
+                    <div class="secao">
+                        <div class="secao-header">
+                            <h2><i class="fas fa-briefcase"></i> Por Função</h2>
+                            <span class="badge badge-primary" id="totalFuncoesChaves">0 funções</span>
+                        </div>
+                        <div class="tabela-container">
+                            <table id="tabelaFuncoesChaves">
+                                <thead>
+                                    <tr>
+                                        <th>Função</th>
+                                        <th>Total</th>
+                                        <th>Em Uso</th>
+                                        <th>No Prazo</th>
+                                        <th>Atrasados</th>
+                                        <th>% Atraso</th>
+                                        <th>Colaboradores</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="secao">
+                        <div class="secao-header">
+                            <h2><i class="fas fa-building"></i> Por Setor</h2>
+                            <span class="badge badge-primary" id="totalSetoresChaves">0 setores</span>
+                        </div>
+                        <div class="tabela-container">
+                            <table id="tabelaSetoresChaves">
+                                <thead>
+                                    <tr>
+                                        <th>Setor (Aba)</th>
+                                        <th>Supervisor</th>
+                                        <th>Turno</th>
+                                        <th>Horário</th>
+                                        <th>Total</th>
+                                        <th>Em Uso</th>
+                                        <th>Atrasados</th>
+                                        <th>Colaboradores</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Atrasados -->
+                <div id="tab-atrasados" class="tab-content">
+                    <div class="stats-grid" id="statsAtrasados"></div>
+                    
+                    <div class="secao">
+                        <div class="secao-header">
+                            <h2><i class="fas fa-exclamation-triangle"></i> Coletores Atrasados</h2>
+                            <span class="badge badge-danger" id="totalColetoresAtrasados">0 atrasados</span>
+                        </div>
+                        <div class="tabela-container">
+                            <table id="tabelaColetoresAtrasados">
+                                <thead>
+                                    <tr>
+                                        <th>Colaborador</th>
+                                        <th>Chapa</th>
+                                        <th>Função</th>
+                                        <th>Setor</th>
+                                        <th>Turno</th>
+                                        <th>Equipamento</th>
+                                        <th>Retirada</th>
+                                        <th>Fim Turno</th>
+                                        <th>Atraso</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="secao">
+                        <div class="secao-header">
+                            <h2><i class="fas fa-exclamation-triangle"></i> Chaves Atrasadas</h2>
+                            <span class="badge badge-danger" id="totalChavesAtrasadas">0 atrasadas</span>
+                        </div>
+                        <div class="tabela-container">
+                            <table id="tabelaChavesAtrasadas">
+                                <thead>
+                                    <tr>
+                                        <th>Colaborador</th>
+                                        <th>Chapa</th>
+                                        <th>Função</th>
+                                        <th>Setor</th>
+                                        <th>Turno</th>
+                                        <th>Equipamento</th>
+                                        <th>Retirada</th>
+                                        <th>Fim Turno</th>
+                                        <th>Atraso</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.origin + '/api/coletores';
+        let dadosColetores = [];
+        let dadosChaves = [];
+        let dadosTurnos = [];
+        let tabAtual = 'coletores';
+
+        function showStatus(msg, type = 'info') {
+            const div = document.getElementById('statusDiv');
+            const icon = type === 'success' ? 'check-circle' : 
+                         type === 'error' ? 'exclamation-triangle' : 'info-circle';
+            
+            div.innerHTML = `
+                <div class="status-message status-${type}">
+                    <i class="fas fa-${icon}"></i>
+                    <span>${msg}</span>
+                </div>
+            `;
+            
+            setTimeout(() => div.innerHTML = '', 5000);
+        }
+
+        function atualizarRelogio() {
+            const agora = new Date();
+            const opcoes = { 
+                timeZone: 'America/Manaus',
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit',
+                hour12: false
+            };
+            const horaFormatada = agora.toLocaleTimeString('pt-BR', opcoes);
+            const dataFormatada = agora.toLocaleDateString('pt-BR');
+            
+            document.getElementById('clockDisplay').innerHTML = `
+                <i class="fas fa-clock"></i>
+                <span>${dataFormatada} - ${horaFormatada} (GMT-4)</span>
+            `;
+        }
+
+        function mudarTab(tab) {
+            tabAtual = tab;
+            
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(`tab-${tab}`).classList.add('active');
+        }
+
+        function verificarAtraso(supervisor, turno, horaRetirada) {
+            const turnoInfo = dadosTurnos.find(t => 
+                t.supervisor === supervisor || t.aba === supervisor
+            );
+            
+            if (!turnoInfo || !turnoInfo.fim) {
+                return { atrasado: false, atrasoMinutos: 0, fimTurno: 'N/A' };
+            }
+
+            const agora = new Date();
+            const [horaFim, minutoFim] = turnoInfo.fim.split(':').map(Number);
+            
+            const fimTurno = new Date(agora);
+            fimTurno.setHours(horaFim, minutoFim, 0, 0);
+            
+            if (horaFim < 12 && agora.getHours() >= 12) {
+                fimTurno.setDate(fimTurno.getDate() + 1);
+            }
+            
+            const atrasado = agora > fimTurno;
+            const atrasoMinutos = atrasado ? Math.floor((agora - fimTurno) / 60000) : 0;
+            
+            return {
+                atrasado,
+                atrasoMinutos,
+                fimTurno: turnoInfo.fim,
+                turnoNome: turnoInfo.turno
+            };
+        }
+
+        function formatarAtraso(minutos) {
+            if (minutos < 60) return `${minutos}min`;
+            const horas = Math.floor(minutos / 60);
+            const mins = minutos % 60;
+            return `${horas}h ${mins}min`;
+        }
+
+        async function carregarDados() {
+            try {
+                document.getElementById('loadingDiv').style.display = 'block';
+                document.getElementById('contentDiv').style.display = 'none';
+
+                console.log('[RESUMO] Carregando dados da Base...');
+                const resBase = await fetch('/api/producao/resumo-base?modo=dados');
+                const resultBase = await resBase.json();
+                
+                if (!resultBase.ok) throw new Error('Erro ao carregar Base');
+                const dadosBase = resultBase.dados || [];
+                console.log(`[RESUMO] Base: ${dadosBase.length} registros`);
+
+                console.log('[RESUMO] Carregando turnos...');
+                const resTurnos = await fetch('/api/producao/resumo-base?modo=dados');
+                const resultTurnos = await resTurnos.json();
+                
+                if (resultTurnos.ok) {
+                    dadosTurnos = [
+                        {turno: 'Turno A', aba: 'Crossdocking', supervisor: 'carlos.zanin', inicio: '06:00', fim: '15:00'},
+                        {turno: 'Turno A', aba: 'Expedição TA-1', supervisor: 'gislaine.arruda', inicio: '06:00', fim: '15:00'},
+                        {turno: 'Turno A', aba: 'Expedição TA-2', supervisor: 'gabriel.morais', inicio: '06:00', fim: '15:00'},
+                        {turno: 'Turno A', aba: 'Expedição TB - Atacado', supervisor: 'ivanilson.souza', inicio: '06:00', fim: '15:00'},
+                        {turno: 'Turno B', aba: 'Expedição TB - Varejo', supervisor: 'anderson.ribeiro', inicio: '13:30', fim: '23:00'},
+                        {turno: 'Turno B', aba: 'FLV TA', supervisor: 'eder.albuquerque', inicio: '13:30', fim: '23:00'},
+                        {turno: 'Turno A', aba: 'FLV TB', supervisor: 'eder.albuquerque', inicio: '06:00', fim: '15:00'},
+                        {turno: 'Turno B', aba: 'Gestão', supervisor: 'andrey.rodrigues', inicio: '13:30', fim: '23:00'},
+                        {turno: 'Turno C', aba: 'Operação TC', supervisor: 'wanderson.andrade', inicio: '21:00', fim: '07:00'},
+                        {turno: 'Turno A', aba: 'PCP_Gestão T1', supervisor: 'kenerson.cruz', inicio: '06:00', fim: '15:00'},
+                        {turno: 'Turno B', aba: 'PCP_Gestão T2', supervisor: 'kenerson.cruz', inicio: '13:30', fim: '23:00'},
+                        {turno: 'Turno A', aba: 'Recebimento TA', supervisor: 'pablo.correa', inicio: '06:00', fim: '15:00'},
+                        {turno: 'Turno B', aba: 'Recebimento TB', supervisor: 'andre.centurion', inicio: '13:30', fim: '23:00'},
+                        {turno: 'Turno A', aba: 'Separação TA-1', supervisor: 'Eduardo.araujo', inicio: '06:00', fim: '15:00'},
+                        {turno: 'Turno A', aba: 'Separação TA-2', supervisor: 'geison.santos', inicio: '06:00', fim: '15:00'},
+                        {turno: 'Turno A', aba: 'Separação TA-3', supervisor: 'carla.brito', inicio: '06:00', fim: '15:00'},
+                        {turno: 'Turno B', aba: 'Separação TB-1', supervisor: 'jefferson.alexandre', inicio: '13:30', fim: '23:00'},
+                        {turno: 'Turno B', aba: 'WMS TA', supervisor: 'almir.junior', inicio: '13:30', fim: '23:00'},
+                        {turno: 'Turno B', aba: 'WMS TB', supervisor: 'almir.junior', inicio: '13:30', fim: '23:00'}
+                    ];
+                }
+                console.log(`[RESUMO] Turnos: ${dadosTurnos.length} registros`);
+
+                console.log('[RESUMO] Carregando coletores...');
+                const resColetores = await fetch('/api/coletores?action=obterColetorStatus');
+                const resultColetores = await resColetores.json();
+                
+                if (resultColetores.ok) {
+                    const statusMap = resultColetores.statusMap || {};
+                    dadosColetores = Object.entries(statusMap)
+                        .filter(([num, info]) => info.tipo === 'Retirada')
+                        .map(([num, info]) => {
+                            const baseInfo = dadosBase.find(d => d.matricula === info.chapa) || {};
+                            const atraso = verificarAtraso(info.supervisor, info.turno, info.hora);
+                            
+                            return {
+                                numero: num,
+                                chapa: info.chapa,
+                                nome: info.nome,
+                                funcao: info.funcao || baseInfo.funcao || 'N/A',
+                                supervisor: info.supervisor,
+                                turno: info.turno,
+                                situacao: info.situacao,
+                                data: info.data,
+                                hora: info.hora,
+                                setor: baseInfo.aba || info.supervisor,
+                                ...atraso
+                            };
+                        });
+                }
+                console.log(`[RESUMO] Coletores: ${dadosColetores.length} em uso`);
+
+                console.log('[RESUMO] Carregando chaves...');
+                const resChaves = await fetch('/api/coletores?action=obterChaveStatus');
+                const resultChaves = await resChaves.json();
+                
+                if (resultChaves.ok) {
+                    const statusMap = resultChaves.statusMap || {};
+                    dadosChaves = Object.entries(statusMap)
+                        .filter(([num, info]) => info.tipo === 'Retirada')
+                        .map(([num, info]) => {
+                            const baseInfo = dadosBase.find(d => d.matricula === info.chapa) || {};
+                            const atraso = verificarAtraso(info.supervisor, info.turno, info.hora);
+                            
+                            return {
+                                numero: num,
+                                chapa: info.chapa,
+                                nome: info.nome,
+                                funcao: info.funcao || baseInfo.funcao || 'N/A',
+                                supervisor: info.supervisor,
+                                turno: info.turno,
+                                situacao: info.situacao,
+                                data: info.data,
+                                hora: info.hora,
+                                setor: baseInfo.aba || info.supervisor,
+                                ...atraso
+                            };
+                        });
+                }
+                console.log(`[RESUMO] Chaves: ${dadosChaves.length} em uso`);
+
+                processarDados();
+                
+                document.getElementById('loadingDiv').style.display = 'none';
+                document.getElementById('contentDiv').style.display = 'block';
+                
+                showStatus('Dados carregados com sucesso!', 'success');
+            } catch (error) {
+                console.error('[RESUMO] Erro:', error);
+                showStatus('Erro ao carregar dados: ' + error.message, 'error');
+                document.getElementById('loadingDiv').style.display = 'none';
+            }
+        }
+
+        function processarDados() {
+            // Processar Coletores
+            processarColetores();
+            
+            // Processar Chaves
+            processarChaves();
+            
+            // Processar Atrasados
+            processarAtrasados();
+        }
+
+        function processarColetores() {
+            // Stats gerais
+            const total = dadosColetores.length;
+            const atrasados = dadosColetores.filter(d => d.atrasado).length;
+            const noPrazo = total - atrasados;
+            const percAtraso = total > 0 ? ((atrasados / total) * 100).toFixed(1) : 0;
+
+            document.getElementById('statsColetores').innerHTML = `
+                <div class="stat-card coletores">
+                    <h3>Total em Uso</h3>
+                    <div class="valor">${total}</div>
+                    <small>coletores ativos</small>
+                </div>
+                <div class="stat-card ok">
+                    <h3>No Prazo</h3>
+                    <div class="valor">${noPrazo}</div>
+                    <small>dentro do horário</small>
+                </div>
+                <div class="stat-card atrasados">
+                    <h3>Atrasados</h3>
+                    <div class="valor">${atrasados}</div>
+                    <small>${percAtraso}% do total</small>
+                </div>
+            `;
+
+            // Agrupar por função
+            const porFuncao = {};
+            dadosColetores.forEach(d => {
+                if (!porFuncao[d.funcao]) {
+                    porFuncao[d.funcao] = { 
+                        total: 0, 
+                        atrasados: 0, 
+                        colaboradores: [] 
+                    };
+                }
+                porFuncao[d.funcao].total++;
+                if (d.atrasado) porFuncao[d.funcao].atrasados++;
+                porFuncao[d.funcao].colaboradores.push(d);
+            });
+
+            let htmlFuncoes = '';
+            Object.keys(porFuncao).sort().forEach((funcao, idx) => {
+                const dados = porFuncao[funcao];
+                const noPrazo = dados.total - dados.atrasados;
+                const perc = dados.total > 0 ? ((dados.atrasados / dados.total) * 100).toFixed(1) : 0;
+                
+                htmlFuncoes += `
+                    <tr>
+                        <td><strong>${funcao}</strong></td>
+                        <td>${dados.total}</td>
+                        <td>${dados.total}</td>
+                        <td>${noPrazo}</td>
+                        <td><span class="badge badge-danger">${dados.atrasados}</span></td>
+                        <td>${perc}%</td>
+                        <td>
+                            <span class="colab-toggle" onclick="toggleColaboradores('coletores-funcao-${idx}')">
+                                Ver ${dados.colaboradores.length} <i class="fas fa-chevron-down"></i>
+                            </span>
+                            <div class="colaboradores-lista" id="coletores-funcao-${idx}">
+                                ${dados.colaboradores.map(c => `
+                                    <div class="colaborador-item">
+                                        <span><strong>${c.nome}</strong></span>
+                                        <span>Chapa: ${c.chapa}</span>
+                                        <span>Coletor: ${c.numero}</span>
+                                        <span>Retirada: ${c.hora}</span>
+                                        <span class="status-icon ${c.atrasado ? (c.atrasoMinutos > 60 ? 'muito-atrasado' : 'atrasado') : 'ok'}">
+                                            <i class="fas fa-${c.atrasado ? 'exclamation-triangle' : 'check'}"></i>
+                                            ${c.atrasado ? 'Atrasado ' + formatarAtraso(c.atrasoMinutos) : 'No prazo'}
+                                        </span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            document.querySelector('#tabelaFuncoesColetores tbody').innerHTML = htmlFuncoes;
+            document.getElementById('totalFuncoesColetores').textContent = `${Object.keys(porFuncao).length} funções`;
+
+            // Agrupar por setor
+            const porSetor = {};
+            dadosColetores.forEach(d => {
+                if (!porSetor[d.setor]) {
+                    porSetor[d.setor] = { 
+                        total: 0, 
+                        atrasados: 0, 
+                        colaboradores: [],
+                        supervisor: d.supervisor,
+                        turno: d.turnoNome || 'N/A',
+                        horario: d.fimTurno || 'N/A'
+                    };
+                }
+                porSetor[d.setor].total++;
+                if (d.atrasado) porSetor[d.setor].atrasados++;
+                porSetor[d.setor].colaboradores.push(d);
+            });
+
+            let htmlSetores = '';
+            Object.keys(porSetor).sort().forEach((setor, idx) => {
+                const dados = porSetor[setor];
+                const turnoInfo = dadosTurnos.find(t => t.aba === setor || t.supervisor === dados.supervisor);
+                const horario = turnoInfo ? `${turnoInfo.inicio} - ${turnoInfo.fim}` : 'N/A';
+                
+                htmlSetores += `
+                    <tr>
+                        <td><strong>${setor}</strong></td>
+                        <td>${dados.supervisor}</td>
+                        <td>${dados.turno}</td>
+                        <td>${horario}</td>
+                        <td>${dados.total}</td>
+                        <td>${dados.total}</td>
+                        <td><span class="badge badge-danger">${dados.atrasados}</span></td>
+                        <td>
+                            <span class="colab-toggle" onclick="toggleColaboradores('coletores-setor-${idx}')">
+                                Ver ${dados.colaboradores.length} <i class="fas fa-chevron-down"></i>
+                            </span>
+                            <div class="colaboradores-lista" id="coletores-setor-${idx}">
+                                ${dados.colaboradores.map(c => `
+                                    <div class="colaborador-item">
+                                        <span><strong>${c.nome}</strong></span>
+                                        <span>Chapa: ${c.chapa}</span>
+                                        <span>Função: ${c.funcao}</span>
+                                        <span>Coletor: ${c.numero}</span>
+                                        <span class="status-icon ${c.atrasado ? (c.atrasoMinutos > 60 ? 'muito-atrasado' : 'atrasado') : 'ok'}">
+                                            <i class="fas fa-${c.atrasado ? 'exclamation-triangle' : 'check'}"></i>
+                                            ${c.atrasado ? 'Atrasado ' + formatarAtraso(c.atrasoMinutos) : 'No prazo'}
+                                        </span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            document.querySelector('#tabelaSetoresColetores tbody').innerHTML = htmlSetores;
+            document.getElementById('totalSetoresColetores').textContent = `${Object.keys(porSetor).length} setores`;
+        }
+
+        function processarChaves() {
+            // Stats gerais
+            const total = dadosChaves.length;
+            const atrasados = dadosChaves.filter(d => d.atrasado).length;
+            const noPrazo = total - atrasados;
+            const percAtraso = total > 0 ? ((atrasados / total) * 100).toFixed(1) : 0;
+
+            document.getElementById('statsChaves').innerHTML = `
+                <div class="stat-card chaves">
+                    <h3>Total em Uso</h3>
+                    <div class="valor">${total}</div>
+                    <small>chaves ativas</small>
+                </div>
+                <div class="stat-card ok">
+                    <h3>No Prazo</h3>
+                    <div class="valor">${noPrazo}</div>
+                    <small>dentro do horário</small>
+                </div>
+                <div class="stat-card atrasados">
+                    <h3>Atrasadas</h3>
+                    <div class="valor">${atrasados}</div>
+                    <small>${percAtraso}% do total</small>
+                </div>
+            `;
+
+            // Agrupar por função
+            const porFuncao = {};
+            dadosChaves.forEach(d => {
+                if (!porFuncao[d.funcao]) {
+                    porFuncao[d.funcao] = { 
+                        total: 0, 
+                        atrasados: 0, 
+                        colaboradores: [] 
+                    };
+                }
+                porFuncao[d.funcao].total++;
+                if (d.atrasado) porFuncao[d.funcao].atrasados++;
+                porFuncao[d.funcao].colaboradores.push(d);
+            });
+
+            let htmlFuncoes = '';
+            Object.keys(porFuncao).sort().forEach((funcao, idx) => {
+                const dados = porFuncao[funcao];
+                const noPrazo = dados.total - dados.atrasados;
+                const perc = dados.total > 0 ? ((dados.atrasados / dados.total) * 100).toFixed(1) : 0;
+                
+                htmlFuncoes += `
+                    <tr>
+                        <td><strong>${funcao}</strong></td>
+                        <td>${dados.total}</td>
+                        <td>${dados.total}</td>
+                        <td>${noPrazo}</td>
+                        <td><span class="badge badge-danger">${dados.atrasados}</span></td>
+                        <td>${perc}%</td>
+                        <td>
+                            <span class="colab-toggle" onclick="toggleColaboradores('chaves-funcao-${idx}')">
+                                Ver ${dados.colaboradores.length} <i class="fas fa-chevron-down"></i>
+                            </span>
+                            <div class="colaboradores-lista" id="chaves-funcao-${idx}">
+                                ${dados.colaboradores.map(c => `
+                                    <div class="colaborador-item">
+                                        <span><strong>${c.nome}</strong></span>
+                                        <span>Chapa: ${c.chapa}</span>
+                                        <span>Chave: ${c.numero}</span>
+                                        <span>Retirada: ${c.hora}</span>
+                                        <span class="status-icon ${c.atrasado ? (c.atrasoMinutos > 60 ? 'muito-atrasado' : 'atrasado') : 'ok'}">
+                                            <i class="fas fa-${c.atrasado ? 'exclamation-triangle' : 'check'}"></i>
+                                            ${c.atrasado ? 'Atrasado ' + formatarAtraso(c.atrasoMinutos) : 'No prazo'}
+                                        </span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            document.querySelector('#tabelaFuncoesChaves tbody').innerHTML = htmlFuncoes;
+            document.getElementById('totalFuncoesChaves').textContent = `${Object.keys(porFuncao).length} funções`;
+
+            // Agrupar por setor
+            const porSetor = {};
+            dadosChaves.forEach(d => {
+                if (!porSetor[d.setor]) {
+                    porSetor[d.setor] = { 
+                        total: 0, 
+                        atrasados: 0, 
+                        colaboradores: [],
+                        supervisor: d.supervisor,
+                        turno: d.turnoNome || 'N/A',
+                        horario: d.fimTurno || 'N/A'
+                    };
+                }
+                porSetor[d.setor].total++;
+                if (d.atrasado) porSetor[d.setor].atrasados++;
+                porSetor[d.setor].colaboradores.push(d);
+            });
+
+            let htmlSetores = '';
+            Object.keys(porSetor).sort().forEach((setor, idx) => {
+                const dados = porSetor[setor];
+                const turnoInfo = dadosTurnos.find(t => t.aba === setor || t.supervisor === dados.supervisor);
+                const horario = turnoInfo ? `${turnoInfo.inicio} - ${turnoInfo.fim}` : 'N/A';
+                
+                htmlSetores += `
+                    <tr>
+                        <td><strong>${setor}</strong></td>
+                        <td>${dados.supervisor}</td>
+                        <td>${dados.turno}</td>
+                        <td>${horario}</td>
+                        <td>${dados.total}</td>
+                        <td>${dados.total}</td>
+                        <td><span class="badge badge-danger">${dados.atrasados}</span></td>
+                        <td>
+                            <span class="colab-toggle" onclick="toggleColaboradores('chaves-setor-${idx}')">
+                                Ver ${dados.colaboradores.length} <i class="fas fa-chevron-down"></i>
+                            </span>
+                            <div class="colaboradores-lista" id="chaves-setor-${idx}">
+                                ${dados.colaboradores.map(c => `
+                                    <div class="colaborador-item">
+                                        <span><strong>${c.nome}</strong></span>
+                                        <span>Chapa: ${c.chapa}</span>
+                                        <span>Função: ${c.funcao}</span>
+                                        <span>Chave: ${c.numero}</span>
+                                        <span class="status-icon ${c.atrasado ? (c.atrasoMinutos > 60 ? 'muito-atrasado' : 'atrasado') : 'ok'}">
+                                            <i class="fas fa-${c.atrasado ? 'exclamation-triangle' : 'check'}"></i>
+                                            ${c.atrasado ? 'Atrasado ' + formatarAtraso(c.atrasoMinutos) : 'No prazo'}
+                                        </span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            document.querySelector('#tabelaSetoresChaves tbody').innerHTML = htmlSetores;
+            document.getElementById('totalSetoresChaves').textContent = `${Object.keys(porSetor).length} setores`;
+        }
+
+        function processarAtrasados() {
+            const coletoresAtrasados = dadosColetores.filter(d => d.atrasado);
+            const chavesAtrasadas = dadosChaves.filter(d => d.atrasado);
+            
+            const totalAtrasados = coletoresAtrasados.length + chavesAtrasadas.length;
+            const muitoAtrasados = [...coletoresAtrasados, ...chavesAtrasadas]
+                .filter(d => d.atrasoMinutos > 60).length;
+
+            document.getElementById('statsAtrasados').innerHTML = `
+                <div class="stat-card atrasados">
+                    <h3>Total Atrasados</h3>
+                    <div class="valor">${totalAtrasados}</div>
+                    <small>equipamentos não devolvidos</small>
+                </div>
+                <div class="stat-card coletores">
+                    <h3>Coletores</h3>
+                    <div class="valor">${coletoresAtrasados.length}</div>
+                    <small>atrasados</small>
+                </div>
+                <div class="stat-card chaves">
+                    <h3>Chaves</h3>
+                    <div class="valor">${chavesAtrasadas.length}</div>
+                    <small>atrasadas</small>
+                </div>
+                <div class="stat-card muito-atrasado" style="color: #dc3545;">
+                    <h3>Muito Atrasado</h3>
+                    <div class="valor" style="color: #dc3545;">${muitoAtrasados}</div>
+                    <small>mais de 1 hora</small>
+                </div>
+            `;
+
+            // Tabela de coletores atrasados
+            let htmlColetores = coletoresAtrasados
+                .sort((a, b) => b.atrasoMinutos - a.atrasoMinutos)
+                .map(c => `
+                    <tr class="${c.atrasoMinutos > 60 ? 'muito-atrasado' : 'atrasado'}">
+                        <td><strong>${c.nome}</strong></td>
+                        <td>${c.chapa}</td>
+                        <td>${c.funcao}</td>
+                        <td>${c.setor}</td>
+                        <td>${c.turnoNome || 'N/A'}</td>
+                        <td>Coletor ${c.numero}</td>
+                        <td>${c.hora}</td>
+                        <td>${c.fimTurno}</td>
+                        <td><strong>${formatarAtraso(c.atrasoMinutos)}</strong></td>
+                        <td>
+                            <span class="status-icon ${c.atrasoMinutos > 60 ? 'muito-atrasado' : 'atrasado'}">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                ${c.atrasoMinutos > 60 ? 'Muito Atrasado' : 'Atrasado'}
+                            </span>
+                        </td>
+                    </tr>
+                `).join('');
+
+            document.querySelector('#tabelaColetoresAtrasados tbody').innerHTML = 
+                htmlColetores || '<tr><td colspan="10" style="text-align: center; color: #28a745;">✓ Nenhum coletor atrasado</td></tr>';
+            document.getElementById('totalColetoresAtrasados').textContent = `${coletoresAtrasados.length} atrasados`;
+
+            // Tabela de chaves atrasadas
+            let htmlChaves = chavesAtrasadas
+                .sort((a, b) => b.atrasoMinutos - a.atrasoMinutos)
+                .map(c => `
+                    <tr class="${c.atrasoMinutos > 60 ? 'muito-atrasado' : 'atrasado'}">
+                        <td><strong>${c.nome}</strong></td>
+                        <td>${c.chapa}</td>
+                        <td>${c.funcao}</td>
+                        <td>${c.setor}</td>
+                        <td>${c.turnoNome || 'N/A'}</td>
+                        <td>Chave ${c.numero}</td>
+                        <td>${c.hora}</td>
+                        <td>${c.fimTurno}</td>
+                        <td><strong>${formatarAtraso(c.atrasoMinutos)}</strong></td>
+                        <td>
+                            <span class="status-icon ${c.atrasoMinutos > 60 ? 'muito-atrasado' : 'atrasado'}">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                ${c.atrasoMinutos > 60 ? 'Muito Atrasada' : 'Atrasada'}
+                            </span>
+                        </td>
+                    </tr>
+                `).join('');
+
+            document.querySelector('#tabelaChavesAtrasadas tbody').innerHTML = 
+                htmlChaves || '<tr><td colspan="10" style="text-align: center; color: #28a745;">✓ Nenhuma chave atrasada</td></tr>';
+            document.getElementById('totalChavesAtrasadas').textContent = `${chavesAtrasadas.length} atrasadas`;
+        }
+
+        function toggleColaboradores(id) {
+            const elem = document.getElementById(id);
+            elem.classList.toggle('show');
+        }
+
+        function exportarCSV() {
+            let csv = 'Tipo,Equipamento,Colaborador,Chapa,Função,Setor,Turno,Retirada,Status,Atraso\n';
+            
+            dadosColetores.forEach(d => {
+                csv += `Coletor,${d.numero},"${d.nome}",${d.chapa},"${d.funcao}","${d.setor}",${d.turnoNome || 'N/A'},${d.hora},${d.atrasado ? 'Atrasado' : 'No prazo'},${d.atrasado ? formatarAtraso(d.atrasoMinutos) : '-'}\n`;
+            });
+            
+            dadosChaves.forEach(d => {
+                csv += `Chave,${d.numero},"${d.nome}",${d.chapa},"${d.funcao}","${d.setor}",${d.turnoNome || 'N/A'},${d.hora},${d.atrasado ? 'Atrasada' : 'No prazo'},${d.atrasado ? formatarAtraso(d.atrasoMinutos) : '-'}\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `resumo_equipamentos_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            
+            showStatus('Arquivo CSV exportado com sucesso!', 'success');
+        }
+
+        // Inicialização
+        setInterval(atualizarRelogio, 1000);
+        atualizarRelogio();
+        carregarDados();
+        
+        // Atualizar automaticamente a cada 2 minutos
+        setInterval(carregarDados, 120000);
+    </script>
+</body>
+</html>
