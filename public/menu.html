@@ -275,7 +275,7 @@
                 'Mapa de Carga': 'fas fa-truck-loading',
                 'Alocação BOX': 'fas fa-warehouse',
                 'Coletores': 'fas fa-mobile-alt',
-                'Controle RFID': 'fas fa-mobile-alt',
+                'Resumo equipamentos': 'fas fa-mobile-alt',
                 'default': 'fas fa-building'
             };
             
@@ -351,6 +351,8 @@
                     window.location.href = '/alocacaobox';
                 } else if (areaLower.includes('coletor') || areaLower.includes('rfid')) {
                     window.location.href = '/controle-coletores';
+                } else if (areaLower.includes('painel equipamentos') || areaLower.includes('rfid')) {
+                    window.location.href = '/resumo-equipamentos';
                 } 
                     
                 // Áreas com múltiplas ferramentas
