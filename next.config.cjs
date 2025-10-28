@@ -42,8 +42,8 @@ const nextConfig = {
         destination: '/painel.html',
       },
       {
-        source: '/coletores',
-        destination: '/coletores.html',
+        source: '/resumo-equipamentos',
+        destination: '/resumo-equipamentos.html',
       },
       {
         source: '/controle-coletores',
