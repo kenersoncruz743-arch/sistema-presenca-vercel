@@ -64,11 +64,31 @@
         
         .btn-primary { background: #667eea; color: white; }
         .btn-success { background: #28a745; color: white; }
-        .btn-info { background: #17a2b8; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
         .btn-warning { background: #ffc107; color: #212529; }
         .btn-secondary { background: #6c757d; color: white; }
         .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
         .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.3s;
+        }
+        
+        .alert-info { background: #d1ecf1; color: #0c5460; border-left: 4px solid #17a2b8; }
+        .alert-success { background: #d4edda; color: #155724; border-left: 4px solid #28a745; }
+        .alert-danger { background: #f8d7da; color: #721c24; border-left: 4px solid #dc3545; }
+        .alert-warning { background: #fff3cd; color: #856404; border-left: 4px solid #ffc107; }
+        
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
         
         .filters-panel {
             background: white;
@@ -105,11 +125,7 @@
             font-size: 14px;
         }
         
-        .filter-group select[multiple] {
-            min-height: 100px;
-        }
-        
-        .resumo-gerencial {
+        .resumo-cards {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
@@ -142,12 +158,6 @@
             color: #666;
             text-transform: uppercase;
             font-weight: 600;
-        }
-        
-        .content-grid {
-            display: grid;
-            grid-template-columns: 1fr 350px;
-            gap: 20px;
         }
         
         .table-container {
@@ -211,48 +221,6 @@
             white-space: nowrap;
         }
         
-        .resumo-lateral {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        
-        .resumo-card {
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-        }
-        
-        .resumo-card h3 {
-            color: #667eea;
-            font-size: 16px;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .resumo-item {
-            padding: 10px;
-            border-left: 4px solid #667eea;
-            background: #f8f9fa;
-            margin-bottom: 10px;
-            border-radius: 4px;
-        }
-        
-        .resumo-item strong {
-            display: block;
-            color: #333;
-            margin-bottom: 5px;
-        }
-        
-        .resumo-valor {
-            font-size: 20px;
-            font-weight: bold;
-            color: #667eea;
-        }
-        
         .modal {
             display: none;
             position: fixed;
@@ -297,7 +265,7 @@
         
         .paste-area {
             width: 100%;
-            min-height: 200px;
+            min-height: 300px;
             padding: 15px;
             border: 2px solid #e0e0e0;
             border-radius: 8px;
@@ -305,26 +273,10 @@
             font-size: 12px;
             resize: vertical;
         }
-
+        
         .paste-area:focus {
             outline: none;
             border-color: #667eea;
-        }
-        
-        @keyframes slideIn {
-            from { transform: translateX(400px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        
-        @keyframes slideOut {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(400px); opacity: 0; }
-        }
-        
-        @media (max-width: 1200px) {
-            .content-grid {
-                grid-template-columns: 1fr;
-            }
         }
     </style>
 </head>
@@ -333,15 +285,17 @@
         <div class="header">
             <div class="header-left">
                 <h1><i class="fas fa-truck-loading"></i> Mapa de Carga</h1>
-                <div class="user-badge"><i class="fas fa-user"></i> <span id="userName">Usuário Demo</span></div>
+                <div class="user-badge"><i class="fas fa-user"></i> <span id="userName">Usuário</span></div>
             </div>
             <div class="header-right">
-                <button class="btn btn-warning" onclick="abrirModalImportacao()"><i class="fas fa-paste"></i> Colar CSV</button>
-                <button class="btn btn-success" onclick="atualizarDados()"><i class="fas fa-sync-alt"></i> Atualizar</button>
-                <button class="btn btn-info" onclick="exportarCSV()"><i class="fas fa-file-csv"></i> Exportar</button>
+                <button class="btn btn-primary" onclick="abrirModalColar()"><i class="fas fa-paste"></i> Colar Dados</button>
+                <button class="btn btn-danger" onclick="limparColunas()"><i class="fas fa-eraser"></i> Limpar Colunas</button>
+                <button class="btn btn-success" onclick="carregarDados()"><i class="fas fa-sync-alt"></i> Atualizar</button>
                 <button class="btn btn-secondary" onclick="voltarMenu()"><i class="fas fa-arrow-left"></i> Voltar</button>
             </div>
         </div>
+
+        <div id="statusDiv"></div>
 
         <div class="filters-panel">
             <div class="filters-grid">
@@ -358,106 +312,200 @@
                     <input type="text" id="filtroLoja" placeholder="Buscar loja...">
                 </div>
                 <div class="filter-group">
-                    <label>Status Separação</label>
+                    <label>Status</label>
                     <select id="filtroStatus" multiple></select>
                 </div>
-                <div class="filter-group">
-                    <label>Data</label>
-                    <input type="date" id="filtroData">
-                </div>
-                <div class="filter-group">
-                    <label>Dias Pendentes</label>
-                    <select id="filtroDias">
-                        <option value="">Todos</option>
-                        <option value="0">Hoje (0 dias)</option>
-                        <option value="1">1 dia</option>
-                        <option value="2">2 dias</option>
-                        <option value="3">3+ dias</option>
-                    </select>
-                </div>
             </div>
-            <button class="btn btn-primary" onclick="aplicarFiltros()"><i class="fas fa-filter"></i> Aplicar Filtros</button>
+            <button class="btn btn-primary" onclick="aplicarFiltros()"><i class="fas fa-filter"></i> Filtrar</button>
         </div>
 
-        <div class="resumo-gerencial" id="resumoGerencial"></div>
+        <div class="resumo-cards" id="resumoCards"></div>
 
-        <div class="content-grid">
-            <div class="table-container">
-                <div class="table-header">
-                    <h2><i class="fas fa-list"></i> Cargas (<span id="totalRegistros">0</span>)</h2>
-                </div>
-                <div class="table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Carga</th>
-                                <th>Descrição</th>
-                                <th>Segmento</th>
-                                <th>Tipo Loja</th>
-                                <th>Loja</th>
-                                <th>M³</th>
-                                <th>Valor</th>
-                                <th>Visitas Pend.</th>
-                                <th>Data Rot.</th>
-                                <th>Dias</th>
-                                <th>Status Sep.</th>
-                                <th>BOX</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabelaBody">
-                            <tr>
-                                <td colspan="12" style="text-align: center; padding: 40px;">
-                                    <i class="fas fa-inbox" style="font-size: 32px; color: #667eea;"></i>
-                                    <p>Cole dados CSV para começar</p>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+        <div class="table-container">
+            <div class="table-header">
+                <h2><i class="fas fa-list"></i> Cargas (<span id="totalRegistros">0</span>)</h2>
             </div>
-
-            <div class="resumo-lateral">
-                <div class="resumo-card">
-                    <h3><i class="fas fa-chart-pie"></i> Resumo por Segmento</h3>
-                    <div id="resumoSegmento"><p style="color: #999; font-size: 14px;">Nenhum dado disponível</p></div>
-                </div>
-                <div class="resumo-card">
-                    <h3><i class="fas fa-calendar-alt"></i> Dias Pendentes</h3>
-                    <div id="resumoDias"><p style="color: #999; font-size: 14px;">Nenhum dado disponível</p></div>
-                </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Segmento</th>
+                            <th>Tipo Loja</th>
+                            <th>Empresa</th>
+                            <th>Carga</th>
+                            <th>Descrição</th>
+                            <th>Loja</th>
+                            <th>M³</th>
+                            <th>Valor</th>
+                            <th>Data Rot.</th>
+                            <th>Status Sep.</th>
+                            <th>BOX</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaBody">
+                        <tr>
+                            <td colspan="11" style="text-align: center; padding: 40px;">
+                                <i class="fas fa-inbox" style="font-size: 32px; color: #667eea;"></i>
+                                <p>Cole dados para começar</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 
-    <div class="modal" id="modalImportacao">
+    <!-- Modal Colar -->
+    <div class="modal" id="modalColar">
         <div class="modal-content">
             <div class="modal-header">
-                <h3><i class="fas fa-paste"></i> Importar CSV</h3>
+                <h3><i class="fas fa-paste"></i> Colar Dados do Excel</h3>
                 <button class="close-modal" onclick="fecharModal()">×</button>
             </div>
-            <p style="margin-bottom: 15px; color: #666;">Cole o conteúdo do CSV separado por tabs:</p>
-            <textarea class="paste-area" id="csvPasteArea" placeholder="Cole aqui o conteúdo CSV..."></textarea>
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                <div>
+                    <strong>Instruções:</strong><br>
+                    1. Copie os dados do Excel (Ctrl+C)<br>
+                    2. Cole aqui (Ctrl+V)<br>
+                    3. Clique em "Processar e Salvar"
+                </div>
+            </div>
+            <textarea class="paste-area" id="pasteArea" placeholder="Cole aqui os dados copiados do Excel..."></textarea>
             <div style="margin-top: 20px; display: flex; gap: 10px;">
-                <button class="btn btn-success" onclick="processarCSV()" style="flex: 1;"><i class="fas fa-check"></i> Processar</button>
-                <button class="btn btn-secondary" onclick="limparCSV()"><i class="fas fa-eraser"></i> Limpar</button>
+                <button class="btn btn-success" onclick="processarDados()" style="flex: 1;">
+                    <i class="fas fa-check"></i> Processar e Salvar
+                </button>
+                <button class="btn btn-secondary" onclick="limparArea()">
+                    <i class="fas fa-eraser"></i> Limpar
+                </button>
             </div>
             <div id="uploadStatus" style="margin-top: 20px;"></div>
         </div>
     </div>
 
     <script>
+        const API_URL = '/api/mapacarga';
         let dadosOriginais = [];
         let dadosFiltrados = [];
 
-        function calcularDias(dataRot) {
-            if (!dataRot) return 0;
+        function showStatus(msg, type = 'info') {
+            const div = document.getElementById('statusDiv');
+            const icons = { info: 'info-circle', success: 'check-circle', danger: 'exclamation-triangle', warning: 'exclamation-circle' };
+            div.innerHTML = `<div class="alert alert-${type}"><i class="fas fa-${icons[type]}"></i><span>${msg}</span></div>`;
+            setTimeout(() => div.innerHTML = '', 5000);
+        }
+
+        function abrirModalColar() {
+            document.getElementById('modalColar').classList.add('active');
+            document.getElementById('pasteArea').focus();
+        }
+
+        function fecharModal() {
+            document.getElementById('modalColar').classList.remove('active');
+        }
+
+        function limparArea() {
+            document.getElementById('pasteArea').value = '';
+            document.getElementById('uploadStatus').innerHTML = '';
+        }
+
+        async function processarDados() {
+            const texto = document.getElementById('pasteArea').value.trim();
+            const statusDiv = document.getElementById('uploadStatus');
+            
+            if (!texto) {
+                statusDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> Cole os dados primeiro!</div>';
+                return;
+            }
+            
+            statusDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin"></i> Processando...</div>';
+            
             try {
-                const partes = dataRot.split('/');
-                const dataRotDate = new Date(partes[2], partes[1] - 1, partes[0]);
-                const hoje = new Date();
-                return Math.floor((hoje - dataRotDate) / (1000 * 60 * 60 * 24));
-            } catch (e) {
-                return 0;
+                const linhas = texto.split('\n').filter(l => l.trim());
+                console.log('[MAPACARGA] Processando', linhas.length, 'linhas');
+                
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        action: 'importar',
+                        dadosImportacao: linhas
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.ok) {
+                    statusDiv.innerHTML = `<div class="alert alert-success"><i class="fas fa-check-circle"></i> ${result.msg}</div>`;
+                    setTimeout(() => {
+                        fecharModal();
+                        carregarDados();
+                    }, 2000);
+                } else {
+                    throw new Error(result.msg || 'Erro ao processar');
+                }
+            } catch (error) {
+                console.error('[MAPACARGA] Erro:', error);
+                statusDiv.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> ${error.message}</div>`;
+            }
+        }
+
+        async function limparColunas() {
+            if (!confirm('Tem certeza que deseja LIMPAR as colunas Empresa até Setor?\n\nIsso irá apagar todos os dados dessas colunas!')) {
+                return;
+            }
+            
+            showStatus('Limpando colunas...', 'info');
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'limpar' })
+                });
+                
+                const result = await response.json();
+                
+                if (result.ok) {
+                    showStatus(result.msg, 'success');
+                    carregarDados();
+                } else {
+                    throw new Error(result.msg || 'Erro ao limpar');
+                }
+            } catch (error) {
+                console.error('[MAPACARGA] Erro:', error);
+                showStatus('Erro ao limpar: ' + error.message, 'danger');
+            }
+        }
+
+        async function carregarDados() {
+            try {
+                showStatus('Carregando dados...', 'info');
+                
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'listar', filtros: {} })
+                });
+                
+                const result = await response.json();
+                
+                if (result.ok) {
+                    dadosOriginais = result.dados || [];
+                    dadosFiltrados = [...dadosOriginais];
+                    
+                    preencherFiltros();
+                    renderTabela();
+                    atualizarResumo();
+                    
+                    showStatus(`${dadosOriginais.length} cargas carregadas`, 'success');
+                } else {
+                    throw new Error(result.msg || 'Erro ao carregar');
+                }
+            } catch (error) {
+                console.error('[MAPACARGA] Erro:', error);
+                showStatus('Erro ao carregar: ' + error.message, 'danger');
             }
         }
 
@@ -477,244 +525,98 @@
             const tipos = Array.from(document.getElementById('filtroTipo').selectedOptions).map(o => o.value);
             const loja = document.getElementById('filtroLoja').value.toLowerCase();
             const statusSel = Array.from(document.getElementById('filtroStatus').selectedOptions).map(o => o.value);
-            const data = document.getElementById('filtroData').value;
-            const diasFiltro = document.getElementById('filtroDias').value;
             
             dadosFiltrados = dadosOriginais.filter(item => {
                 const matchSegmento = segmentos.length === 0 || segmentos.includes(item.segmento);
                 const matchTipo = tipos.length === 0 || tipos.includes(item.tipoLoja);
                 const matchLoja = !loja || item.loja.toLowerCase().includes(loja);
                 const matchStatus = statusSel.length === 0 || statusSel.includes(item.statusSep);
-                const matchData = !data || item.dataRot.includes(data.split('-').reverse().join('/'));
                 
-                let matchDias = true;
-                if (diasFiltro) {
-                    if (diasFiltro === '0') matchDias = item.dias === 0;
-                    else if (diasFiltro === '1') matchDias = item.dias === 1;
-                    else if (diasFiltro === '2') matchDias = item.dias === 2;
-                    else if (diasFiltro === '3') matchDias = item.dias >= 3;
-                }
-                
-                return matchSegmento && matchTipo && matchLoja && matchStatus && matchData && matchDias;
+                return matchSegmento && matchTipo && matchLoja && matchStatus;
             });
             
-            renderizarResumoGerencial();
-            renderizarTabela();
-            renderizarResumoLateral();
-            mostrarNotificacao(`${dadosFiltrados.length} cargas encontradas`, 'info');
+            renderTabela();
+            atualizarResumo();
+            showStatus(`${dadosFiltrados.length} cargas filtradas`, 'info');
         }
 
-        function renderizarResumoGerencial() {
-            const resumoPorSegmento = {};
-            dadosFiltrados.forEach(d => {
-                if (!resumoPorSegmento[d.segmento]) {
-                    resumoPorSegmento[d.segmento] = { quantidade: 0, valor: 0, volume: 0 };
-                }
-                resumoPorSegmento[d.segmento].quantidade++;
-                resumoPorSegmento[d.segmento].valor += d.valor;
-                resumoPorSegmento[d.segmento].volume += d.m3;
-            });
-            
-            let html = '';
-            Object.keys(resumoPorSegmento).sort().forEach(segmento => {
-                const dados = resumoPorSegmento[segmento];
-                const veiculos = (dados.volume / 13.2).toFixed(1);
-                html += `
-                    <div class="stat-card">
-                        <i class="fas fa-truck"></i>
-                        <div class="value">${segmento}</div>
-                        <div class="label">${dados.quantidade} cargas</div>
-                        <div style="margin-top: 10px; font-size: 12px; color: #666;">
-                            <div>Valor: R$ ${dados.valor.toLocaleString('pt-BR')}</div>
-                            <div>Volume: ${dados.volume.toFixed(1)} m³</div>
-                            <div>Veículos: ${veiculos}</div>
-                        </div>
-                    </div>
-                `;
-            });
-            document.getElementById('resumoGerencial').innerHTML = html;
-        }
-
-        function renderizarTabela() {
+        function renderTabela() {
             const tbody = document.getElementById('tabelaBody');
+            
             if (dadosFiltrados.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="12" style="text-align: center; padding: 40px; color: #666;"><i class="fas fa-inbox" style="font-size: 32px;"></i><p>Nenhuma carga encontrada</p></td></tr>`;
+                tbody.innerHTML = '<tr><td colspan="11" style="text-align: center; padding: 40px;"><i class="fas fa-inbox" style="font-size: 32px;"></i><p>Nenhuma carga encontrada</p></td></tr>';
                 return;
             }
             
             tbody.innerHTML = dadosFiltrados.map(item => `
                 <tr>
-                    <td><strong>${item.carga}</strong></td>
-                    <td style="max-width: 300px; white-space: normal;">${item.descricao}</td>
-                    <td>${item.segmento}</td>
-                    <td>${item.tipoLoja}</td>
-                    <td>${item.loja}</td>
-                    <td><strong>${item.m3.toFixed(2)}</strong></td>
-                    <td>R$ ${item.valor.toLocaleString('pt-BR')}</td>
-                    <td>${item.visitasPendente}</td>
-                    <td>${item.dataRot}</td>
-                    <td><span style="background: ${item.dias > 2 ? '#dc3545' : item.dias > 1 ? '#ffc107' : '#28a745'}; color: white; padding: 4px 8px; border-radius: 4px;">${item.dias}d</span></td>
-                    <td><span style="font-size: 11px;">${item.statusSep}</span></td>
+                    <td>${item.segmento || '-'}</td>
+                    <td>${item.tipoLoja || '-'}</td>
+                    <td>${item.empresa || '-'}</td>
+                    <td><strong>${item.carga || '-'}</strong></td>
+                    <td style="max-width: 300px; white-space: normal;">${item.descricao || '-'}</td>
+                    <td>${item.loja || '-'}</td>
+                    <td><strong>${item.m3 || '0'}</strong></td>
+                    <td>R$ ${item.valor || '0'}</td>
+                    <td>${item.dataRot || '-'}</td>
+                    <td><span style="font-size: 11px;">${item.statusSep || '-'}</span></td>
                     <td>${item.box || '-'}</td>
                 </tr>
             `).join('');
+            
             document.getElementById('totalRegistros').textContent = dadosFiltrados.length;
         }
 
-        function renderizarResumoLateral() {
-            const porSegmento = {};
-            dadosFiltrados.forEach(d => {
-                if (!porSegmento[d.segmento]) porSegmento[d.segmento] = { qtd: 0, valor: 0, volume: 0 };
-                porSegmento[d.segmento].qtd++;
-                porSegmento[d.segmento].valor += d.valor;
-                porSegmento[d.segmento].volume += d.m3;
-            });
+        function atualizarResumo() {
+            const total = dadosFiltrados.length;
+            const comper = dadosFiltrados.filter(d => d.segmento === 'LJ COMPER').length;
+            const fort = dadosFiltrados.filter(d => d.segmento === 'LJ FORT').length;
+            const volumeTotal = dadosFiltrados.reduce((s, d) => s + (parseFloat(d.m3) || 0), 0);
             
-            let htmlSegmento = '';
-            Object.keys(porSegmento).sort().forEach(seg => {
-                const d = porSegmento[seg];
-                htmlSegmento += `<div class="resumo-item"><strong>${seg}</strong><div style="font-size: 12px; color: #666; margin-top: 5px;">${d.qtd} cargas | R$ ${d.valor.toLocaleString('pt-BR')} | ${d.volume.toFixed(1)} m³</div></div>`;
-            });
-            document.getElementById('resumoSegmento').innerHTML = htmlSegmento || '<p style="color: #999; font-size: 14px;">Nenhum dado disponível</p>';
-            
-            const porDias = {};
-            dadosFiltrados.forEach(d => {
-                if (!porDias[d.dias]) porDias[d.dias] = 0;
-                porDias[d.dias]++;
-            });
-            
-            let htmlDias = '';
-            Object.keys(porDias).sort((a, b) => b - a).forEach(dia => {
-                htmlDias += `<div class="resumo-item"><strong>${dia} dias</strong><div class="resumo-valor">${porDias[dia]} cargas</div></div>`;
-            });
-            document.getElementById('resumoDias').innerHTML = htmlDias || '<p style="color: #999; font-size: 14px;">Nenhum dado disponível</p>';
-        }
-
-        function abrirModalImportacao() {
-            document.getElementById('modalImportacao').classList.add('active');
-            document.getElementById('csvPasteArea').focus();
-        }
-
-        function fecharModal() {
-            document.getElementById('modalImportacao').classList.remove('active');
-        }
-
-        function limparCSV() {
-            document.getElementById('csvPasteArea').value = '';
-            document.getElementById('uploadStatus').innerHTML = '';
-        }
-
-        function processarCSV() {
-            const csvText = document.getElementById('csvPasteArea').value.trim();
-            const statusDiv = document.getElementById('uploadStatus');
-            
-            if (!csvText) {
-                statusDiv.innerHTML = '<p style="color: #dc3545;"><i class="fas fa-exclamation-triangle"></i> Cole o conteúdo CSV primeiro!</p>';
-                return;
-            }
-            
-            statusDiv.innerHTML = '<p style="color: #17a2b8;"><i class="fas fa-spinner fa-spin"></i> Processando...</p>';
-            
-            try {
-                const linhas = csvText.split('\n').filter(l => l.trim());
-                dadosOriginais = linhas.map(linha => {
-                    const campos = linha.split(/\t+/).map(c => c.trim());
-                    return {
-                        carga: campos[0] || '',
-                        descricao: campos[6] || '',
-                        segmento: campos[7] || 'N/A',
-                        tipoLoja: campos[8] || 'N/A',
-                        loja: campos[9] || '',
-                        m3: parseFloat(campos[10]) || 0,
-                        valor: parseFloat(campos[11]) || 0,
-                        visitasPendente: parseInt(campos[12]) || 0,
-                        dataRot: campos[13] || '',
-                        statusSep: campos[14] || '',
-                        box: campos[15] || '',
-                        dias: calcularDias(campos[13])
-                    };
-                });
-                
-                dadosFiltrados = [...dadosOriginais];
-                preencherFiltros();
-                renderizarResumoGerencial();
-                renderizarTabela();
-                renderizarResumoLateral();
-                
-                statusDiv.innerHTML = `<p style="color: #28a745;"><i class="fas fa-check-circle"></i> ${dadosOriginais.length} cargas importadas!</p>`;
-                setTimeout(() => { fecharModal(); mostrarNotificacao(`${dadosOriginais.length} cargas importadas!`, 'success'); }, 2000);
-            } catch (error) {
-                statusDiv.innerHTML = `<p style="color: #dc3545;"><i class="fas fa-exclamation-triangle"></i> Erro: ${error.message}</p>`;
-            }
-        }
-
-        function exportarCSV() {
-            if (dadosFiltrados.length === 0) {
-                mostrarNotificacao('Nenhum dado para exportar', 'warning');
-                return;
-            }
-            let csv = 'Carga,Descrição,Segmento,Tipo Loja,Loja,M³,Valor,Visitas Pend.,Data Rot.,Dias,Status Sep.,BOX\n';
-            dadosFiltrados.forEach(d => {
-                csv += `"${d.carga}","${d.descricao}","${d.segmento}","${d.tipoLoja}","${d.loja}",${d.m3},${d.valor},${d.visitasPendente},"${d.dataRot}",${d.dias},"${d.statusSep}","${d.box || ''}"\n`;
-            });
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `Mapa_Carga_${new Date().toISOString().split('T')[0]}.csv`;
-            link.click();
-            mostrarNotificacao('CSV exportado com sucesso!', 'success');
-        }
-
-        function atualizarDados() {
-            const btn = event.target.closest('button');
-            const originalHTML = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Atualizando...';
-            setTimeout(() => {
-                renderizarResumoGerencial();
-                renderizarTabela();
-                renderizarResumoLateral();
-                btn.disabled = false;
-                btn.innerHTML = originalHTML;
-                mostrarNotificacao('Dados atualizados!', 'success');
-            }, 1000);
+            document.getElementById('resumoCards').innerHTML = `
+                <div class="stat-card">
+                    <i class="fas fa-truck"></i>
+                    <div class="value">${total}</div>
+                    <div class="label">Total Cargas</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-store"></i>
+                    <div class="value">${comper}</div>
+                    <div class="label">LJ COMPER</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-store-alt"></i>
+                    <div class="value">${fort}</div>
+                    <div class="label">LJ FORT</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-cube"></i>
+                    <div class="value">${volumeTotal.toFixed(1)}</div>
+                    <div class="label">Volume Total (m³)</div>
+                </div>
+            `;
         }
 
         function voltarMenu() {
-            if (confirm('Deseja voltar ao menu principal?')) {
+            if (confirm('Deseja voltar ao menu?')) {
                 window.location.href = '/menu';
             }
         }
 
-        function mostrarNotificacao(mensagem, tipo = 'success') {
-            const cores = { success: '#28a745', error: '#dc3545', warning: '#ffc107', info: '#17a2b8' };
-            const icones = { success: 'fa-check-circle', error: 'fa-times-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
-            const notif = document.createElement('div');
-            notif.style.cssText = `position: fixed; top: 20px; right: 20px; background: ${cores[tipo]}; color: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); z-index: 9999; animation: slideIn 0.3s ease-out; max-width: 400px;`;
-            notif.innerHTML = `<i class="fas ${icones[tipo]}"></i> ${mensagem}`;
-            document.body.appendChild(notif);
-            setTimeout(() => {
-                notif.style.animation = 'slideOut 0.3s ease-in';
-                setTimeout(() => notif.remove(), 300);
-            }, 3000);
-        }
-
-        document.getElementById('modalImportacao').addEventListener('click', function(e) {
+        // Fechar modal ao clicar fora
+        document.getElementById('modalColar').addEventListener('click', function(e) {
             if (e.target === this) fecharModal();
         });
 
+        // Atalho de teclado
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') fecharModal();
-            if (e.ctrlKey && e.key === 'v' && !document.getElementById('modalImportacao').classList.contains('active')) {
-                e.preventDefault();
-                abrirModalImportacao();
-            }
         });
 
         window.onload = function() {
-            const usuario = sessionStorage.getItem('usuario') || 'Usuário Demo';
+            const usuario = sessionStorage.getItem('usuario') || 'Usuário';
             document.getElementById('userName').textContent = usuario;
-            mostrarNotificacao('Sistema carregado! Use Ctrl+V ou clique em "Colar CSV" para importar dados.', 'info');
+            carregarDados();
         };
     </script>
 </body>
