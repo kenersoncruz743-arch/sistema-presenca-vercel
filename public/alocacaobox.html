@@ -31,7 +31,7 @@
         }
         
         .header-left h1 { color: #333; font-size: 24px; display: flex; align-items: center; gap: 10px; }
-        .header-right { display: flex; gap: 10px; }
+        .header-right { display: flex; gap: 10px; flex-wrap: wrap; }
         
         .btn {
             padding: 10px 20px;
@@ -51,6 +51,58 @@
         .btn-warning { background: #ffc107; color: #333; }
         .btn-secondary { background: #6c757d; color: white; }
         .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        
+        .filter-panel {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .filter-group label {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .filter-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .filter-checkbox:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        
+        .filter-checkbox input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .filter-checkbox.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
         
         .legend-panel {
             background: white;
@@ -208,11 +260,109 @@
         
         .stat-mini .value { font-size: 20px; font-weight: bold; }
         
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active { display: flex; }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .modal-header h3 {
+            color: #333;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.3s;
+        }
+        
+        .close-modal:hover { color: #333; }
+        
+        .detail-grid {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .detail-item {
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            gap: 10px;
+            padding: 10px 0;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .detail-value {
+            color: #333;
+        }
+        
+        .loading {
+            display: inline-block;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
         @media (max-width: 768px) {
             .grid-container { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 10px; }
             .box-item { padding: 10px; }
             .box-number { font-size: 18px; }
             .sugestao-item { grid-template-columns: 1fr; text-align: center; }
+            .filter-panel { flex-direction: column; align-items: stretch; }
+            .header-right { width: 100%; justify-content: center; }
         }
     </style>
 </head>
@@ -232,6 +382,24 @@
                 <button class="btn btn-secondary" onclick="voltarMenu()">
                     <i class="fas fa-arrow-left"></i> Voltar
                 </button>
+            </div>
+        </div>
+
+        <div class="filter-panel">
+            <div class="filter-group">
+                <label><i class="fas fa-filter"></i> Filtrar por Tipo:</label>
+            </div>
+            <div class="filter-checkbox" id="filterComper">
+                <input type="checkbox" id="chkComper" checked onchange="atualizarFiltros()">
+                <label for="chkComper" style="cursor: pointer; margin: 0;">COMPER</label>
+            </div>
+            <div class="filter-checkbox" id="filterFort">
+                <input type="checkbox" id="chkFort" checked onchange="atualizarFiltros()">
+                <label for="chkFort" style="cursor: pointer; margin: 0;">FORT</label>
+            </div>
+            <div style="flex: 1;"></div>
+            <div style="font-size: 13px; color: #666;">
+                <i class="fas fa-info-circle"></i> Selecione os tipos de loja para gerar sugestões
             </div>
         </div>
 
@@ -295,6 +463,19 @@
         </div>
     </div>
 
+    <!-- Modal de Detalhes -->
+    <div class="modal" id="modalDetalhes">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-info-circle"></i> Detalhes do BOX</h3>
+                <button class="close-modal" onclick="fecharModal()">×</button>
+            </div>
+            <div class="detail-grid" id="detalhesContent">
+                <!-- Detalhes serão inseridos aqui -->
+            </div>
+        </div>
+    </div>
+
     <script>
         // IMPORTANTE: Usa a API unificada
         const API_URL = '/api/mapacarga';
@@ -309,6 +490,38 @@
         let boxesState = {};
         let cargasDisponiveis = [];
         let sugestoesAtuais = [];
+        let filtrosAtivos = {
+            comper: true,
+            fort: true
+        };
+        
+        function atualizarFiltros() {
+            filtrosAtivos.comper = document.getElementById('chkComper').checked;
+            filtrosAtivos.fort = document.getElementById('chkFort').checked;
+            
+            // Atualiza visual dos filtros
+            const filterComper = document.getElementById('filterComper');
+            const filterFort = document.getElementById('filterFort');
+            
+            if (filtrosAtivos.comper) {
+                filterComper.classList.add('active');
+            } else {
+                filterComper.classList.remove('active');
+            }
+            
+            if (filtrosAtivos.fort) {
+                filterFort.classList.add('active');
+            } else {
+                filterFort.classList.remove('active');
+            }
+            
+            // Se algum filtro mudou e já tem sugestões, limpa
+            if (sugestoesAtuais.length > 0) {
+                sugestoesAtuais = [];
+                renderizarSugestoes();
+                inicializarBoxes();
+            }
+        }
         
         async function carregarCargasAPI() {
             try {
@@ -500,6 +713,12 @@
         }
 
         function gerarSugestoes() {
+            // Valida se pelo menos um filtro está ativo
+            if (!filtrosAtivos.comper && !filtrosAtivos.fort) {
+                mostrarNotificacao('Selecione pelo menos um tipo de loja!', 'warning');
+                return;
+            }
+            
             const btn = event.target;
             const originalHTML = btn.innerHTML;
             btn.disabled = true;
@@ -526,9 +745,21 @@
 
         function calcularSugestoesInteligentes() {
             console.log('[SUGESTAO] Iniciando...');
+            console.log('[SUGESTAO] Filtros ativos:', filtrosAtivos);
             
             const sugestoes = [];
-            let cargasElegiveis = cargasDisponiveis.filter(c => !c.box);
+            
+            // Filtra cargas elegíveis (sem BOX e pelos filtros)
+            let cargasElegiveis = cargasDisponiveis.filter(c => {
+                if (c.box) return false;
+                
+                const tipoUpper = (c.tipoLoja || '').toUpperCase();
+                
+                if (filtrosAtivos.comper && tipoUpper.includes('COMPER')) return true;
+                if (filtrosAtivos.fort && tipoUpper.includes('FORT')) return true;
+                
+                return false;
+            });
             
             console.log('[SUGESTAO] Cargas elegíveis:', cargasElegiveis.length);
             
@@ -558,7 +789,6 @@
                 const cargaIndex = cargasElegiveis.findIndex((c, idx) => {
                     if (cargasUsadas.has(idx)) return false;
                     if (c.m3 > capacidade) return false;
-                    
                     const lojaNaoRepetida = !lojasAlocadas.has(c.loja);
                     
                     if (cargasElegiveis.length - cargasUsadas.size <= boxesVazios.length - sugestoes.length) {
@@ -599,7 +829,7 @@
                 container.innerHTML = `
                     <div style="text-align: center; color: #666; padding: 40px;">
                         <i class="fas fa-check-circle" style="font-size: 48px; color: #28a745; margin-bottom: 15px;"></i>
-                        <p>Nenhuma sugestão disponível</p>
+                        <p>Nenhuma sugestão disponível com os filtros selecionados</p>
                     </div>
                 `;
                 return;
@@ -615,7 +845,7 @@
                     <div class="sugestao-descricao">
                         <strong>${sug.carga.carga}</strong><br>
                         ${sug.carga.descricao}<br>
-                        <small>Ocupação: ${sug.ocupacao}%</small>
+                        <small>Ocupação: ${sug.ocupacao}% | ${sug.carga.tipoLoja}</small>
                     </div>
                     <div class="sugestao-m3">
                         <i class="fas fa-cube"></i><br>
@@ -623,9 +853,12 @@
                     </div>
                     <div class="sugestao-data">
                         <i class="fas fa-calendar"></i><br>
-                        ${sug.carga.dataRot}
+                        ${formatarData(sug.carga.dataRot)}
                     </div>
                     <div class="sugestao-actions">
+                        <button class="btn btn-primary" onclick="verDetalhesSugestao(${index})" title="Detalhes">
+                            <i class="fas fa-eye"></i>
+                        </button>
                         <button class="btn btn-success" onclick="alocarCarga(${index})" title="Alocar">
                             <i class="fas fa-check"></i>
                         </button>
@@ -676,13 +909,178 @@
         }
 
         function verDetalhesBox(boxNum) {
-            const carga = boxesState[boxNum];
+            const modal = document.getElementById('modalDetalhes');
+            const content = document.getElementById('detalhesContent');
             const capacidade = boxesConfig[boxNum];
+            const carga = boxesState[boxNum];
+            
+            let detalhesHTML = `
+                <div class="detail-item">
+                    <div class="detail-label">BOX:</div>
+                    <div class="detail-value"><strong>BOX ${boxNum}</strong></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Capacidade:</div>
+                    <div class="detail-value">≤ ${capacidade} m³</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Status:</div>
+                    <div class="detail-value">
+                        <span style="padding: 5px 10px; border-radius: 5px; background: ${carga ? '#dc3545' : '#28a745'}; color: white;">
+                            ${carga ? 'Ocupado' : 'Disponível'}
+                        </span>
+                    </div>
+                </div>
+            `;
             
             if (carga) {
-                alert(`BOX ${boxNum}\nCapacidade: ${capacidade} m³\n\nCarga: ${carga.carga}\nLoja: ${carga.loja}\nVolume: ${carga.m3.toFixed(1)} m³\nOcupação: ${((carga.m3 / capacidade) * 100).toFixed(1)}%`);
+                detalhesHTML += `
+                    <div class="detail-item">
+                        <div class="detail-label">Carga:</div>
+                        <div class="detail-value"><strong>${carga.carga}</strong></div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Descrição:</div>
+                        <div class="detail-value">${carga.descricao}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Loja:</div>
+                        <div class="detail-value">${carga.loja}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Tipo:</div>
+                        <div class="detail-value">${carga.tipoLoja}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Volume (m³):</div>
+                        <div class="detail-value"><strong>${carga.m3.toFixed(1)} m³</strong></div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Ocupação:</div>
+                        <div class="detail-value">${((carga.m3 / capacidade) * 100).toFixed(1)}% da capacidade</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Data Roteirização:</div>
+                        <div class="detail-value">${formatarData(carga.dataRot)}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Valor:</div>
+                        <div class="detail-value"><strong>${carga.valor}</strong></div>
+                    </div>
+                `;
+                
+                detalhesHTML += `
+                    <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #f0f0f0;">
+                        <button class="btn btn-warning" onclick="liberarBox(${boxNum})" style="width: 100%;">
+                            <i class="fas fa-times"></i> Liberar BOX
+                        </button>
+                    </div>
+                `;
             } else {
-                alert(`BOX ${boxNum}\nCapacidade: ${capacidade} m³\n\nStatus: Disponível`);
+                detalhesHTML += `
+                    <div class="detail-item">
+                        <div class="detail-label">Informação:</div>
+                        <div class="detail-value">Este BOX está disponível para alocação</div>
+                    </div>
+                `;
+            }
+            
+            content.innerHTML = detalhesHTML;
+            modal.classList.add('active');
+        }
+
+        function verDetalhesSugestao(sugestaoIndex) {
+            const sugestao = sugestoesAtuais[sugestaoIndex];
+            const modal = document.getElementById('modalDetalhes');
+            const content = document.getElementById('detalhesContent');
+            
+            content.innerHTML = `
+                <div class="detail-item">
+                    <div class="detail-label">BOX Sugerido:</div>
+                    <div class="detail-value"><strong>BOX ${sugestao.boxSugerido}</strong></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Capacidade BOX:</div>
+                    <div class="detail-value">≤ ${sugestao.capacidadeBox} m³</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Carga:</div>
+                    <div class="detail-value"><strong>${sugestao.carga.carga}</strong></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Descrição:</div>
+                    <div class="detail-value">${sugestao.carga.descricao}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Loja:</div>
+                    <div class="detail-value">${sugestao.carga.loja}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Tipo Loja:</div>
+                    <div class="detail-value">${sugestao.carga.tipoLoja}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Volume:</div>
+                    <div class="detail-value"><strong>${sugestao.carga.m3.toFixed(1)} m³</strong></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Ocupação:</div>
+                    <div class="detail-value">${sugestao.ocupacao}% da capacidade</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Data Roteirização:</div>
+                    <div class="detail-value">${formatarData(sugestao.carga.dataRot)}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Valor:</div>
+                    <div class="detail-value"><strong>${sugestao.carga.valor}</strong></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Motivo:</div>
+                    <div class="detail-value" style="color: #28a745; font-weight: 600;">
+                        <i class="fas fa-lightbulb"></i> ${sugestao.motivo}
+                    </div>
+                </div>
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #f0f0f0;">
+                    <button class="btn btn-success" onclick="alocarCarga(${sugestaoIndex}); fecharModal();" style="width: 100%;">
+                        <i class="fas fa-check"></i> Alocar Agora
+                    </button>
+                </div>
+            `;
+            
+            modal.classList.add('active');
+        }
+
+        async function liberarBox(boxNum) {
+            if (confirm(`Deseja realmente liberar o BOX ${boxNum}?`)) {
+                const success = await liberarBoxAPI(boxNum);
+                
+                if (success) {
+                    const carga = boxesState[boxNum];
+                    if (carga) {
+                        carga.box = null;
+                    }
+                    delete boxesState[boxNum];
+                    
+                    fecharModal();
+                    inicializarBoxes();
+                    
+                    mostrarNotificacao(`BOX ${boxNum} liberado com sucesso!`, 'success');
+                }
+            }
+        }
+
+        function fecharModal() {
+            document.getElementById('modalDetalhes').classList.remove('active');
+        }
+
+        function formatarData(dataStr) {
+            if (!dataStr) return 'N/A';
+            try {
+                const data = new Date(dataStr + 'T00:00:00');
+                return data.toLocaleDateString('pt-BR');
+            } catch (e) {
+                return dataStr;
             }
         }
 
@@ -714,6 +1112,24 @@
             }, 3000);
         }
 
+        // Fechar modal ao clicar fora
+        document.getElementById('modalDetalhes').addEventListener('click', function(e) {
+            if (e.target === this) {
+                fecharModal();
+            }
+        });
+
+        // Atalhos de teclado
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                fecharModal();
+            }
+            if (e.ctrlKey && e.key === 'g') {
+                e.preventDefault();
+                gerarSugestoes();
+            }
+        });
+
         // Animações CSS
         const style = document.createElement('style');
         style.textContent = `
@@ -738,6 +1154,9 @@
                 window.location.href = '/';
                 return;
             }
+            
+            // Inicializa filtros visuais
+            atualizarFiltros();
             
             mostrarNotificacao('Inicializando sistema...', 'info');
             
