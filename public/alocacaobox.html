@@ -15,10 +15,7 @@
             padding: 20px;
         }
         
-        .container {
-            max-width: 1800px;
-            margin: 0 auto;
-        }
+        .container { max-width: 1800px; margin: 0 auto; }
         
         .header {
             background: white;
@@ -33,18 +30,8 @@
             gap: 15px;
         }
         
-        .header-left h1 {
-            color: #333;
-            font-size: 24px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .header-right {
-            display: flex;
-            gap: 10px;
-        }
+        .header-left h1 { color: #333; font-size: 24px; display: flex; align-items: center; gap: 10px; }
+        .header-right { display: flex; gap: 10px; }
         
         .btn {
             padding: 10px 20px;
@@ -59,43 +46,11 @@
             gap: 8px;
         }
         
-        .btn-primary {
-            background: #667eea;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #5a6fd8;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
-        }
-        
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-        
-        .btn-success:hover {
-            background: #218838;
-        }
-        
-        .btn-warning {
-            background: #ffc107;
-            color: #333;
-        }
-        
-        .btn-warning:hover {
-            background: #e0a800;
-        }
-        
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-        
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-warning { background: #ffc107; color: #333; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
         
         .legend-panel {
             background: white;
@@ -109,13 +64,7 @@
             flex-wrap: wrap;
         }
         
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-        }
-        
+        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 14px; }
         .legend-box {
             width: 30px;
             height: 30px;
@@ -140,13 +89,7 @@
             margin-bottom: 20px;
         }
         
-        .boxes-grid h2 {
-            color: #333;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .boxes-grid h2 { color: #333; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
         
         .grid-container {
             display: grid;
@@ -169,10 +112,7 @@
             overflow: hidden;
         }
         
-        .box-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-        }
+        .box-item:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
         
         .box-item.ocupado {
             background: linear-gradient(135deg, #dc3545, #c82333);
@@ -194,24 +134,9 @@
             box-shadow: 0 0 20px rgba(255, 193, 7, 0.5);
         }
         
-        .box-number {
-            font-size: 24px;
-            font-weight: bold;
-            text-align: center;
-        }
-        
-        .box-info {
-            font-size: 11px;
-            text-align: center;
-            margin-top: 5px;
-        }
-        
-        .box-capacity {
-            font-size: 10px;
-            text-align: center;
-            opacity: 0.8;
-            margin-top: 3px;
-        }
+        .box-number { font-size: 24px; font-weight: bold; text-align: center; }
+        .box-info { font-size: 11px; text-align: center; margin-top: 5px; }
+        .box-capacity { font-size: 10px; text-align: center; opacity: 0.8; margin-top: 3px; }
         
         .box-loja {
             font-size: 12px;
@@ -221,10 +146,6 @@
             padding: 3px 6px;
             background: rgba(255,255,255,0.2);
             border-radius: 4px;
-        }
-        
-        .box-item.sugerido .box-loja {
-            background: rgba(0,0,0,0.1);
         }
         
         .sugestoes-panel {
@@ -260,52 +181,12 @@
             box-shadow: 0 3px 10px rgba(0,0,0,0.1);
         }
         
-        .sugestao-box {
-            font-size: 20px;
-            font-weight: bold;
-            color: #667eea;
-            text-align: center;
-        }
-        
-        .sugestao-loja {
-            font-weight: 600;
-            color: #333;
-        }
-        
-        .sugestao-descricao {
-            font-size: 13px;
-            color: #666;
-        }
-        
-        .sugestao-m3 {
-            text-align: center;
-            font-weight: 600;
-            color: #28a745;
-        }
-        
-        .sugestao-data {
-            text-align: center;
-            font-size: 12px;
-            color: #666;
-        }
-        
-        .sugestao-actions {
-            display: flex;
-            gap: 5px;
-            justify-content: flex-end;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            color: #999;
-        }
-        
-        .empty-state i {
-            font-size: 48px;
-            margin-bottom: 15px;
-            color: #ddd;
-        }
+        .sugestao-box { font-size: 20px; font-weight: bold; color: #667eea; text-align: center; }
+        .sugestao-loja { font-weight: 600; color: #333; }
+        .sugestao-descricao { font-size: 13px; color: #666; }
+        .sugestao-m3 { text-align: center; font-weight: 600; color: #28a745; }
+        .sugestao-data { text-align: center; font-size: 12px; color: #666; }
+        .sugestao-actions { display: flex; gap: 5px; justify-content: flex-end; }
         
         .stats-mini {
             display: flex;
@@ -325,138 +206,21 @@
             font-size: 14px;
         }
         
-        .stat-mini i {
-            font-size: 20px;
-        }
-        
-        .stat-mini .value {
-            font-size: 20px;
-            font-weight: bold;
-        }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .modal.active {
-            display: flex;
-        }
-        
-        .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            max-width: 600px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #f0f0f0;
-        }
-        
-        .modal-header h3 {
-            color: #333;
-            font-size: 20px;
-        }
-        
-        .close-modal {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #999;
-        }
-        
-        .close-modal:hover {
-            color: #333;
-        }
-        
-        .detail-grid {
-            display: grid;
-            gap: 15px;
-        }
-        
-        .detail-item {
-            display: grid;
-            grid-template-columns: 140px 1fr;
-            gap: 10px;
-        }
-        
-        .detail-label {
-            font-weight: 600;
-            color: #667eea;
-        }
-        
-        .detail-value {
-            color: #333;
-        }
-        
-        .loading {
-            display: inline-block;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        @media (max-width: 1200px) {
-            .sugestao-item {
-                grid-template-columns: 1fr;
-                text-align: center;
-            }
-            
-            .sugestao-actions {
-                justify-content: center;
-            }
-        }
+        .stat-mini .value { font-size: 20px; font-weight: bold; }
         
         @media (max-width: 768px) {
-            .grid-container {
-                grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-                gap: 10px;
-            }
-            
-            .box-item {
-                padding: 10px;
-            }
-            
-            .box-number {
-                font-size: 18px;
-            }
-            
-            .header {
-                flex-direction: column;
-            }
+            .grid-container { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 10px; }
+            .box-item { padding: 10px; }
+            .box-number { font-size: 18px; }
+            .sugestao-item { grid-template-columns: 1fr; text-align: center; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
         <div class="header">
             <div class="header-left">
-                <h1>
-                    <i class="fas fa-warehouse"></i>
-                    Alocação Inteligente de BOX
-                </h1>
+                <h1><i class="fas fa-warehouse"></i> Alocação Inteligente de BOX</h1>
             </div>
             <div class="header-right">
                 <button class="btn btn-success" onclick="gerarSugestoes()">
@@ -471,7 +235,6 @@
             </div>
         </div>
 
-        <!-- Legenda -->
         <div class="legend-panel">
             <strong><i class="fas fa-info-circle"></i> Legenda:</strong>
             <div class="legend-item">
@@ -484,16 +247,12 @@
             </div>
             <div class="legend-item">
                 <div class="legend-box sugerido"></div>
-                <span>BOX Sugerido (Próxima Carga)</span>
+                <span>BOX Sugerido</span>
             </div>
         </div>
 
-        <!-- Mapa de Boxes -->
         <div class="boxes-grid">
-            <h2>
-                <i class="fas fa-th"></i>
-                Mapa de Boxes
-            </h2>
+            <h2><i class="fas fa-th"></i> Mapa de Boxes</h2>
             
             <div class="stats-mini">
                 <div class="stat-mini">
@@ -519,41 +278,27 @@
                 </div>
             </div>
             
-            <div class="grid-container" id="boxesGrid">
-                <!-- Os boxes serão gerados dinamicamente -->
-            </div>
+            <div class="grid-container" id="boxesGrid"></div>
         </div>
 
-        <!-- Sugestões -->
         <div class="sugestoes-panel">
             <h2>
                 <i class="fas fa-lightbulb"></i>
                 Sugestões de Alocação (<span id="totalSugestoes">0</span>)
             </h2>
             <div id="sugestoesContainer">
-                <div class="empty-state">
-                    <i class="fas fa-magic"></i>
-                    <p>Clique em "Gerar Sugestões" para obter recomendações inteligentes de alocação</p>
+                <div style="text-align: center; color: #666; padding: 40px;">
+                    <i class="fas fa-magic" style="font-size: 48px; margin-bottom: 15px;"></i>
+                    <p>Clique em "Gerar Sugestões" para obter recomendações inteligentes</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal de Detalhes -->
-    <div class="modal" id="modalDetalhes">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3><i class="fas fa-info-circle"></i> Detalhes do BOX</h3>
-                <button class="close-modal" onclick="fecharModal()">×</button>
-            </div>
-            <div class="detail-grid" id="detalhesContent">
-                <!-- Detalhes serão inseridos aqui -->
-            </div>
-        </div>
-    </div>
-
     <script>
-        // Configuração dos Boxes com suas capacidades
+        // IMPORTANTE: Usa a API unificada
+        const API_URL = '/api/mapacarga';
+        
         const boxesConfig = {
             51: 30, 50: 18, 49: 18, 48: 18, 47: 18, 46: 18, 45: 18, 44: 18,
             43: 18, 42: 18, 41: 18, 40: 18, 39: 7, 38: 7, 37: 18, 36: 18,
@@ -561,21 +306,13 @@
             27: 18, 26: 18
         };
 
-        // Estado dos boxes (número do box -> dados da carga alocada)
         let boxesState = {};
-
-        // Dados de cargas disponíveis (carregados da API)
         let cargasDisponiveis = [];
-
         let sugestoesAtuais = [];
         
-        // URL da API
-        const API_URL = '/api/alocacaobox';
-        
-        // Função para carregar cargas da API
         async function carregarCargasAPI() {
             try {
-                mostrarNotificacao('Carregando cargas...', 'info');
+                console.log('[ALOCACAO] Buscando cargas sem BOX...');
                 
                 const response = await fetch(API_URL, {
                     method: 'POST',
@@ -587,8 +324,6 @@
                 });
                 
                 const data = await response.json();
-                
-                console.log('[DEBUG] Resposta da API:', data);
                 
                 if (data.ok && data.cargas) {
                     cargasDisponiveis = data.cargas.map(c => ({
@@ -607,24 +342,19 @@
                         box: c.box || null
                     }));
                     
-                    console.log('[DEBUG] Cargas processadas:', cargasDisponiveis.length);
-                    console.log('[DEBUG] Exemplo de carga:', cargasDisponiveis[0]);
-                    
-                    mostrarNotificacao(`${cargasDisponiveis.length} cargas carregadas!`, 'success');
+                    console.log('[ALOCACAO] Cargas carregadas:', cargasDisponiveis.length);
+                    mostrarNotificacao(`${cargasDisponiveis.length} cargas disponíveis`, 'success');
                     return true;
                 } else {
-                    console.error('[DEBUG] Erro ao carregar cargas:', data.msg);
-                    mostrarNotificacao('Erro ao carregar cargas: ' + data.msg, 'error');
-                    return false;
+                    throw new Error(data.msg || 'Erro ao carregar cargas');
                 }
             } catch (error) {
-                console.error('[DEBUG] Erro na requisição:', error);
-                mostrarNotificacao('Erro ao conectar com a API', 'error');
+                console.error('[ALOCACAO] Erro:', error);
+                mostrarNotificacao('Erro ao carregar cargas', 'error');
                 return false;
             }
         }
         
-        // Função para carregar estado dos boxes da API
         async function carregarBoxesAPI() {
             try {
                 const response = await fetch(API_URL, {
@@ -634,8 +364,6 @@
                 });
                 
                 const data = await response.json();
-                
-                console.log('[DEBUG] Boxes da API:', data);
                 
                 if (data.ok && data.boxes) {
                     boxesState = {};
@@ -655,19 +383,17 @@
                         }
                     });
                     
-                    console.log('[DEBUG] Boxes ocupados:', Object.keys(boxesState).length);
+                    console.log('[ALOCACAO] Boxes carregados:', Object.keys(boxesState).length);
                     return true;
                 } else {
-                    console.error('[DEBUG] Erro ao carregar boxes:', data.msg);
-                    return false;
+                    throw new Error(data.msg || 'Erro ao carregar boxes');
                 }
             } catch (error) {
-                console.error('[DEBUG] Erro ao carregar boxes:', error);
+                console.error('[ALOCACAO] Erro:', error);
                 return false;
             }
         }
         
-        // Função para alocar carga via API
         async function alocarCargaAPI(boxNum, cargaId) {
             try {
                 const response = await fetch(API_URL, {
@@ -683,21 +409,18 @@
                 const data = await response.json();
                 
                 if (data.ok) {
-                    console.log('[DEBUG] Carga alocada com sucesso via API');
                     return true;
                 } else {
-                    console.error('[DEBUG] Erro ao alocar carga:', data.msg);
-                    mostrarNotificacao('Erro ao alocar: ' + data.msg, 'error');
+                    mostrarNotificacao(data.msg, 'error');
                     return false;
                 }
             } catch (error) {
-                console.error('[DEBUG] Erro ao alocar carga:', error);
-                mostrarNotificacao('Erro ao conectar com a API', 'error');
+                console.error('[ALOCACAO] Erro:', error);
+                mostrarNotificacao('Erro ao alocar', 'error');
                 return false;
             }
         }
         
-        // Função para liberar box via API
         async function liberarBoxAPI(boxNum) {
             try {
                 const response = await fetch(API_URL, {
@@ -712,16 +435,13 @@
                 const data = await response.json();
                 
                 if (data.ok) {
-                    console.log('[DEBUG] BOX liberado com sucesso via API');
                     return true;
                 } else {
-                    console.error('[DEBUG] Erro ao liberar BOX:', data.msg);
-                    mostrarNotificacao('Erro ao liberar: ' + data.msg, 'error');
+                    mostrarNotificacao(data.msg, 'error');
                     return false;
                 }
             } catch (error) {
-                console.error('[DEBUG] Erro ao liberar BOX:', error);
-                mostrarNotificacao('Erro ao conectar com a API', 'error');
+                console.error('[ALOCACAO] Erro:', error);
                 return false;
             }
         }
@@ -783,7 +503,7 @@
             const btn = event.target;
             const originalHTML = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner loading"></i> Processando...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
             
             carregarCargasAPI().then(success => {
                 if (success) {
@@ -805,111 +525,81 @@
         }
 
         function calcularSugestoesInteligentes() {
-            console.log('[SUGESTÃO] Iniciando cálculo de sugestões...');
-            console.log('[SUGESTÃO] Cargas disponíveis:', cargasDisponiveis.length);
-            console.log('[SUGESTÃO] Boxes ocupados:', Object.keys(boxesState).length);
+            console.log('[SUGESTAO] Iniciando...');
             
             const sugestoes = [];
-            
-            // 1. Filtra cargas elegíveis (sem BOX)
             let cargasElegiveis = cargasDisponiveis.filter(c => !c.box);
             
-            console.log('[SUGESTÃO] Cargas elegíveis (sem BOX):', cargasElegiveis.length);
+            console.log('[SUGESTAO] Cargas elegíveis:', cargasElegiveis.length);
             
-            if (cargasElegiveis.length === 0) {
-                console.log('[SUGESTÃO] Nenhuma carga elegível encontrada');
-                return [];
-            }
+            if (cargasElegiveis.length === 0) return [];
             
-            // 2. Ordena cargas por critérios (data mais antiga primeiro, depois por m³)
             cargasElegiveis.sort((a, b) => {
-                // Primeiro por data
                 const dateA = new Date(a.dataRot || '9999-12-31');
                 const dateB = new Date(b.dataRot || '9999-12-31');
                 if (dateA < dateB) return -1;
                 if (dateA > dateB) return 1;
-                // Se mesma data, por m³ (maior primeiro para otimizar espaço)
                 return b.m3 - a.m3;
             });
             
-            console.log('[SUGESTÃO] Cargas após ordenação:', cargasElegiveis.slice(0, 3));
-            
-            // 3. Pega boxes vazios ordenados por capacidade (maior primeiro)
             const boxesVazios = Object.keys(boxesConfig)
                 .map(Number)
                 .filter(boxNum => !boxesState[boxNum])
                 .sort((a, b) => boxesConfig[b] - boxesConfig[a]);
             
-            console.log('[SUGESTÃO] Boxes vazios:', boxesVazios.length);
-            console.log('[SUGESTÃO] Boxes disponíveis:', boxesVazios);
+            console.log('[SUGESTAO] Boxes vazios:', boxesVazios.length);
             
-            // 4. Algoritmo de alocação melhorado
             const lojasAlocadas = new Set();
             const cargasUsadas = new Set();
             
             for (const box of boxesVazios) {
                 const capacidade = boxesConfig[box];
                 
-                // Busca melhor carga para este box
                 const cargaIndex = cargasElegiveis.findIndex((c, idx) => {
-                    // Já foi usada
                     if (cargasUsadas.has(idx)) return false;
-                    
-                    // Verifica se cabe
                     if (c.m3 > capacidade) return false;
                     
-                    // Prioriza lojas não repetidas (mas permite se necessário)
                     const lojaNaoRepetida = !lojasAlocadas.has(c.loja);
                     
-                    // Se tem poucas cargas restantes, aceita qualquer uma que caiba
                     if (cargasElegiveis.length - cargasUsadas.size <= boxesVazios.length - sugestoes.length) {
                         return true;
                     }
                     
-                    // Caso contrário, prioriza lojas não repetidas
                     return lojaNaoRepetida;
                 });
                 
                 if (cargaIndex !== -1) {
                     const carga = cargasElegiveis[cargaIndex];
                     
-                    const sugestao = {
+                    sugestoes.push({
                         boxSugerido: box,
                         capacidadeBox: capacidade,
                         carga: carga,
                         ocupacao: ((carga.m3 / capacidade) * 100).toFixed(1),
-                        motivo: `BOX ${box} (${capacidade}m³) para ${carga.loja} (${carga.m3.toFixed(1)}m³) - ${formatarData(carga.dataRot)}`
-                    };
+                        motivo: `BOX ${box} (${capacidade}m³) para ${carga.loja}`
+                    });
                     
-                    sugestoes.push(sugestao);
                     lojasAlocadas.add(carga.loja);
                     cargasUsadas.add(cargaIndex);
                     
-                    console.log('[SUGESTÃO] Adicionada:', sugestao);
-                    
-                    // Limita a 15 sugestões
                     if (sugestoes.length >= 15) break;
                 }
             }
             
-            console.log('[SUGESTÃO] Total de sugestões geradas:', sugestoes.length);
+            console.log('[SUGESTAO] Total gerado:', sugestoes.length);
             
             return sugestoes;
         }
 
         function renderizarSugestoes() {
             const container = document.getElementById('sugestoesContainer');
-            const totalElement = document.getElementById('totalSugestoes');
-            
-            if (totalElement) {
-                totalElement.textContent = sugestoesAtuais.length;
-            }
+            document.getElementById('totalSugestoes').textContent = sugestoesAtuais.length;
             
             if (sugestoesAtuais.length === 0) {
                 container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-check-circle"></i>
-                        <p>Nenhuma sugestão disponível. Todas as cargas podem já estar alocadas.</p>
+                    <div style="text-align: center; color: #666; padding: 40px;">
+                        <i class="fas fa-check-circle" style="font-size: 48px; color: #28a745; margin-bottom: 15px;"></i>
+                        <p>Nenhuma sugestão disponível</p>
                     </div>
                 `;
                 return;
@@ -933,45 +623,42 @@
                     </div>
                     <div class="sugestao-data">
                         <i class="fas fa-calendar"></i><br>
-                        ${formatarData(sug.carga.dataRot)}
+                        ${sug.carga.dataRot}
                     </div>
                     <div class="sugestao-actions">
                         <button class="btn btn-success" onclick="alocarCarga(${index})" title="Alocar">
                             <i class="fas fa-check"></i>
-                        </button>
-                        <button class="btn btn-primary" onclick="verDetalhesSugestao(${index})" title="Detalhes">
-                            <i class="fas fa-eye"></i>
                         </button>
                     </div>
                 </div>
             `).join('');
         }
 
-        function alocarCarga(sugestaoIndex) {
+        async function alocarCarga(sugestaoIndex) {
             const sugestao = sugestoesAtuais[sugestaoIndex];
             
-            if (confirm(`Confirma a alocação da carga ${sugestao.carga.carga} no BOX ${sugestao.boxSugerido}?`)) {
-                const btn = event.target.closest('button');
-                const originalHTML = btn.innerHTML;
-                btn.disabled = true;
-                btn.innerHTML = '<i class="fas fa-spinner loading"></i>';
+            if (!confirm(`Confirma alocação da carga ${sugestao.carga.carga} no BOX ${sugestao.boxSugerido}?`)) return;
+            
+            const btn = event.target.closest('button');
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            
+            const success = await alocarCargaAPI(sugestao.boxSugerido, sugestao.carga.carga);
+            
+            if (success) {
+                boxesState[sugestao.boxSugerido] = sugestao.carga;
+                sugestao.carga.box = sugestao.boxSugerido;
                 
-                alocarCargaAPI(sugestao.boxSugerido, sugestao.carga.carga).then(success => {
-                    if (success) {
-                        boxesState[sugestao.boxSugerido] = sugestao.carga;
-                        sugestao.carga.box = sugestao.boxSugerido;
-                        
-                        sugestoesAtuais.splice(sugestaoIndex, 1);
-                        
-                        renderizarSugestoes();
-                        inicializarBoxes();
-                        
-                        mostrarNotificacao(`Carga ${sugestao.carga.carga} alocada no BOX ${sugestao.boxSugerido}!`, 'success');
-                    } else {
-                        btn.disabled = false;
-                        btn.innerHTML = originalHTML;
-                    }
-                });
+                sugestoesAtuais.splice(sugestaoIndex, 1);
+                
+                renderizarSugestoes();
+                inicializarBoxes();
+                
+                mostrarNotificacao(`Carga alocada no BOX ${sugestao.boxSugerido}!`, 'success');
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
             }
         }
 
@@ -979,221 +666,44 @@
             if (confirm('Deseja realmente limpar todas as alocações?')) {
                 boxesState = {};
                 sugestoesAtuais = [];
-                
                 cargasDisponiveis.forEach(c => c.box = null);
                 
                 renderizarSugestoes();
                 inicializarBoxes();
                 
-                mostrarNotificacao('Todas as alocações foram limpas!', 'success');
+                mostrarNotificacao('Alocações limpas!', 'success');
             }
         }
 
         function verDetalhesBox(boxNum) {
-            const modal = document.getElementById('modalDetalhes');
-            const content = document.getElementById('detalhesContent');
-            const capacidade = boxesConfig[boxNum];
             const carga = boxesState[boxNum];
-            
-            let detalhesHTML = `
-                <div class="detail-item">
-                    <div class="detail-label">BOX:</div>
-                    <div class="detail-value"><strong>BOX ${boxNum}</strong></div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Capacidade:</div>
-                    <div class="detail-value">≤ ${capacidade} m³</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Status:</div>
-                    <div class="detail-value">
-                        <span style="padding: 5px 10px; border-radius: 5px; background: ${carga ? '#dc3545' : '#28a745'}; color: white;">
-                            ${carga ? 'Ocupado' : 'Disponível'}
-                        </span>
-                    </div>
-                </div>
-            `;
+            const capacidade = boxesConfig[boxNum];
             
             if (carga) {
-                detalhesHTML += `
-                    <div class="detail-item">
-                        <div class="detail-label">Carga:</div>
-                        <div class="detail-value"><strong>${carga.carga}</strong></div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Descrição:</div>
-                        <div class="detail-value">${carga.descricao}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Loja:</div>
-                        <div class="detail-value">${carga.loja}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Tipo:</div>
-                        <div class="detail-value">${carga.tipoLoja}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Volume (m³):</div>
-                        <div class="detail-value"><strong>${carga.m3.toFixed(1)} m³</strong></div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Ocupação:</div>
-                        <div class="detail-value">${((carga.m3 / capacidade) * 100).toFixed(1)}% da capacidade</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Data Roteirização:</div>
-                        <div class="detail-value">${formatarData(carga.dataRot)}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Valor:</div>
-                        <div class="detail-value"><strong>${carga.valor}</strong></div>
-                    </div>
-                `;
-                
-                detalhesHTML += `
-                    <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #f0f0f0;">
-                        <button class="btn btn-warning" onclick="liberarBox(${boxNum})" style="width: 100%;">
-                            <i class="fas fa-times"></i> Liberar BOX
-                        </button>
-                    </div>
-                `;
+                alert(`BOX ${boxNum}\nCapacidade: ${capacidade} m³\n\nCarga: ${carga.carga}\nLoja: ${carga.loja}\nVolume: ${carga.m3.toFixed(1)} m³\nOcupação: ${((carga.m3 / capacidade) * 100).toFixed(1)}%`);
             } else {
-                detalhesHTML += `
-                    <div class="detail-item">
-                        <div class="detail-label">Informação:</div>
-                        <div class="detail-value">Este BOX está disponível para alocação</div>
-                    </div>
-                `;
-            }
-            
-            content.innerHTML = detalhesHTML;
-            modal.classList.add('active');
-        }
-
-        function verDetalhesSugestao(sugestaoIndex) {
-            const sugestao = sugestoesAtuais[sugestaoIndex];
-            const modal = document.getElementById('modalDetalhes');
-            const content = document.getElementById('detalhesContent');
-            
-            content.innerHTML = `
-                <div class="detail-item">
-                    <div class="detail-label">BOX Sugerido:</div>
-                    <div class="detail-value"><strong>BOX ${sugestao.boxSugerido}</strong></div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Capacidade BOX:</div>
-                    <div class="detail-value">≤ ${sugestao.capacidadeBox} m³</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Carga:</div>
-                    <div class="detail-value"><strong>${sugestao.carga.carga}</strong></div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Descrição:</div>
-                    <div class="detail-value">${sugestao.carga.descricao}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Loja:</div>
-                    <div class="detail-value">${sugestao.carga.loja}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Tipo Loja:</div>
-                    <div class="detail-value">${sugestao.carga.tipoLoja}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Volume:</div>
-                    <div class="detail-value"><strong>${sugestao.carga.m3.toFixed(1)} m³</strong></div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Ocupação:</div>
-                    <div class="detail-value">${sugestao.ocupacao}% da capacidade</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Data Roteirização:</div>
-                    <div class="detail-value">${formatarData(sugestao.carga.dataRot)}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Valor:</div>
-                    <div class="detail-value"><strong>${sugestao.carga.valor}</strong></div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Motivo:</div>
-                    <div class="detail-value" style="color: #28a745; font-weight: 600;">
-                        <i class="fas fa-lightbulb"></i> ${sugestao.motivo}
-                    </div>
-                </div>
-                <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #f0f0f0;">
-                    <button class="btn btn-success" onclick="alocarCarga(${sugestaoIndex}); fecharModal();" style="width: 100%;">
-                        <i class="fas fa-check"></i> Alocar Agora
-                    </button>
-                </div>
-            `;
-            
-            modal.classList.add('active');
-        }
-
-        function liberarBox(boxNum) {
-            if (confirm(`Deseja realmente liberar o BOX ${boxNum}?`)) {
-                liberarBoxAPI(boxNum).then(success => {
-                    if (success) {
-                        const carga = boxesState[boxNum];
-                        if (carga) {
-                            carga.box = null;
-                        }
-                        delete boxesState[boxNum];
-                        
-                        fecharModal();
-                        inicializarBoxes();
-                        
-                        mostrarNotificacao(`BOX ${boxNum} liberado com sucesso!`, 'success');
-                    }
-                });
+                alert(`BOX ${boxNum}\nCapacidade: ${capacidade} m³\n\nStatus: Disponível`);
             }
         }
 
-        function fecharModal() {
-            document.getElementById('modalDetalhes').classList.remove('active');
-        }
-
-        function formatarData(dataStr) {
-            if (!dataStr) return 'N/A';
-            try {
-                const data = new Date(dataStr + 'T00:00:00');
-                return data.toLocaleDateString('pt-BR');
-            } catch (e) {
-                return dataStr;
+        function voltarMenu() {
+            if (confirm('Deseja voltar ao menu?')) {
+                window.location.href = '/menu';
             }
         }
 
         function mostrarNotificacao(mensagem, tipo = 'success') {
-            const cores = {
-                success: '#28a745',
-                error: '#dc3545',
-                warning: '#ffc107',
-                info: '#17a2b8'
-            };
+            const cores = { success: '#28a745', error: '#dc3545', warning: '#ffc107', info: '#17a2b8' };
+            const icones = { success: 'fa-check-circle', error: 'fa-times-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
             
             const notif = document.createElement('div');
             notif.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: ${cores[tipo]};
-                color: white;
-                padding: 15px 25px;
-                border-radius: 8px;
+                position: fixed; top: 20px; right: 20px;
+                background: ${cores[tipo]}; color: white;
+                padding: 15px 25px; border-radius: 8px;
                 box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-                z-index: 9999;
-                animation: slideIn 0.3s ease-out;
-                max-width: 400px;
+                z-index: 9999; animation: slideIn 0.3s ease-out;
             `;
-            
-            const icones = {
-                success: 'fa-check-circle',
-                error: 'fa-times-circle',
-                warning: 'fa-exclamation-triangle',
-                info: 'fa-info-circle'
-            };
             
             notif.innerHTML = `<i class="fas ${icones[tipo]}"></i> ${mensagem}`;
             document.body.appendChild(notif);
@@ -1204,53 +714,17 @@
             }, 3000);
         }
 
-        function voltarMenu() {
-            if (confirm('Deseja voltar ao menu? As alterações não salvas serão perdidas.')) {
-                window.location.href = '/menu';
-            }
-        }
-
-        // Fechar modal ao clicar fora
-        document.getElementById('modalDetalhes').addEventListener('click', function(e) {
-            if (e.target === this) {
-                fecharModal();
-            }
-        });
-
-        // Atalhos de teclado
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                fecharModal();
-            }
-            if (e.ctrlKey && e.key === 'g') {
-                e.preventDefault();
-                gerarSugestoes();
-            }
-        });
-
         // Animações CSS
         const style = document.createElement('style');
         style.textContent = `
             @keyframes slideIn {
-                from {
-                    transform: translateX(400px);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
+                from { transform: translateX(400px); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
             }
             
             @keyframes slideOut {
-                from {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-                to {
-                    transform: translateX(400px);
-                    opacity: 0;
-                }
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(400px); opacity: 0; }
             }
         `;
         document.head.appendChild(style);
@@ -1272,14 +746,9 @@
             
             if (cargasOk && boxesOk) {
                 inicializarBoxes();
-                mostrarNotificacao('Sistema carregado! Use Ctrl+G para gerar sugestões.', 'success');
-                
-                console.log('[INIT] Sistema inicializado');
-                console.log('[INIT] Boxes configurados:', Object.keys(boxesConfig).length);
-                console.log('[INIT] Cargas disponíveis:', cargasDisponiveis.length);
-                console.log('[INIT] Boxes ocupados:', Object.keys(boxesState).length);
+                mostrarNotificacao('Sistema carregado!', 'success');
             } else {
-                mostrarNotificacao('Erro ao carregar dados. Verifique a conexão.', 'error');
+                mostrarNotificacao('Erro ao carregar dados', 'error');
             }
         };
     </script>
