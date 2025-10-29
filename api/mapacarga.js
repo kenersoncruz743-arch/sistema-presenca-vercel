@@ -77,7 +77,7 @@ module.exports = async (req, res) => {
       }
 
       case 'importar': {
-        console.log('[API MAPACARGA] Importando dados...');
+        console.log('[API MAPACARGA] Processando dados colados...');
         
         if (!dadosImportacao || !Array.isArray(dadosImportacao)) {
           return res.status(400).json({ 
@@ -87,16 +87,34 @@ module.exports = async (req, res) => {
         }
         
         try {
-          const resultado = await sheetsService.importarMapaCarga(dadosImportacao);
+          const resultado = await sheetsService.processarMapaCargaColado(dadosImportacao);
           
-          console.log('[API MAPACARGA] Resultado importação:', resultado);
+          console.log('[API MAPACARGA] Resultado processamento:', resultado);
           
           return res.status(200).json(resultado);
         } catch (error) {
-          console.error('[API MAPACARGA] Erro ao importar:', error);
+          console.error('[API MAPACARGA] Erro ao processar:', error);
           return res.status(500).json({ 
             ok: false, 
-            msg: 'Erro ao importar dados: ' + error.message 
+            msg: 'Erro ao processar dados: ' + error.message 
+          });
+        }
+      }
+      
+      case 'limpar': {
+        console.log('[API MAPACARGA] Limpando colunas específicas...');
+        
+        try {
+          const resultado = await sheetsService.limparColunasMapaCarga();
+          
+          console.log('[API MAPACARGA] Resultado limpeza:', resultado);
+          
+          return res.status(200).json(resultado);
+        } catch (error) {
+          console.error('[API MAPACARGA] Erro ao limpar:', error);
+          return res.status(500).json({ 
+            ok: false, 
+            msg: 'Erro ao limpar colunas: ' + error.message 
           });
         }
       }
