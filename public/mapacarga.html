@@ -240,9 +240,9 @@
             background: white;
             padding: 30px;
             border-radius: 15px;
-            max-width: 800px;
+            max-width: 900px;
             width: 90%;
-            max-height: 80vh;
+            max-height: 85vh;
             overflow-y: auto;
         }
         
@@ -265,18 +265,20 @@
         
         .paste-area {
             width: 100%;
-            min-height: 300px;
+            min-height: 400px;
             padding: 15px;
-            border: 2px solid #e0e0e0;
+            border: 2px dashed #e0e0e0;
             border-radius: 8px;
-            font-family: monospace;
+            font-family: 'Courier New', monospace;
             font-size: 12px;
             resize: vertical;
+            background: #f8f9fa;
         }
         
         .paste-area:focus {
             outline: none;
             border-color: #667eea;
+            background: white;
         }
         
         .paste-preview {
@@ -291,26 +293,27 @@
         .paste-preview table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 12px;
+            font-size: 11px;
         }
         
         .paste-preview th {
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
-            padding: 10px;
+            padding: 8px;
             text-align: left;
             font-weight: 600;
             position: sticky;
             top: 0;
             z-index: 10;
             white-space: nowrap;
+            font-size: 10px;
         }
         
         .paste-preview td {
-            padding: 8px;
+            padding: 6px 8px;
             border-bottom: 1px solid #e9ecef;
             white-space: nowrap;
-            max-width: 300px;
+            max-width: 250px;
             overflow: hidden;
             text-overflow: ellipsis;
         }
@@ -330,9 +333,15 @@
             margin-bottom: 20px;
         }
         
+        .col-mapping h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
         .col-mapping-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 10px;
             margin-top: 10px;
         }
@@ -341,21 +350,25 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            font-size: 12px;
+            font-size: 11px;
+            padding: 5px;
+            background: white;
+            border-radius: 4px;
         }
         
         .col-mapping-item strong {
             color: #667eea;
-            min-width: 60px;
+            min-width: 80px;
+            font-size: 10px;
         }
         
         .col-badge {
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
-            padding: 4px 8px;
+            padding: 3px 8px;
             border-radius: 4px;
             font-weight: 600;
-            font-size: 11px;
+            font-size: 10px;
         }
         
         .preview-stats {
@@ -388,6 +401,35 @@
             font-size: 18px;
             font-weight: bold;
             color: #333;
+        }
+
+        .instructions {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+
+        .instructions h4 {
+            color: #1976d2;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .instructions ol {
+            margin-left: 20px;
+            color: #333;
+            font-size: 13px;
+            line-height: 1.8;
+        }
+
+        .instructions ol li {
+            margin-bottom: 5px;
+        }
+
+        .instructions strong {
+            color: #1976d2;
         }
     </style>
 </head>
@@ -473,16 +515,70 @@
                 <h3><i class="fas fa-paste"></i> Colar Dados do Excel</h3>
                 <button class="close-modal" onclick="fecharModal()">×</button>
             </div>
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle"></i>
-                <div>
-                    <strong>Instruções:</strong><br>
-                    1. Copie os dados do Excel (Ctrl+C)<br>
-                    2. Cole aqui (Ctrl+V)<br>
-                    3. Clique em "Processar e Salvar"
+
+            <div class="instructions">
+                <h4><i class="fas fa-info-circle"></i> Instruções para Colagem</h4>
+                <ol>
+                    <li>No <strong>Excel</strong>, selecione as linhas completas (incluindo o cabeçalho)</li>
+                    <li>Copie com <strong>Ctrl+C</strong></li>
+                    <li>Clique na área de texto abaixo e cole com <strong>Ctrl+V</strong></li>
+                    <li>Verifique a prévia e clique em <strong>"Processar e Salvar"</strong></li>
+                </ol>
+            </div>
+
+            <div class="col-mapping">
+                <h4><i class="fas fa-table"></i> Mapeamento de Colunas</h4>
+                <div class="col-mapping-grid">
+                    <div class="col-mapping-item">
+                        <span class="col-badge">Col 0</span>
+                        <strong>Empresa</strong>
+                    </div>
+                    <div class="col-mapping-item">
+                        <span class="col-badge">Col 4</span>
+                        <strong>Carga</strong>
+                    </div>
+                    <div class="col-mapping-item">
+                        <span class="col-badge">Col 6</span>
+                        <strong>Descrição</strong>
+                    </div>
+                    <div class="col-mapping-item">
+                        <span class="col-badge">Col 7</span>
+                        <strong>Toneladas</strong>
+                    </div>
+                    <div class="col-mapping-item">
+                        <span class="col-badge">Col 8</span>
+                        <strong>Volume (m³)</strong>
+                    </div>
+                    <div class="col-mapping-item">
+                        <span class="col-badge">Col 9</span>
+                        <strong>Valor</strong>
+                    </div>
+                    <div class="col-mapping-item">
+                        <span class="col-badge">Col 12</span>
+                        <strong>Visitas Pendente</strong>
+                    </div>
+                    <div class="col-mapping-item">
+                        <span class="col-badge">Col 14</span>
+                        <strong>Data Roteirização</strong>
+                    </div>
+                    <div class="col-mapping-item">
+                        <span class="col-badge">Col 18</span>
+                        <strong>Separação Status</strong>
+                    </div>
+                    <div class="col-mapping-item">
+                        <span class="col-badge">Col 19</span>
+                        <strong>Conferência Status</strong>
+                    </div>
                 </div>
             </div>
-            <textarea class="paste-area" id="pasteArea" placeholder="Cole aqui os dados copiados do Excel..."></textarea>
+            
+            <textarea class="paste-area" id="pasteArea" placeholder="Cole aqui os dados copiados do Excel...
+
+Exemplo:
+Empresa	SM	Deposito	BOX	Carga	Col1	Descrição	Ton	Volume	Valor	..."></textarea>
+            
+            <div id="previewContainer"></div>
+            
             <div style="margin-top: 20px; display: flex; gap: 10px;">
                 <button class="btn btn-success" onclick="processarDados()" style="flex: 1;">
                     <i class="fas fa-check"></i> Processar e Salvar
@@ -519,6 +615,150 @@
         function limparArea() {
             document.getElementById('pasteArea').value = '';
             document.getElementById('uploadStatus').innerHTML = '';
+            document.getElementById('previewContainer').innerHTML = '';
+        }
+
+        // Preview automático ao colar
+        document.addEventListener('DOMContentLoaded', function() {
+            const pasteArea = document.getElementById('pasteArea');
+            
+            pasteArea.addEventListener('input', function() {
+                gerarPreview();
+            });
+        });
+
+        function gerarPreview() {
+            const texto = document.getElementById('pasteArea').value.trim();
+            const previewContainer = document.getElementById('previewContainer');
+            
+            if (!texto) {
+                previewContainer.innerHTML = '';
+                return;
+            }
+
+            try {
+                const linhas = texto.split('\n').filter(l => l.trim());
+                
+                if (linhas.length < 2) {
+                    previewContainer.innerHTML = '';
+                    return;
+                }
+
+                const dadosPreview = linhas.slice(0, 11); // Header + 10 linhas
+                
+                let html = `
+                    <div class="preview-stats">
+                        <div class="preview-stat">
+                            <i class="fas fa-list"></i>
+                            <div>
+                                <div class="label">Total Linhas</div>
+                                <div class="value">${linhas.length}</div>
+                            </div>
+                        </div>
+                        <div class="preview-stat">
+                            <i class="fas fa-eye"></i>
+                            <div>
+                                <div class="label">Pré-visualização</div>
+                                <div class="value">${Math.min(10, linhas.length - 1)}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="paste-preview">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Empresa</th>
+                                    <th>Carga</th>
+                                    <th>Descrição</th>
+                                    <th>Ton</th>
+                                    <th>Volume</th>
+                                    <th>Valor</th>
+                                    <th>Visitas</th>
+                                    <th>Data Rot</th>
+                                    <th>Sep St</th>
+                                    <th>Conf St</th>
+                                    <th>Segmento</th>
+                                    <th>Loja</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                for (let i = 1; i < dadosPreview.length; i++) {
+                    const linha = dadosPreview[i];
+                    const campos = linha.split('\t');
+                    
+                    if (campos.length < 10) continue;
+
+                    const empresa = (campos[0] || '').trim();
+                    const carga = (campos[4] || '').trim();
+                    const descricao = (campos[6] || '').trim();
+                    const ton = (campos[7] || '').trim();
+                    const volume = (campos[8] || '').trim();
+                    const valor = (campos[9] || '').trim();
+                    const visitas = (campos[12] || '').trim();
+                    const dataRot = (campos[14] || '').trim();
+                    const sepSt = (campos[18] || '').trim();
+                    const confSt = (campos[19] || '').trim();
+
+                    let segmento = '';
+                    let loja = '';
+                    if (descricao.toUpperCase().includes('COMPER')) {
+                        segmento = 'LJ COMPER';
+                    } else if (descricao.toUpperCase().includes('FORT')) {
+                        segmento = 'LJ FORT';
+                    }
+                    
+                    const matchLoja = descricao.match(/LJ\s+(\d+)/i);
+                    if (matchLoja) {
+                        loja = `LJ ${matchLoja[1]}`;
+                    }
+
+                    html += `
+                        <tr>
+                            <td>${empresa}</td>
+                            <td><strong>${carga}</strong></td>
+                            <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${descricao}</td>
+                            <td>${ton}</td>
+                            <td><strong>${volume}</strong></td>
+                            <td>${valor}</td>
+                            <td>${visitas}</td>
+                            <td>${dataRot}</td>
+                            <td>${sepSt}</td>
+                            <td>${confSt}</td>
+                            <td><span style="background: #e3f2fd; padding: 3px 8px; border-radius: 4px; font-size: 10px;">${segmento}</span></td>
+                            <td><strong>${loja}</strong></td>
+                        </tr>
+                    `;
+                }
+
+                if (linhas.length > 11) {
+                    html += `
+                        <tr>
+                            <td colspan="12" style="text-align: center; color: #667eea; font-weight: 600; padding: 10px;">
+                                <i class="fas fa-ellipsis-h"></i> Mais ${linhas.length - 11} linhas serão processadas
+                            </td>
+                        </tr>
+                    `;
+                }
+
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+
+                previewContainer.innerHTML = html;
+
+            } catch (error) {
+                console.error('[PREVIEW] Erro:', error);
+                previewContainer.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Erro ao gerar prévia. Verifique se os dados foram colados corretamente.
+                    </div>
+                `;
+            }
         }
 
         async function processarDados() {
