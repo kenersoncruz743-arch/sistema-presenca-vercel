@@ -30,23 +30,8 @@
             gap: 15px;
         }
         
-        .header-left h1 {
-            color: #333;
-            font-size: 24px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .user-badge {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 14px;
-            margin-top: 10px;
-        }
-        
+        .header-left h1 { color: #333; font-size: 24px; display: flex; align-items: center; gap: 10px; }
+        .user-badge { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 8px 15px; border-radius: 20px; font-size: 14px; margin-top: 10px; }
         .header-right { display: flex; gap: 10px; flex-wrap: wrap; }
         
         .btn {
@@ -222,6 +207,104 @@
             white-space: nowrap;
         }
         
+        .pivot-table {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .pivot-table h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .pivot-container {
+            overflow-x: auto;
+            max-height: 800px;
+            overflow-y: auto;
+        }
+        
+        .pivot-table table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        
+        .pivot-table th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 10px 8px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            white-space: nowrap;
+            font-size: 11px;
+        }
+        
+        .pivot-table td {
+            padding: 8px;
+            border-bottom: 1px solid #e9ecef;
+            white-space: nowrap;
+        }
+        
+        .pivot-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .pivot-table td.numeric {
+            text-align: right;
+            font-weight: 600;
+        }
+        
+        .expandable {
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .expandable:hover {
+            background: #e3f2fd;
+        }
+        
+        .expand-icon {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        
+        .expand-icon.expanded {
+            transform: rotate(90deg);
+        }
+        
+        .nivel-0 { background: #e3f2fd; font-weight: bold; }
+        .nivel-1 { background: #f0f4ff; padding-left: 30px !important; }
+        .nivel-2 { background: #f8f9fa; padding-left: 50px !important; }
+        .nivel-3 { background: #ffffff; padding-left: 70px !important; }
+        .nivel-4 { background: #fafafa; padding-left: 90px !important; }
+        
+        .row-hidden { display: none; }
+        
+        .total-row {
+            background: #667eea !important;
+            color: white !important;
+            font-weight: bold;
+        }
+        
+        .total-row td {
+            border-top: 2px solid #5a6fd8;
+        }
+        
         .modal {
             display: none;
             position: fixed;
@@ -241,9 +324,9 @@
             background: white;
             padding: 30px;
             border-radius: 15px;
-            max-width: 900px;
-            width: 90%;
-            max-height: 85vh;
+            max-width: 95vw;
+            width: 1400px;
+            max-height: 90vh;
             overflow-y: auto;
         }
         
@@ -266,14 +349,16 @@
         
         .paste-area {
             width: 100%;
-            min-height: 400px;
+            min-height: 250px;
+            max-height: 350px;
             padding: 15px;
             border: 2px dashed #e0e0e0;
             border-radius: 8px;
             font-family: 'Courier New', monospace;
-            font-size: 12px;
+            font-size: 11px;
             resize: vertical;
             background: #f8f9fa;
+            overflow-y: auto;
         }
         
         .paste-area:focus {
@@ -287,269 +372,96 @@
             border: 1px solid #e0e0e0;
             border-radius: 8px;
             overflow-x: auto;
-            max-height: 400px;
+            max-height: 450px;
             overflow-y: auto;
         }
         
         .paste-preview table {
             width: 100%;
             border-collapse: collapse;
+            font-size: 10px;
+        }
+        
+        .paste-preview th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 6px 4px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            white-space: nowrap;
+            font-size: 9px;
+        }
+        
+        .paste-preview td {
+            padding: 5px 4px;
+            border-bottom: 1px solid #e9ecef;
+            white-space: nowrap;
+            max-width: 180px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 10px;
+        }
+        
+        .preview-stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .preview-stat {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .preview-stat i {
+            color: #667eea;
+            font-size: 16px;
+        }
+        
+        .preview-stat .label {
             font-size: 11px;
+            color: #6c757d;
         }
         
-        .paste-preview th {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 8px;
-            text-align: left;
-            font-weight: 600;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            white-space: nowrap;
-            font-size: 10px;
+        .preview-stat .value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
         }
         
-        .paste-preview td {
-            padding: 6px 8px;
-            border-bottom: 1px solid #e9ecef;
-            white-space: nowrap;
-            max-width: 250px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        .paste-preview tbody tr:hover {
-            background-color: #f8f9fa;
-        }
-        
-        .paste-preview tbody tr:nth-child(even) {
-            background-color: #fafafa;
-        }
-        
-        .preview-stats {
-            display: flex;
-            gap: 20px;
+        .instructions {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 12px;
             margin-bottom: 15px;
-            padding: 15px;
-            background: #f8f9fa;
             border-radius: 8px;
-            flex-wrap: wrap;
         }
         
-        .preview-stat {
-            display: flex;
-            align-items: center;
-            gap: 8px;
+        .instructions h4 {
+            color: #1976d2;
+            margin-bottom: 8px;
+            font-size: 13px;
         }
         
-        .preview-stat i {
-            color: #667eea;
-            font-size: 18px;
-        }
-        
-        .preview-stat .label {
+        .instructions ol {
+            margin-left: 18px;
+            color: #333;
             font-size: 12px;
-            color: #6c757d;
-        }
-        
-        .preview-stat .value {
-            font-size: 18px;
-            font-weight: bold;
-            color: #333;
-        }
-
-        .instructions {
-            background: #e7f3ff;
-            border-left: 4px solid #2196F3;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 8px;
-        }
-
-        .instructions h4 {
-            color: #1976d2;
-            margin-bottom: 10px;
-            font-size: 14px;
-        }
-
-        .instructions ol {
-            margin-left: 20px;
-            color: #333;
-            font-size: 13px;
-            line-height: 1.8;
-        }
-
-        .instructions ol li {
-            margin-bottom: 5px;
-        }
-
-        .instructions strong {
-            color: #1976d2;
-        }
-
-        .pivot-table {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-        }
-
-        .pivot-table h3 {
-            color: #667eea;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .pivot-table table {
-            font-size: 13px;
-        }
-
-        .pivot-table th {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-        }
-
-        .pivot-table td.numeric {
-            text-align: right;
-            font-weight: 600;
-        }
-
-        .valor-total {
-            background: #e8f5e9;
-            color: #2e7d32;
-            font-weight: bold;
-        }
-
-        <!-- ADICIONAR NO <style> do mapacarga.html -->
-
-        /* ===== MODAL MAIOR E MELHORADO ===== */
-        .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            max-width: 95vw;  /* Aumentado de 900px para 95% da largura */
-            width: 1400px;    /* Largura fixa maior */
-            max-height: 90vh; /* Aumentado de 85vh para 90vh */
-            overflow-y: auto;
-        }
-        
-        /* ===== ÁREA DE COLAGEM MAIOR ===== */
-        .paste-area {
-            width: 100%;
-            min-height: 250px;  /* Aumentado de 400px */
-            max-height: 350px;  /* Permite scroll */
-            padding: 15px;
-            border: 2px dashed #e0e0e0;
-            border-radius: 8px;
-            font-family: 'Courier New', monospace;
-            font-size: 11px;  /* Reduzido para caber mais */
-            resize: vertical;
-            background: #f8f9fa;
-            overflow-y: auto;  /* Scroll interno */
-        }
-        
-        /* ===== PRÉVIA MELHORADA ===== */
-        .paste-preview {
-            margin-top: 20px;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            overflow-x: auto;
-            max-height: 450px;  /* Aumentado de 400px */
-            overflow-y: auto;
-        }
-        
-        .paste-preview table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 10px;  /* Reduzido para caber mais colunas */
-        }
-        
-        .paste-preview th {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 6px 4px;  /* Padding reduzido */
-            text-align: left;
-            font-weight: 600;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            white-space: nowrap;
-            font-size: 9px;  /* Menor para headers */
-        }
-        
-        .paste-preview td {
-            padding: 5px 4px;  /* Padding reduzido */
-            border-bottom: 1px solid #e9ecef;
-            white-space: nowrap;
-            max-width: 180px;  /* Reduzido para caber mais */
-            overflow: hidden;
-            text-overflow: ellipsis;
-            font-size: 10px;
-        }
-        
-        /* ===== STATS DA PRÉVIA ===== */
-        .preview-stats {
-            display: flex;
-            gap: 15px;  /* Reduzido */
-            margin-bottom: 15px;
-            padding: 12px;  /* Reduzido */
-            background: #f8f9fa;
-            border-radius: 8px;
-            flex-wrap: wrap;
-        }
-        
-        .preview-stat {
-            display: flex;
-            align-items: center;
-            gap: 6px;  /* Reduzido */
-        }
-        
-        .preview-stat i {
-            color: #667eea;
-            font-size: 16px;  /* Reduzido */
-        }
-        
-        .preview-stat .label {
-            font-size: 11px;  /* Reduzido */
-            color: #6c757d;
-        }
-        
-        .preview-stat .value {
-            font-size: 16px;  /* Reduzido */
-            font-weight: bold;
-            color: #333;
-        }
-        
-        /* ===== INSTRUÇÕES COMPACTAS ===== */
-        .instructions {
-            background: #e7f3ff;
-            border-left: 4px solid #2196F3;
-            padding: 12px;  /* Reduzido */
-            margin-bottom: 15px;  /* Reduzido */
-            border-radius: 8px;
-        }
-        
-        .instructions h4 {
-            color: #1976d2;
-            margin-bottom: 8px;  /* Reduzido */
-            font-size: 13px;  /* Reduzido */
-        }
-        
-        .instructions ol {
-            margin-left: 18px;  /* Reduzido */
-            color: #333;
-            font-size: 12px;  /* Reduzido */
-            line-height: 1.6;  /* Reduzido */
+            line-height: 1.6;
         }
         
         .instructions ol li {
-            margin-bottom: 4px;  /* Reduzido */
+            margin-bottom: 4px;
         }
         
-        /* ===== SCROLL SUAVE ===== */
         .modal-content::-webkit-scrollbar,
         .paste-area::-webkit-scrollbar,
         .paste-preview::-webkit-scrollbar {
@@ -577,28 +489,12 @@
             background: #555;
         }
         
-        /* ===== RESPONSIVO ===== */
-        @media (max-width: 1400px) {
-            .modal-content {
-                width: 90vw;
-            }
-        }
-        
         @media (max-width: 768px) {
-            .modal-content {
-                padding: 20px;
-                width: 95vw;
-                max-height: 85vh;
-            }
-            
-            .paste-preview table {
-                font-size: 9px;
-            }
-            
-            .paste-preview th,
-            .paste-preview td {
-                padding: 4px 3px;
-            }
+            .header { flex-direction: column; text-align: center; }
+            input[type="text"] { min-width: 100%; margin-bottom: 10px; }
+            .filters-grid { grid-template-columns: 1fr; }
+            table { font-size: 14px; }
+            th, td { padding: 8px; }
         }
     </style>
 </head>
@@ -607,7 +503,7 @@
         <div class="header">
             <div class="header-left">
                 <h1><i class="fas fa-truck-loading"></i> Mapa de Carga</h1>
-                <div class="user-badge"><i class="fas fa-user"></i> <span id="userName">Usuário</span></div>
+                <div class="user-badge"><i class="fas fa-user"></i> <span id="userName">Carregando...</span></div>
             </div>
             <div class="header-right">
                 <button class="btn btn-primary" onclick="abrirModalColar()"><i class="fas fa-paste"></i> Colar Dados</button>
@@ -644,20 +540,20 @@
         <div class="resumo-cards" id="resumoCards"></div>
 
         <div class="pivot-table">
-            <h3><i class="fas fa-table"></i> Consolidação por Loja (Tabela Dinâmica)</h3>
-            <div class="table-wrapper">
-                <table id="tabelaPivot">
+            <h3><i class="fas fa-table"></i> Consolidação Hierárquica - Clique para expandir/recolher</h3>
+            <div class="pivot-container">
+                <table id="tabelaPivotExpansivel">
                     <thead>
                         <tr>
-                            <th>Loja</th>
+                            <th style="width: 400px;">Hierarquia (Data Rot > Segmento > Loja > BOX > Carga)</th>
                             <th>Qtd Cargas</th>
                             <th>Valor Total</th>
                             <th>Visitas Pendentes</th>
                             <th>Volume Total (m³)</th>
-                            <th>Volume/Visita</th>
+                            <th>Vol/Visita</th>
                         </tr>
                     </thead>
-                    <tbody></tbody>
+                    <tbody id="pivotBody"></tbody>
                 </table>
             </div>
         </div>
@@ -671,29 +567,23 @@
                     <thead>
                         <tr>
                             <th>Empresa</th>
-                            <th>SM</th>
-                            <th>Deposito</th>
-                            <th>BOX</th>
                             <th>Carga</th>
                             <th>Descrição</th>
                             <th>Ton</th>
                             <th>M³</th>
                             <th>Valor</th>
-                            <th>Visita Picking</th>
-                            <th>Volume</th>
-                            <th>Inclusão</th>
-                            <th>Roteirização</th>
-                            <th>Geração Mesa</th>
+                            <th>Visitas</th>
+                            <th>Data Rot</th>
                             <th>Separação</th>
-                            <th>Conferencia</th>
-                            <th>Setor</th>
+                            <th>Loja</th>
+                            <th>BOX</th>
                         </tr>
                     </thead>
                     <tbody id="tabelaBody">
                         <tr>
-                            <td colspan="17" style="text-align: center; padding: 40px;">
+                            <td colspan="11" style="text-align: center; padding: 40px;">
                                 <i class="fas fa-inbox" style="font-size: 32px; color: #667eea;"></i>
-                                <p>Cole dados para começar</p>
+                                <p>Carregando dados...</p>
                             </td>
                         </tr>
                     </tbody>
@@ -717,14 +607,11 @@
                     <li>Copie com <strong>Ctrl+C</strong></li>
                     <li>Cole abaixo com <strong>Ctrl+V</strong></li>
                     <li>Verifique a prévia e clique em <strong>"Processar e Salvar"</strong></li>
+                    <li><strong>IMPORTANTE:</strong> Colunas protegidas (Visitas Pendente, Separação st, conf. St, Loja, etc) serão preservadas</li>
                 </ol>
             </div>
             
-            <textarea class="paste-area" id="pasteArea" placeholder="Cole aqui os DADOS do Excel (sem cabeçalho)...
-
-Exemplo (apenas dados):
-164	164	1	1	4293874	4293861	MS 0164 LJ 067 COMPER FORNEC. CRISTALCOP	1	0,00	0,04	R$ 98,00		1	1	25/10	30/10	31/10/2025 07:00:41	31/10/2025 07:03:56		0	0	X				BAZ
-164	164	1	1	4293881	4293862	MS 0164 LJ 072 COMPER FORNEC. INDUSTRIA	1	0,00	0,01	R$ 94,00		1	1	25/10	30/10	31/10/2025 07:00:47	31/10/2025 08:32:23		0	0	X				MER"></textarea>
+            <textarea class="paste-area" id="pasteArea" placeholder="Cole aqui os DADOS do Excel (sem cabeçalho)..."></textarea>
             
             <div id="previewContainer"></div>
             
@@ -744,6 +631,7 @@ Exemplo (apenas dados):
         const API_URL = '/api/mapacarga';
         let dadosOriginais = [];
         let dadosFiltrados = [];
+        let estruturaHierarquica = {};
 
         function showStatus(msg, type = 'info') {
             const div = document.getElementById('statusDiv');
@@ -938,7 +826,7 @@ Exemplo (apenas dados):
         }
 
         async function limparColunas() {
-            if (!confirm('Tem certeza que deseja LIMPAR as colunas?\n\nIsso irá apagar todos os dados!')) {
+            if (!confirm('Tem certeza que deseja LIMPAR as colunas?\n\nATENÇÃO: As seguintes colunas NÃO serão apagadas:\n- Visitas Pendente\n- Separação st\n- conf. St\n- Loja\n- Dia oferta\n- Prioridade\n- Total_Vertical\n- Segmento\n- Tipo Loja\n- Data Rot')) {
                 return;
             }
             
@@ -982,9 +870,10 @@ Exemplo (apenas dados):
                     dadosFiltrados = [...dadosOriginais];
                     
                     preencherFiltros();
+                    construirHierarquia();
+                    renderizarPivot();
                     renderTabela();
                     atualizarResumo();
-                    renderTabelaPivot();
                     
                     showStatus(`${dadosOriginais.length} cargas carregadas`, 'success');
                 } else {
@@ -1022,39 +911,267 @@ Exemplo (apenas dados):
                 return matchSegmento && matchTipo && matchLoja && matchStatus;
             });
             
+            construirHierarquia();
+            renderizarPivot();
             renderTabela();
             atualizarResumo();
-            renderTabelaPivot();
             showStatus(`${dadosFiltrados.length} cargas filtradas`, 'info');
+        }
+
+        function construirHierarquia() {
+            estruturaHierarquica = {};
+            
+            dadosFiltrados.forEach(item => {
+                const dataRot = item.dataRot || 'Sem Data';
+                const segmento = item.segmento || 'Sem Segmento';
+                const loja = item.loja || 'Sem Loja';
+                const box = item.box || 'Sem BOX';
+                const carga = item.carga;
+                
+                // Nível 0: Data Rot
+                if (!estruturaHierarquica[dataRot]) {
+                    estruturaHierarquica[dataRot] = {
+                        nome: dataRot,
+                        nivel: 0,
+                        expandido: false,
+                        dados: { qtd: 0, valor: 0, visitas: 0, volume: 0 },
+                        filhos: {}
+                    };
+                }
+                
+                // Nível 1: Segmento
+                if (!estruturaHierarquica[dataRot].filhos[segmento]) {
+                    estruturaHierarquica[dataRot].filhos[segmento] = {
+                        nome: segmento,
+                        nivel: 1,
+                        expandido: false,
+                        dados: { qtd: 0, valor: 0, visitas: 0, volume: 0 },
+                        filhos: {}
+                    };
+                }
+                
+                // Nível 2: Loja
+                if (!estruturaHierarquica[dataRot].filhos[segmento].filhos[loja]) {
+                    estruturaHierarquica[dataRot].filhos[segmento].filhos[loja] = {
+                        nome: loja,
+                        nivel: 2,
+                        expandido: false,
+                        dados: { qtd: 0, valor: 0, visitas: 0, volume: 0 },
+                        filhos: {}
+                    };
+                }
+                
+                // Nível 3: BOX
+                if (!estruturaHierarquica[dataRot].filhos[segmento].filhos[loja].filhos[box]) {
+                    estruturaHierarquica[dataRot].filhos[segmento].filhos[loja].filhos[box] = {
+                        nome: box,
+                        nivel: 3,
+                        expandido: false,
+                        dados: { qtd: 0, valor: 0, visitas: 0, volume: 0 },
+                        filhos: {}
+                    };
+                }
+                
+                // Nível 4: Carga (folha)
+                estruturaHierarquica[dataRot].filhos[segmento].filhos[loja].filhos[box].filhos[carga] = {
+                    nome: carga,
+                    nivel: 4,
+                    expandido: false,
+                    dados: {
+                        qtd: 1,
+                        valor: parseValor(item.valor),
+                        visitas: parseInt(item.visitasPendente) || 0,
+                        volume: parseFloat(item.m3) || 0
+                    },
+                    detalhes: item
+                };
+                
+                // Atualiza totais em cascata
+                const valorItem = parseValor(item.valor);
+                const visitasItem = parseInt(item.visitasPendente) || 0;
+                const volumeItem = parseFloat(item.m3) || 0;
+                
+                estruturaHierarquica[dataRot].dados.qtd++;
+                estruturaHierarquica[dataRot].dados.valor += valorItem;
+                estruturaHierarquica[dataRot].dados.visitas += visitasItem;
+                estruturaHierarquica[dataRot].dados.volume += volumeItem;
+                
+                estruturaHierarquica[dataRot].filhos[segmento].dados.qtd++;
+                estruturaHierarquica[dataRot].filhos[segmento].dados.valor += valorItem;
+                estruturaHierarquica[dataRot].filhos[segmento].dados.visitas += visitasItem;
+                estruturaHierarquica[dataRot].filhos[segmento].dados.volume += volumeItem;
+                
+                estruturaHierarquica[dataRot].filhos[segmento].filhos[loja].dados.qtd++;
+                estruturaHierarquica[dataRot].filhos[segmento].filhos[loja].dados.valor += valorItem;
+                estruturaHierarquica[dataRot].filhos[segmento].filhos[loja].dados.visitas += visitasItem;
+                estruturaHierarquica[dataRot].filhos[segmento].filhos[loja].dados.volume += volumeItem;
+                
+                estruturaHierarquica[dataRot].filhos[segmento].filhos[loja].filhos[box].dados.qtd++;
+                estruturaHierarquica[dataRot].filhos[segmento].filhos[loja].filhos[box].dados.valor += valorItem;
+                estruturaHierarquica[dataRot].filhos[segmento].filhos[loja].filhos[box].dados.visitas += visitasItem;
+                estruturaHierarquica[dataRot].filhos[segmento].filhos[loja].filhos[box].dados.volume += volumeItem;
+            });
+        }
+
+        function parseValor(valor) {
+            if (!valor) return 0;
+            const valorStr = String(valor).replace('R, '').replace(/\./g, '').replace(',', '.').trim();
+            return parseFloat(valorStr) || 0;
+        }
+
+        function renderizarPivot() {
+            const tbody = document.getElementById('pivotBody');
+            tbody.innerHTML = '';
+            
+            let linhaId = 0;
+            let totalGeral = { qtd: 0, valor: 0, visitas: 0, volume: 0 };
+            
+            // Ordena datas
+            const datas = Object.keys(estruturaHierarquica).sort();
+            
+            datas.forEach(dataKey => {
+                const dataNode = estruturaHierarquica[dataKey];
+                totalGeral.qtd += dataNode.dados.qtd;
+                totalGeral.valor += dataNode.dados.valor;
+                totalGeral.visitas += dataNode.dados.visitas;
+                totalGeral.volume += dataNode.dados.volume;
+                
+                const dataId = `linha-${linhaId++}`;
+                tbody.innerHTML += criarLinha(dataNode, dataId, null);
+                
+                // Segmentos
+                const segmentos = Object.keys(dataNode.filhos).sort();
+                segmentos.forEach(segKey => {
+                    const segNode = dataNode.filhos[segKey];
+                    const segId = `linha-${linhaId++}`;
+                    tbody.innerHTML += criarLinha(segNode, segId, dataId);
+                    
+                    // Lojas
+                    const lojas = Object.keys(segNode.filhos).sort();
+                    lojas.forEach(lojaKey => {
+                        const lojaNode = segNode.filhos[lojaKey];
+                        const lojaId = `linha-${linhaId++}`;
+                        tbody.innerHTML += criarLinha(lojaNode, lojaId, segId);
+                        
+                        // BOXes
+                        const boxes = Object.keys(lojaNode.filhos).sort();
+                        boxes.forEach(boxKey => {
+                            const boxNode = lojaNode.filhos[boxKey];
+                            const boxId = `linha-${linhaId++}`;
+                            tbody.innerHTML += criarLinha(boxNode, boxId, lojaId);
+                            
+                            // Cargas
+                            const cargas = Object.keys(boxNode.filhos).sort();
+                            cargas.forEach(cargaKey => {
+                                const cargaNode = boxNode.filhos[cargaKey];
+                                const cargaId = `linha-${linhaId++}`;
+                                tbody.innerHTML += criarLinha(cargaNode, cargaId, boxId);
+                            });
+                        });
+                    });
+                });
+            });
+            
+            // Linha de total geral
+            const volPorVisita = totalGeral.visitas > 0 ? (totalGeral.volume / totalGeral.visitas).toFixed(2) : '0.00';
+            tbody.innerHTML += `
+                <tr class="total-row">
+                    <td><strong>TOTAL GERAL</strong></td>
+                    <td class="numeric">${totalGeral.qtd}</td>
+                    <td class="numeric">R$ ${totalGeral.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    <td class="numeric">${totalGeral.visitas}</td>
+                    <td class="numeric">${totalGeral.volume.toFixed(2)} m³</td>
+                    <td class="numeric">${volPorVisita} m³</td>
+                </tr>
+            `;
+        }
+
+        function criarLinha(node, linhaId, parentId) {
+            const temFilhos = Object.keys(node.filhos || {}).length > 0;
+            const expandIcon = temFilhos ? '<i class="fas fa-chevron-right expand-icon"></i>' : '<i class="fas fa-circle" style="font-size: 6px; margin-left: 5px;"></i>';
+            const volPorVisita = node.dados.visitas > 0 ? (node.dados.volume / node.dados.visitas).toFixed(2) : '0.00';
+            
+            const prefixo = node.nivel === 0 ? '📅 ' : 
+                           node.nivel === 1 ? '🏢 ' : 
+                           node.nivel === 2 ? '🏪 ' : 
+                           node.nivel === 3 ? '📦 ' : 
+                           '📋 ';
+            
+            return `
+                <tr id="${linhaId}" class="nivel-${node.nivel} ${parentId ? 'row-hidden' : ''}" data-parent="${parentId || ''}" data-nivel="${node.nivel}">
+                    <td class="expandable" onclick="toggleExpand('${linhaId}', ${temFilhos})">
+                        ${expandIcon}
+                        <strong>${prefixo}${node.nome}</strong>
+                    </td>
+                    <td class="numeric">${node.dados.qtd}</td>
+                    <td class="numeric">R$ ${node.dados.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    <td class="numeric">${node.dados.visitas}</td>
+                    <td class="numeric">${node.dados.volume.toFixed(2)} m³</td>
+                    <td class="numeric">${volPorVisita} m³</td>
+                </tr>
+            `;
+        }
+
+        function toggleExpand(linhaId, temFilhos) {
+            if (!temFilhos) return;
+            
+            const linha = document.getElementById(linhaId);
+            const icon = linha.querySelector('.expand-icon');
+            
+            // Toggle icon
+            icon.classList.toggle('expanded');
+            
+            // Mostra/esconde filhos diretos
+            const todasLinhas = document.querySelectorAll(`tr[data-parent="${linhaId}"]`);
+            const mostrar = icon.classList.contains('expanded');
+            
+            todasLinhas.forEach(filha => {
+                if (mostrar) {
+                    filha.classList.remove('row-hidden');
+                } else {
+                    // Esconde e reseta expansão dos filhos
+                    filha.classList.add('row-hidden');
+                    const iconFilho = filha.querySelector('.expand-icon');
+                    if (iconFilho) {
+                        iconFilho.classList.remove('expanded');
+                    }
+                    // Esconde recursivamente os netos
+                    esconderDescendentes(filha.id);
+                }
+            });
+        }
+
+        function esconderDescendentes(linhaId) {
+            const descendentes = document.querySelectorAll(`tr[data-parent="${linhaId}"]`);
+            descendentes.forEach(desc => {
+                desc.classList.add('row-hidden');
+                const icon = desc.querySelector('.expand-icon');
+                if (icon) icon.classList.remove('expanded');
+                esconderDescendentes(desc.id);
+            });
         }
 
         function renderTabela() {
             const tbody = document.getElementById('tabelaBody');
             
             if (dadosFiltrados.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="17" style="text-align: center; padding: 40px;"><i class="fas fa-inbox" style="font-size: 32px;"></i><p>Nenhuma carga encontrada</p></td></tr>';
+                tbody.innerHTML = '<tr><td colspan="11" style="text-align: center; padding: 40px;"><i class="fas fa-inbox" style="font-size: 32px;"></i><p>Nenhuma carga encontrada</p></td></tr>';
                 return;
             }
             
             tbody.innerHTML = dadosFiltrados.map(item => `
                 <tr>
                     <td>${item.empresa || '-'}</td>
-                    <td>${item.sm || '-'}</td>
-                    <td>${item.deposito || '-'}</td>
-                    <td>${item.box || '-'}</td>
                     <td><strong>${item.carga || '-'}</strong></td>
                     <td style="max-width: 300px; white-space: normal;">${item.descricao || '-'}</td>
                     <td>${item.ton || '0'}</td>
                     <td><strong>${item.m3 || '0'}</strong></td>
-                    <td class="valor-total">${item.valor || '0'}</td>
+                    <td>${item.valor || '0'}</td>
                     <td>${item.visitasPendente || '0'}</td>
-                    <td>${item.volume || '0'}</td>
-                    <td>${item.inclusao || '-'}</td>
                     <td>${item.dataRot || '-'}</td>
-                    <td>${item.geracaoMesa || '-'}</td>
                     <td>${item.statusSep || '-'}</td>
-                    <td>${item.statusConf || '-'}</td>
-                    <td>${item.setor || '-'}</td>
+                    <td><strong>${item.loja || '-'}</strong></td>
+                    <td>${item.box || '-'}</td>
                 </tr>
             `).join('');
             
@@ -1068,7 +1185,7 @@ Exemplo (apenas dados):
             const volumeTotal = dadosFiltrados.reduce((s, d) => s + (parseFloat(d.m3) || 0), 0);
             
             const valorTotal = dadosFiltrados.reduce((s, d) => {
-                const valorStr = (d.valor || '0').replace('R$', '').replace('.', '').replace(',', '.').trim();
+                const valorStr = (d.valor || '0').replace('R, '').replace('.', '').replace(',', '.').trim();
                 return s + (parseFloat(valorStr) || 0);
             }, 0);
             
@@ -1106,84 +1223,6 @@ Exemplo (apenas dados):
                     <div class="label">Visitas Pendentes</div>
                 </div>
             `;
-        }
-
-        function renderTabelaPivot() {
-            const tbody = document.querySelector('#tabelaPivot tbody');
-            
-            if (dadosFiltrados.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;"><i class="fas fa-info-circle"></i> Nenhum dado para consolidar</td></tr>';
-                return;
-            }
-            
-            const consolidacao = {};
-            
-            dadosFiltrados.forEach(item => {
-                const loja = item.loja || 'Sem Loja';
-                
-                if (!consolidacao[loja]) {
-                    consolidacao[loja] = {
-                        qtdCargas: 0,
-                        valorTotal: 0,
-                        visitasTotal: 0,
-                        volumeTotal: 0
-                    };
-                }
-                
-                consolidacao[loja].qtdCargas++;
-                
-                const valorStr = (item.valor || '0').replace('R$', '').replace('.', '').replace(',', '.').trim();
-                consolidacao[loja].valorTotal += parseFloat(valorStr) || 0;
-                
-                consolidacao[loja].visitasTotal += parseInt(item.visitasPendente) || 0;
-                consolidacao[loja].volumeTotal += parseFloat(item.m3) || 0;
-            });
-            
-            const lojas = Object.keys(consolidacao).sort();
-            
-            let html = '';
-            let totais = {
-                qtdCargas: 0,
-                valorTotal: 0,
-                visitasTotal: 0,
-                volumeTotal: 0
-            };
-            
-            lojas.forEach(loja => {
-                const dados = consolidacao[loja];
-                const volumePorVisita = dados.visitasTotal > 0 ? (dados.volumeTotal / dados.visitasTotal) : 0;
-                
-                totais.qtdCargas += dados.qtdCargas;
-                totais.valorTotal += dados.valorTotal;
-                totais.visitasTotal += dados.visitasTotal;
-                totais.volumeTotal += dados.volumeTotal;
-                
-                html += `
-                    <tr>
-                        <td><strong>${loja}</strong></td>
-                        <td class="numeric">${dados.qtdCargas}</td>
-                        <td class="numeric valor-total">R$ ${dados.valorTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                        <td class="numeric">${dados.visitasTotal}</td>
-                        <td class="numeric">${dados.volumeTotal.toFixed(2)} m³</td>
-                        <td class="numeric">${volumePorVisita.toFixed(2)} m³</td>
-                    </tr>
-                `;
-            });
-            
-            const volumeTotalPorVisita = totais.visitasTotal > 0 ? (totais.volumeTotal / totais.visitasTotal) : 0;
-            
-            html += `
-                <tr style="background: #667eea; color: white; font-weight: bold;">
-                    <td><strong>TOTAL GERAL</strong></td>
-                    <td class="numeric">${totais.qtdCargas}</td>
-                    <td class="numeric">R$ ${totais.valorTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                    <td class="numeric">${totais.visitasTotal}</td>
-                    <td class="numeric">${totais.volumeTotal.toFixed(2)} m³</td>
-                    <td class="numeric">${volumeTotalPorVisita.toFixed(2)} m³</td>
-                </tr>
-            `;
-            
-            tbody.innerHTML = html;
         }
 
         function voltarMenu() {
