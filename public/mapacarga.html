@@ -278,6 +278,117 @@
             outline: none;
             border-color: #667eea;
         }
+        
+        .paste-preview {
+            margin-top: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .paste-preview table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        
+        .paste-preview th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 10px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            white-space: nowrap;
+        }
+        
+        .paste-preview td {
+            padding: 8px;
+            border-bottom: 1px solid #e9ecef;
+            white-space: nowrap;
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .paste-preview tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .paste-preview tbody tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+        
+        .col-mapping {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .col-mapping-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .col-mapping-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+        
+        .col-mapping-item strong {
+            color: #667eea;
+            min-width: 60px;
+        }
+        
+        .col-badge {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 11px;
+        }
+        
+        .preview-stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .preview-stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .preview-stat i {
+            color: #667eea;
+            font-size: 18px;
+        }
+        
+        .preview-stat .label {
+            font-size: 12px;
+            color: #6c757d;
+        }
+        
+        .preview-stat .value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
     </style>
 </head>
 <body>
