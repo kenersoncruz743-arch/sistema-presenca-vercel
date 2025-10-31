@@ -110,6 +110,12 @@
             font-size: 14px;
         }
         
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
         .resumo-cards {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -462,33 +468,6 @@
             margin-bottom: 4px;
         }
         
-        .modal-content::-webkit-scrollbar,
-        .paste-area::-webkit-scrollbar,
-        .paste-preview::-webkit-scrollbar {
-            width: 10px;
-            height: 10px;
-        }
-        
-        .modal-content::-webkit-scrollbar-track,
-        .paste-area::-webkit-scrollbar-track,
-        .paste-preview::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-        
-        .modal-content::-webkit-scrollbar-thumb,
-        .paste-area::-webkit-scrollbar-thumb,
-        .paste-preview::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 10px;
-        }
-        
-        .modal-content::-webkit-scrollbar-thumb:hover,
-        .paste-area::-webkit-scrollbar-thumb:hover,
-        .paste-preview::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
-        
         @media (max-width: 768px) {
             .header { flex-direction: column; text-align: center; }
             input[type="text"] { min-width: 100%; margin-bottom: 10px; }
@@ -534,7 +513,10 @@
                     <select id="filtroStatus" multiple></select>
                 </div>
             </div>
-            <button class="btn btn-primary" onclick="aplicarFiltros()"><i class="fas fa-filter"></i> Filtrar</button>
+            <div class="filter-actions">
+                <button class="btn btn-primary" onclick="aplicarFiltros()"><i class="fas fa-filter"></i> Filtrar</button>
+                <button class="btn btn-secondary" onclick="limparFiltros()"><i class="fas fa-eraser"></i> Limpar Filtros</button>
+            </div>
         </div>
 
         <div class="resumo-cards" id="resumoCards"></div>
@@ -658,9 +640,11 @@
         document.addEventListener('DOMContentLoaded', function() {
             const pasteArea = document.getElementById('pasteArea');
             
-            pasteArea.addEventListener('input', function() {
-                gerarPreview();
-            });
+            if (pasteArea) {
+                pasteArea.addEventListener('input', function() {
+                    gerarPreview();
+                });
+            }
         });
 
         function gerarPreview() {
@@ -802,40 +786,6 @@
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        action: 'importar',
-                        dadosImportacao: linhas
-                    })
-                });
-                
-                const result = await response.json();
-                
-                if (result.ok) {
-                    statusDiv.innerHTML = `<div class="alert alert-success"><i class="fas fa-check-circle"></i> ${result.msg}</div>`;
-                    setTimeout(() => {
-                        fecharModal();
-                        carregarDados();
-                    }, 2000);
-                } else {
-                    throw new Error(result.msg || 'Erro ao processar');
-                }
-            } catch (error) {
-                console.error('[MAPACARGA] Erro:', error);
-                statusDiv.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> ${error.message}</div>`;
-            }
-        }
-
-        async function limparColunas() {
-            if (!confirm('Tem certeza que deseja LIMPAR as colunas?\n\nATENÇÃO: As seguintes colunas NÃO serão apagadas:\n- Visitas Pendente\n- Separação st\n- conf. St\n- Loja\n- Dia oferta\n- Prioridade\n- Total_Vertical\n- Segmento\n- Tipo Loja\n- Data Rot')) {
-                return;
-            }
-            
-            showStatus('Limpando colunas...', 'info');
-            
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'limpar' })
                 });
                 
@@ -887,20 +837,34 @@
 
         function preencherFiltros() {
             const segmentos = [...new Set(dadosOriginais.map(d => d.segmento).filter(Boolean))].sort();
-            document.getElementById('filtroSegmento').innerHTML = segmentos.map(s => `<option value="${s}">${s}</option>`).join('');
+            const selectSegmento = document.getElementById('filtroSegmento');
+            if (selectSegmento) {
+                selectSegmento.innerHTML = segmentos.map(s => `<option value="${s}">${s}</option>`).join('');
+            }
             
             const tipos = [...new Set(dadosOriginais.map(d => d.tipoLoja).filter(Boolean))].sort();
-            document.getElementById('filtroTipo').innerHTML = tipos.map(t => `<option value="${t}">${t}</option>`).join('');
+            const selectTipo = document.getElementById('filtroTipo');
+            if (selectTipo) {
+                selectTipo.innerHTML = tipos.map(t => `<option value="${t}">${t}</option>`).join('');
+            }
             
             const status = [...new Set(dadosOriginais.map(d => d.statusSep).filter(Boolean))].sort();
-            document.getElementById('filtroStatus').innerHTML = status.map(st => `<option value="${st}">${st}</option>`).join('');
+            const selectStatus = document.getElementById('filtroStatus');
+            if (selectStatus) {
+                selectStatus.innerHTML = status.map(st => `<option value="${st}">${st}</option>`).join('');
+            }
         }
 
         function aplicarFiltros() {
-            const segmentos = Array.from(document.getElementById('filtroSegmento').selectedOptions).map(o => o.value);
-            const tipos = Array.from(document.getElementById('filtroTipo').selectedOptions).map(o => o.value);
-            const loja = document.getElementById('filtroLoja').value.toLowerCase();
-            const statusSel = Array.from(document.getElementById('filtroStatus').selectedOptions).map(o => o.value);
+            const selectSegmento = document.getElementById('filtroSegmento');
+            const selectTipo = document.getElementById('filtroTipo');
+            const inputLoja = document.getElementById('filtroLoja');
+            const selectStatus = document.getElementById('filtroStatus');
+            
+            const segmentos = selectSegmento ? Array.from(selectSegmento.selectedOptions).map(o => o.value) : [];
+            const tipos = selectTipo ? Array.from(selectTipo.selectedOptions).map(o => o.value) : [];
+            const loja = inputLoja ? inputLoja.value.toLowerCase() : '';
+            const statusSel = selectStatus ? Array.from(selectStatus.selectedOptions).map(o => o.value) : [];
             
             dadosFiltrados = dadosOriginais.filter(item => {
                 const matchSegmento = segmentos.length === 0 || segmentos.includes(item.segmento);
@@ -918,6 +882,25 @@
             showStatus(`${dadosFiltrados.length} cargas filtradas`, 'info');
         }
 
+        function limparFiltros() {
+            const selectSegmento = document.getElementById('filtroSegmento');
+            const selectTipo = document.getElementById('filtroTipo');
+            const inputLoja = document.getElementById('filtroLoja');
+            const selectStatus = document.getElementById('filtroStatus');
+            
+            if (selectSegmento) selectSegmento.selectedIndex = -1;
+            if (selectTipo) selectTipo.selectedIndex = -1;
+            if (inputLoja) inputLoja.value = '';
+            if (selectStatus) selectStatus.selectedIndex = -1;
+            
+            dadosFiltrados = [...dadosOriginais];
+            construirHierarquia();
+            renderizarPivot();
+            renderTabela();
+            atualizarResumo();
+            showStatus('Filtros removidos', 'info');
+        }
+
         function construirHierarquia() {
             estruturaHierarquica = {};
             
@@ -928,7 +911,6 @@
                 const box = item.box || 'Sem BOX';
                 const carga = item.carga;
                 
-                // Nível 0: Data Rot
                 if (!estruturaHierarquica[dataRot]) {
                     estruturaHierarquica[dataRot] = {
                         nome: dataRot,
@@ -939,7 +921,6 @@
                     };
                 }
                 
-                // Nível 1: Segmento
                 if (!estruturaHierarquica[dataRot].filhos[segmento]) {
                     estruturaHierarquica[dataRot].filhos[segmento] = {
                         nome: segmento,
@@ -950,7 +931,6 @@
                     };
                 }
                 
-                // Nível 2: Loja
                 if (!estruturaHierarquica[dataRot].filhos[segmento].filhos[loja]) {
                     estruturaHierarquica[dataRot].filhos[segmento].filhos[loja] = {
                         nome: loja,
@@ -961,7 +941,6 @@
                     };
                 }
                 
-                // Nível 3: BOX
                 if (!estruturaHierarquica[dataRot].filhos[segmento].filhos[loja].filhos[box]) {
                     estruturaHierarquica[dataRot].filhos[segmento].filhos[loja].filhos[box] = {
                         nome: box,
@@ -972,7 +951,6 @@
                     };
                 }
                 
-                // Nível 4: Carga (folha)
                 estruturaHierarquica[dataRot].filhos[segmento].filhos[loja].filhos[box].filhos[carga] = {
                     nome: carga,
                     nivel: 4,
@@ -986,7 +964,6 @@
                     detalhes: item
                 };
                 
-                // Atualiza totais em cascata
                 const valorItem = parseValor(item.valor);
                 const visitasItem = parseInt(item.visitasPendente) || 0;
                 const volumeItem = parseFloat(item.m3) || 0;
@@ -1015,18 +992,19 @@
 
         function parseValor(valor) {
             if (!valor) return 0;
-            const valorStr = String(valor).replace('R, '').replace(/\./g, '').replace(',', '.').trim();
+            const valorStr = String(valor).replace('R$ ', '').replace(/\./g, '').replace(',', '.').trim();
             return parseFloat(valorStr) || 0;
         }
 
         function renderizarPivot() {
             const tbody = document.getElementById('pivotBody');
+            if (!tbody) return;
+            
             tbody.innerHTML = '';
             
             let linhaId = 0;
             let totalGeral = { qtd: 0, valor: 0, visitas: 0, volume: 0 };
             
-            // Ordena datas
             const datas = Object.keys(estruturaHierarquica).sort();
             
             datas.forEach(dataKey => {
@@ -1039,28 +1017,24 @@
                 const dataId = `linha-${linhaId++}`;
                 tbody.innerHTML += criarLinha(dataNode, dataId, null);
                 
-                // Segmentos
                 const segmentos = Object.keys(dataNode.filhos).sort();
                 segmentos.forEach(segKey => {
                     const segNode = dataNode.filhos[segKey];
                     const segId = `linha-${linhaId++}`;
                     tbody.innerHTML += criarLinha(segNode, segId, dataId);
                     
-                    // Lojas
                     const lojas = Object.keys(segNode.filhos).sort();
                     lojas.forEach(lojaKey => {
                         const lojaNode = segNode.filhos[lojaKey];
                         const lojaId = `linha-${linhaId++}`;
                         tbody.innerHTML += criarLinha(lojaNode, lojaId, segId);
                         
-                        // BOXes
                         const boxes = Object.keys(lojaNode.filhos).sort();
                         boxes.forEach(boxKey => {
                             const boxNode = lojaNode.filhos[boxKey];
                             const boxId = `linha-${linhaId++}`;
                             tbody.innerHTML += criarLinha(boxNode, boxId, lojaId);
                             
-                            // Cargas
                             const cargas = Object.keys(boxNode.filhos).sort();
                             cargas.forEach(cargaKey => {
                                 const cargaNode = boxNode.filhos[cargaKey];
@@ -1072,7 +1046,6 @@
                 });
             });
             
-            // Linha de total geral
             const volPorVisita = totalGeral.visitas > 0 ? (totalGeral.volume / totalGeral.visitas).toFixed(2) : '0.00';
             tbody.innerHTML += `
                 <tr class="total-row">
@@ -1116,12 +1089,13 @@
             if (!temFilhos) return;
             
             const linha = document.getElementById(linhaId);
-            const icon = linha.querySelector('.expand-icon');
+            if (!linha) return;
             
-            // Toggle icon
+            const icon = linha.querySelector('.expand-icon');
+            if (!icon) return;
+            
             icon.classList.toggle('expanded');
             
-            // Mostra/esconde filhos diretos
             const todasLinhas = document.querySelectorAll(`tr[data-parent="${linhaId}"]`);
             const mostrar = icon.classList.contains('expanded');
             
@@ -1129,13 +1103,11 @@
                 if (mostrar) {
                     filha.classList.remove('row-hidden');
                 } else {
-                    // Esconde e reseta expansão dos filhos
                     filha.classList.add('row-hidden');
                     const iconFilho = filha.querySelector('.expand-icon');
                     if (iconFilho) {
                         iconFilho.classList.remove('expanded');
                     }
-                    // Esconde recursivamente os netos
                     esconderDescendentes(filha.id);
                 }
             });
@@ -1153,6 +1125,7 @@
 
         function renderTabela() {
             const tbody = document.getElementById('tabelaBody');
+            if (!tbody) return;
             
             if (dadosFiltrados.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="11" style="text-align: center; padding: 40px;"><i class="fas fa-inbox" style="font-size: 32px;"></i><p>Nenhuma carga encontrada</p></td></tr>';
@@ -1175,7 +1148,10 @@
                 </tr>
             `).join('');
             
-            document.getElementById('totalRegistros').textContent = dadosFiltrados.length;
+            const totalRegistros = document.getElementById('totalRegistros');
+            if (totalRegistros) {
+                totalRegistros.textContent = dadosFiltrados.length;
+            }
         }
 
         function atualizarResumo() {
@@ -1185,44 +1161,47 @@
             const volumeTotal = dadosFiltrados.reduce((s, d) => s + (parseFloat(d.m3) || 0), 0);
             
             const valorTotal = dadosFiltrados.reduce((s, d) => {
-                const valorStr = (d.valor || '0').replace('R, '').replace('.', '').replace(',', '.').trim();
+                const valorStr = (d.valor || '0').replace('R$ ', '').replace(/\./g, '').replace(',', '.').trim();
                 return s + (parseFloat(valorStr) || 0);
             }, 0);
             
             const visitasTotal = dadosFiltrados.reduce((s, d) => s + (parseInt(d.visitasPendente) || 0), 0);
             
-            document.getElementById('resumoCards').innerHTML = `
-                <div class="stat-card">
-                    <i class="fas fa-truck"></i>
-                    <div class="value">${total}</div>
-                    <div class="label">Total Cargas</div>
-                </div>
-                <div class="stat-card">
-                    <i class="fas fa-store"></i>
-                    <div class="value">${comper}</div>
-                    <div class="label">LJ COMPER</div>
-                </div>
-                <div class="stat-card">
-                    <i class="fas fa-store-alt"></i>
-                    <div class="value">${fort}</div>
-                    <div class="label">LJ FORT</div>
-                </div>
-                <div class="stat-card">
-                    <i class="fas fa-cube"></i>
-                    <div class="value">${volumeTotal.toFixed(1)}</div>
-                    <div class="label">Volume Total (m³)</div>
-                </div>
-                <div class="stat-card">
-                    <i class="fas fa-dollar-sign"></i>
-                    <div class="value">R$ ${valorTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-                    <div class="label">Valor Total</div>
-                </div>
-                <div class="stat-card">
-                    <i class="fas fa-map-marker-alt"></i>
-                    <div class="value">${visitasTotal}</div>
-                    <div class="label">Visitas Pendentes</div>
-                </div>
-            `;
+            const resumoCards = document.getElementById('resumoCards');
+            if (resumoCards) {
+                resumoCards.innerHTML = `
+                    <div class="stat-card">
+                        <i class="fas fa-truck"></i>
+                        <div class="value">${total}</div>
+                        <div class="label">Total Cargas</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-store"></i>
+                        <div class="value">${comper}</div>
+                        <div class="label">LJ COMPER</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-store-alt"></i>
+                        <div class="value">${fort}</div>
+                        <div class="label">LJ FORT</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-cube"></i>
+                        <div class="value">${volumeTotal.toFixed(1)}</div>
+                        <div class="label">Volume Total (m³)</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-dollar-sign"></i>
+                        <div class="value">R$ ${valorTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                        <div class="label">Valor Total</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <div class="value">${visitasTotal}</div>
+                        <div class="label">Visitas Pendentes</div>
+                    </div>
+                `;
+            }
         }
 
         function voltarMenu() {
@@ -1240,8 +1219,11 @@
         });
 
         window.onload = function() {
-            const usuario = sessionStorage.getItem('usuario') || 'Usuário';
-            document.getElementById('userName').textContent = usuario;
+            const userName = document.getElementById('userName');
+            if (userName) {
+                const usuario = sessionStorage.getItem('usuario') || 'Usuário';
+                userName.textContent = usuario;
+            }
             carregarDados();
         };
     </script>
