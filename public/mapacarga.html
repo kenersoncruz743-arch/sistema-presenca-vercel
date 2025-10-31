@@ -165,6 +165,7 @@
             border-radius: 15px;
             box-shadow: 0 5px 20px rgba(0,0,0,0.1);
             overflow: hidden;
+            margin-bottom: 20px;
         }
         
         .table-header {
@@ -199,9 +200,9 @@
         }
         
         th {
-            padding: 12px 15px;
+            padding: 12px 8px;
             text-align: left;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
             text-transform: uppercase;
             white-space: nowrap;
@@ -215,8 +216,8 @@
         tbody tr:hover { background: #f8f9ff; }
         
         td {
-            padding: 12px 15px;
-            font-size: 13px;
+            padding: 10px 8px;
+            font-size: 12px;
             color: #333;
             white-space: nowrap;
         }
@@ -326,51 +327,6 @@
             background-color: #fafafa;
         }
         
-        .col-mapping {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        
-        .col-mapping h4 {
-            color: #667eea;
-            margin-bottom: 10px;
-            font-size: 14px;
-        }
-        
-        .col-mapping-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 10px;
-            margin-top: 10px;
-        }
-        
-        .col-mapping-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 11px;
-            padding: 5px;
-            background: white;
-            border-radius: 4px;
-        }
-        
-        .col-mapping-item strong {
-            color: #667eea;
-            min-width: 80px;
-            font-size: 10px;
-        }
-        
-        .col-badge {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-weight: 600;
-            font-size: 10px;
-        }
-        
         .preview-stats {
             display: flex;
             gap: 20px;
@@ -431,6 +387,41 @@
         .instructions strong {
             color: #1976d2;
         }
+
+        .pivot-table {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .pivot-table h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pivot-table table {
+            font-size: 13px;
+        }
+
+        .pivot-table th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .pivot-table td.numeric {
+            text-align: right;
+            font-weight: 600;
+        }
+
+        .valor-total {
+            background: #e8f5e9;
+            color: #2e7d32;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -474,6 +465,25 @@
 
         <div class="resumo-cards" id="resumoCards"></div>
 
+        <div class="pivot-table">
+            <h3><i class="fas fa-table"></i> Consolidação por Loja (Tabela Dinâmica)</h3>
+            <div class="table-wrapper">
+                <table id="tabelaPivot">
+                    <thead>
+                        <tr>
+                            <th>Loja</th>
+                            <th>Qtd Cargas</th>
+                            <th>Valor Total</th>
+                            <th>Visitas Pendentes</th>
+                            <th>Volume Total (m³)</th>
+                            <th>Volume/Visita</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
         <div class="table-container">
             <div class="table-header">
                 <h2><i class="fas fa-list"></i> Cargas (<span id="totalRegistros">0</span>)</h2>
@@ -482,22 +492,28 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Segmento</th>
-                            <th>Tipo Loja</th>
                             <th>Empresa</th>
+                            <th>SM</th>
+                            <th>Deposito</th>
+                            <th>BOX</th>
                             <th>Carga</th>
                             <th>Descrição</th>
-                            <th>Loja</th>
+                            <th>Ton</th>
                             <th>M³</th>
                             <th>Valor</th>
-                            <th>Data Rot.</th>
-                            <th>Status Sep.</th>
-                            <th>BOX</th>
+                            <th>Visita Picking</th>
+                            <th>Volume</th>
+                            <th>Inclusão</th>
+                            <th>Roteirização</th>
+                            <th>Geração Mesa</th>
+                            <th>Separação</th>
+                            <th>Conferencia</th>
+                            <th>Setor</th>
                         </tr>
                     </thead>
                     <tbody id="tabelaBody">
                         <tr>
-                            <td colspan="11" style="text-align: center; padding: 40px;">
+                            <td colspan="17" style="text-align: center; padding: 40px;">
                                 <i class="fas fa-inbox" style="font-size: 32px; color: #667eea;"></i>
                                 <p>Cole dados para começar</p>
                             </td>
@@ -519,63 +535,18 @@
             <div class="instructions">
                 <h4><i class="fas fa-info-circle"></i> Instruções para Colagem</h4>
                 <ol>
-                    <li>No <strong>Excel</strong>, selecione as linhas completas (incluindo o cabeçalho)</li>
+                    <li>No <strong>Excel</strong>, selecione APENAS as linhas de dados (SEM o cabeçalho)</li>
                     <li>Copie com <strong>Ctrl+C</strong></li>
-                    <li>Clique na área de texto abaixo e cole com <strong>Ctrl+V</strong></li>
+                    <li>Cole abaixo com <strong>Ctrl+V</strong></li>
                     <li>Verifique a prévia e clique em <strong>"Processar e Salvar"</strong></li>
                 </ol>
             </div>
-
-            <div class="col-mapping">
-                <h4><i class="fas fa-table"></i> Mapeamento de Colunas</h4>
-                <div class="col-mapping-grid">
-                    <div class="col-mapping-item">
-                        <span class="col-badge">Col 0</span>
-                        <strong>Empresa</strong>
-                    </div>
-                    <div class="col-mapping-item">
-                        <span class="col-badge">Col 4</span>
-                        <strong>Carga</strong>
-                    </div>
-                    <div class="col-mapping-item">
-                        <span class="col-badge">Col 6</span>
-                        <strong>Descrição</strong>
-                    </div>
-                    <div class="col-mapping-item">
-                        <span class="col-badge">Col 7</span>
-                        <strong>Toneladas</strong>
-                    </div>
-                    <div class="col-mapping-item">
-                        <span class="col-badge">Col 8</span>
-                        <strong>Volume (m³)</strong>
-                    </div>
-                    <div class="col-mapping-item">
-                        <span class="col-badge">Col 9</span>
-                        <strong>Valor</strong>
-                    </div>
-                    <div class="col-mapping-item">
-                        <span class="col-badge">Col 12</span>
-                        <strong>Visitas Pendente</strong>
-                    </div>
-                    <div class="col-mapping-item">
-                        <span class="col-badge">Col 14</span>
-                        <strong>Data Roteirização</strong>
-                    </div>
-                    <div class="col-mapping-item">
-                        <span class="col-badge">Col 18</span>
-                        <strong>Separação Status</strong>
-                    </div>
-                    <div class="col-mapping-item">
-                        <span class="col-badge">Col 19</span>
-                        <strong>Conferência Status</strong>
-                    </div>
-                </div>
-            </div>
             
-            <textarea class="paste-area" id="pasteArea" placeholder="Cole aqui os dados copiados do Excel...
+            <textarea class="paste-area" id="pasteArea" placeholder="Cole aqui os DADOS do Excel (sem cabeçalho)...
 
-Exemplo:
-Empresa	SM	Deposito	BOX	Carga	Col1	Descrição	Ton	Volume	Valor	..."></textarea>
+Exemplo (apenas dados):
+164	164	1	1	4293874	4293861	MS 0164 LJ 067 COMPER FORNEC. CRISTALCOP	1	0,00	0,04	R$ 98,00		1	1	25/10	30/10	31/10/2025 07:00:41	31/10/2025 07:03:56		0	0	X				BAZ
+164	164	1	1	4293881	4293862	MS 0164 LJ 072 COMPER FORNEC. INDUSTRIA	1	0,00	0,01	R$ 94,00		1	1	25/10	30/10	31/10/2025 07:00:47	31/10/2025 08:32:23		0	0	X				MER"></textarea>
             
             <div id="previewContainer"></div>
             
@@ -618,7 +589,6 @@ Empresa	SM	Deposito	BOX	Carga	Col1	Descrição	Ton	Volume	Valor	..."></textarea>
             document.getElementById('previewContainer').innerHTML = '';
         }
 
-        // Preview automático ao colar
         document.addEventListener('DOMContentLoaded', function() {
             const pasteArea = document.getElementById('pasteArea');
             
@@ -639,12 +609,12 @@ Empresa	SM	Deposito	BOX	Carga	Col1	Descrição	Ton	Volume	Valor	..."></textarea>
             try {
                 const linhas = texto.split('\n').filter(l => l.trim());
                 
-                if (linhas.length < 2) {
+                if (linhas.length === 0) {
                     previewContainer.innerHTML = '';
                     return;
                 }
 
-                const dadosPreview = linhas.slice(0, 11); // Header + 10 linhas
+                const dadosPreview = linhas.slice(0, 10);
                 
                 let html = `
                     <div class="preview-stats">
@@ -659,7 +629,7 @@ Empresa	SM	Deposito	BOX	Carga	Col1	Descrição	Ton	Volume	Valor	..."></textarea>
                             <i class="fas fa-eye"></i>
                             <div>
                                 <div class="label">Pré-visualização</div>
-                                <div class="value">${Math.min(10, linhas.length - 1)}</div>
+                                <div class="value">${Math.min(10, linhas.length)}</div>
                             </div>
                         </div>
                     </div>
@@ -675,40 +645,29 @@ Empresa	SM	Deposito	BOX	Carga	Col1	Descrição	Ton	Volume	Valor	..."></textarea>
                                     <th>Valor</th>
                                     <th>Visitas</th>
                                     <th>Data Rot</th>
-                                    <th>Sep St</th>
-                                    <th>Conf St</th>
-                                    <th>Segmento</th>
+                                    <th>Separação</th>
                                     <th>Loja</th>
                                 </tr>
                             </thead>
                             <tbody>
                 `;
 
-                for (let i = 1; i < dadosPreview.length; i++) {
-                    const linha = dadosPreview[i];
+                dadosPreview.forEach(linha => {
                     const campos = linha.split('\t');
                     
-                    if (campos.length < 10) continue;
+                    if (campos.length < 20) return;
 
                     const empresa = (campos[0] || '').trim();
                     const carga = (campos[4] || '').trim();
                     const descricao = (campos[6] || '').trim();
-                    const ton = (campos[7] || '').trim();
-                    const volume = (campos[8] || '').trim();
-                    const valor = (campos[9] || '').trim();
+                    const ton = (campos[8] || '').trim();
+                    const volume = (campos[9] || '').trim();
+                    const valor = (campos[10] || '').trim();
                     const visitas = (campos[12] || '').trim();
-                    const dataRot = (campos[14] || '').trim();
-                    const sepSt = (campos[18] || '').trim();
-                    const confSt = (campos[19] || '').trim();
+                    const dataRot = (campos[16] || '').trim();
+                    const separacao = (campos[22] || '').trim();
 
-                    let segmento = '';
                     let loja = '';
-                    if (descricao.toUpperCase().includes('COMPER')) {
-                        segmento = 'LJ COMPER';
-                    } else if (descricao.toUpperCase().includes('FORT')) {
-                        segmento = 'LJ FORT';
-                    }
-                    
                     const matchLoja = descricao.match(/LJ\s+(\d+)/i);
                     if (matchLoja) {
                         loja = `LJ ${matchLoja[1]}`;
@@ -724,19 +683,17 @@ Empresa	SM	Deposito	BOX	Carga	Col1	Descrição	Ton	Volume	Valor	..."></textarea>
                             <td>${valor}</td>
                             <td>${visitas}</td>
                             <td>${dataRot}</td>
-                            <td>${sepSt}</td>
-                            <td>${confSt}</td>
-                            <td><span style="background: #e3f2fd; padding: 3px 8px; border-radius: 4px; font-size: 10px;">${segmento}</span></td>
+                            <td>${separacao}</td>
                             <td><strong>${loja}</strong></td>
                         </tr>
                     `;
-                }
+                });
 
-                if (linhas.length > 11) {
+                if (linhas.length > 10) {
                     html += `
                         <tr>
-                            <td colspan="12" style="text-align: center; color: #667eea; font-weight: 600; padding: 10px;">
-                                <i class="fas fa-ellipsis-h"></i> Mais ${linhas.length - 11} linhas serão processadas
+                            <td colspan="10" style="text-align: center; color: #667eea; font-weight: 600; padding: 10px;">
+                                <i class="fas fa-ellipsis-h"></i> Mais ${linhas.length - 10} linhas serão processadas
                             </td>
                         </tr>
                     `;
@@ -803,7 +760,7 @@ Empresa	SM	Deposito	BOX	Carga	Col1	Descrição	Ton	Volume	Valor	..."></textarea>
         }
 
         async function limparColunas() {
-            if (!confirm('Tem certeza que deseja LIMPAR as colunas Empresa até Setor?\n\nIsso irá apagar todos os dados dessas colunas!')) {
+            if (!confirm('Tem certeza que deseja LIMPAR as colunas?\n\nIsso irá apagar todos os dados!')) {
                 return;
             }
             
@@ -849,6 +806,7 @@ Empresa	SM	Deposito	BOX	Carga	Col1	Descrição	Ton	Volume	Valor	..."></textarea>
                     preencherFiltros();
                     renderTabela();
                     atualizarResumo();
+                    renderTabelaPivot();
                     
                     showStatus(`${dadosOriginais.length} cargas carregadas`, 'success');
                 } else {
@@ -888,6 +846,7 @@ Empresa	SM	Deposito	BOX	Carga	Col1	Descrição	Ton	Volume	Valor	..."></textarea>
             
             renderTabela();
             atualizarResumo();
+            renderTabelaPivot();
             showStatus(`${dadosFiltrados.length} cargas filtradas`, 'info');
         }
 
@@ -895,23 +854,29 @@ Empresa	SM	Deposito	BOX	Carga	Col1	Descrição	Ton	Volume	Valor	..."></textarea>
             const tbody = document.getElementById('tabelaBody');
             
             if (dadosFiltrados.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="11" style="text-align: center; padding: 40px;"><i class="fas fa-inbox" style="font-size: 32px;"></i><p>Nenhuma carga encontrada</p></td></tr>';
+                tbody.innerHTML = '<tr><td colspan="17" style="text-align: center; padding: 40px;"><i class="fas fa-inbox" style="font-size: 32px;"></i><p>Nenhuma carga encontrada</p></td></tr>';
                 return;
             }
             
             tbody.innerHTML = dadosFiltrados.map(item => `
                 <tr>
-                    <td>${item.segmento || '-'}</td>
-                    <td>${item.tipoLoja || '-'}</td>
                     <td>${item.empresa || '-'}</td>
+                    <td>${item.sm || '-'}</td>
+                    <td>${item.deposito || '-'}</td>
+                    <td>${item.box || '-'}</td>
                     <td><strong>${item.carga || '-'}</strong></td>
                     <td style="max-width: 300px; white-space: normal;">${item.descricao || '-'}</td>
-                    <td>${item.loja || '-'}</td>
+                    <td>${item.ton || '0'}</td>
                     <td><strong>${item.m3 || '0'}</strong></td>
-                    <td>R$ ${item.valor || '0'}</td>
+                    <td class="valor-total">${item.valor || '0'}</td>
+                    <td>${item.visitasPendente || '0'}</td>
+                    <td>${item.volume || '0'}</td>
+                    <td>${item.inclusao || '-'}</td>
                     <td>${item.dataRot || '-'}</td>
-                    <td><span style="font-size: 11px;">${item.statusSep || '-'}</span></td>
-                    <td>${item.box || '-'}</td>
+                    <td>${item.geracaoMesa || '-'}</td>
+                    <td>${item.statusSep || '-'}</td>
+                    <td>${item.statusConf || '-'}</td>
+                    <td>${item.setor || '-'}</td>
                 </tr>
             `).join('');
             
@@ -923,6 +888,13 @@ Empresa	SM	Deposito	BOX	Carga	Col1	Descrição	Ton	Volume	Valor	..."></textarea>
             const comper = dadosFiltrados.filter(d => d.segmento === 'LJ COMPER').length;
             const fort = dadosFiltrados.filter(d => d.segmento === 'LJ FORT').length;
             const volumeTotal = dadosFiltrados.reduce((s, d) => s + (parseFloat(d.m3) || 0), 0);
+            
+            const valorTotal = dadosFiltrados.reduce((s, d) => {
+                const valorStr = (d.valor || '0').replace('R$', '').replace('.', '').replace(',', '.').trim();
+                return s + (parseFloat(valorStr) || 0);
+            }, 0);
+            
+            const visitasTotal = dadosFiltrados.reduce((s, d) => s + (parseInt(d.visitasPendente) || 0), 0);
             
             document.getElementById('resumoCards').innerHTML = `
                 <div class="stat-card">
@@ -945,7 +917,95 @@ Empresa	SM	Deposito	BOX	Carga	Col1	Descrição	Ton	Volume	Valor	..."></textarea>
                     <div class="value">${volumeTotal.toFixed(1)}</div>
                     <div class="label">Volume Total (m³)</div>
                 </div>
+                <div class="stat-card">
+                    <i class="fas fa-dollar-sign"></i>
+                    <div class="value">R$ ${valorTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                    <div class="label">Valor Total</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <div class="value">${visitasTotal}</div>
+                    <div class="label">Visitas Pendentes</div>
+                </div>
             `;
+        }
+
+        function renderTabelaPivot() {
+            const tbody = document.querySelector('#tabelaPivot tbody');
+            
+            if (dadosFiltrados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;"><i class="fas fa-info-circle"></i> Nenhum dado para consolidar</td></tr>';
+                return;
+            }
+            
+            const consolidacao = {};
+            
+            dadosFiltrados.forEach(item => {
+                const loja = item.loja || 'Sem Loja';
+                
+                if (!consolidacao[loja]) {
+                    consolidacao[loja] = {
+                        qtdCargas: 0,
+                        valorTotal: 0,
+                        visitasTotal: 0,
+                        volumeTotal: 0
+                    };
+                }
+                
+                consolidacao[loja].qtdCargas++;
+                
+                const valorStr = (item.valor || '0').replace('R$', '').replace('.', '').replace(',', '.').trim();
+                consolidacao[loja].valorTotal += parseFloat(valorStr) || 0;
+                
+                consolidacao[loja].visitasTotal += parseInt(item.visitasPendente) || 0;
+                consolidacao[loja].volumeTotal += parseFloat(item.m3) || 0;
+            });
+            
+            const lojas = Object.keys(consolidacao).sort();
+            
+            let html = '';
+            let totais = {
+                qtdCargas: 0,
+                valorTotal: 0,
+                visitasTotal: 0,
+                volumeTotal: 0
+            };
+            
+            lojas.forEach(loja => {
+                const dados = consolidacao[loja];
+                const volumePorVisita = dados.visitasTotal > 0 ? (dados.volumeTotal / dados.visitasTotal) : 0;
+                
+                totais.qtdCargas += dados.qtdCargas;
+                totais.valorTotal += dados.valorTotal;
+                totais.visitasTotal += dados.visitasTotal;
+                totais.volumeTotal += dados.volumeTotal;
+                
+                html += `
+                    <tr>
+                        <td><strong>${loja}</strong></td>
+                        <td class="numeric">${dados.qtdCargas}</td>
+                        <td class="numeric valor-total">R$ ${dados.valorTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td class="numeric">${dados.visitasTotal}</td>
+                        <td class="numeric">${dados.volumeTotal.toFixed(2)} m³</td>
+                        <td class="numeric">${volumePorVisita.toFixed(2)} m³</td>
+                    </tr>
+                `;
+            });
+            
+            const volumeTotalPorVisita = totais.visitasTotal > 0 ? (totais.volumeTotal / totais.visitasTotal) : 0;
+            
+            html += `
+                <tr style="background: #667eea; color: white; font-weight: bold;">
+                    <td><strong>TOTAL GERAL</strong></td>
+                    <td class="numeric">${totais.qtdCargas}</td>
+                    <td class="numeric">R$ ${totais.valorTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    <td class="numeric">${totais.visitasTotal}</td>
+                    <td class="numeric">${totais.volumeTotal.toFixed(2)} m³</td>
+                    <td class="numeric">${volumeTotalPorVisita.toFixed(2)} m³</td>
+                </tr>
+            `;
+            
+            tbody.innerHTML = html;
         }
 
         function voltarMenu() {
@@ -954,12 +1014,10 @@ Empresa	SM	Deposito	BOX	Carga	Col1	Descrição	Ton	Volume	Valor	..."></textarea>
             }
         }
 
-        // Fechar modal ao clicar fora
         document.getElementById('modalColar').addEventListener('click', function(e) {
             if (e.target === this) fecharModal();
         });
 
-        // Atalho de teclado
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') fecharModal();
         });
