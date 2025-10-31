@@ -1,4 +1,4 @@
-// api/mapacarga.js - API UNIFICADA (Mapa de Carga + Alocação BOX)
+// api/mapacarga.js - API UNIFICADA (Mapa de Carga + Alocação BOX) - CORRIGIDO
 const sheetsService = require('../lib/sheets');
 
 module.exports = async (req, res) => {
