@@ -1,8 +1,7 @@
-// api/mapacarga.js - API UNIFICADA (Mapa de Carga + Alocação BOX) - CORRIGIDO
+// api/mapacarga.js - VERSÃO OTIMIZADA E CORRIGIDA
 const sheetsService = require('../lib/sheets');
 
 module.exports = async (req, res) => {
-  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
