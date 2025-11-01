@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapa de Carga - Gestão Perlog</title>
+    <title>Gestão de Mapa de Carga</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -81,6 +81,23 @@
             border-radius: 15px;
             box-shadow: 0 5px 20px rgba(0,0,0,0.1);
             margin-bottom: 20px;
+        }
+        
+        .filters-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .filters-header h3 {
+            color: #333;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         
         .filters-grid {
@@ -468,6 +485,16 @@
             margin-bottom: 4px;
         }
         
+        .loading {
+            display: inline-block;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
         @media (max-width: 768px) {
             .header { flex-direction: column; text-align: center; }
             input[type="text"] { min-width: 100%; margin-bottom: 10px; }
@@ -481,12 +508,12 @@
     <div class="container">
         <div class="header">
             <div class="header-left">
-                <h1><i class="fas fa-truck-loading"></i> Mapa de Carga</h1>
+                <h1><i class="fas fa-truck-loading"></i> Gestão de Mapa de Carga</h1>
                 <div class="user-badge"><i class="fas fa-user"></i> <span id="userName">Carregando...</span></div>
             </div>
             <div class="header-right">
-                <button class="btn btn-primary" onclick="abrirModalColar()"><i class="fas fa-paste"></i> Colar Dados</button>
-                <button class="btn btn-danger" onclick="limparColunas()"><i class="fas fa-eraser"></i> Limpar Colunas</button>
+                <button class="btn btn-primary" onclick="abrirModalColar()"><i class="fas fa-paste"></i> Importar Dados</button>
+                <button class="btn btn-danger" onclick="limparColunas()"><i class="fas fa-eraser"></i> Limpar Tabela</button>
                 <button class="btn btn-success" onclick="carregarDados()"><i class="fas fa-sync-alt"></i> Atualizar</button>
                 <button class="btn btn-secondary" onclick="voltarMenu()"><i class="fas fa-arrow-left"></i> Voltar</button>
             </div>
@@ -495,26 +522,29 @@
         <div id="statusDiv"></div>
 
         <div class="filters-panel">
+            <div class="filters-header">
+                <h3><i class="fas fa-filter"></i> Filtros de Consulta</h3>
+            </div>
             <div class="filters-grid">
                 <div class="filter-group">
                     <label>Segmento</label>
                     <select id="filtroSegmento" multiple></select>
                 </div>
                 <div class="filter-group">
-                    <label>Tipo Loja</label>
+                    <label>Tipo de Loja</label>
                     <select id="filtroTipo" multiple></select>
                 </div>
                 <div class="filter-group">
                     <label>Loja</label>
-                    <input type="text" id="filtroLoja" placeholder="Buscar loja...">
+                    <input type="text" id="filtroLoja" placeholder="Digite para buscar...">
                 </div>
                 <div class="filter-group">
-                    <label>Status</label>
+                    <label>Status Separação</label>
                     <select id="filtroStatus" multiple></select>
                 </div>
             </div>
             <div class="filter-actions">
-                <button class="btn btn-primary" onclick="aplicarFiltros()"><i class="fas fa-filter"></i> Filtrar</button>
+                <button class="btn btn-primary" onclick="aplicarFiltros()"><i class="fas fa-search"></i> Aplicar Filtros</button>
                 <button class="btn btn-secondary" onclick="limparFiltros()"><i class="fas fa-eraser"></i> Limpar Filtros</button>
             </div>
         </div>
@@ -522,17 +552,17 @@
         <div class="resumo-cards" id="resumoCards"></div>
 
         <div class="pivot-table">
-            <h3><i class="fas fa-table"></i> Consolidação Hierárquica - Clique para expandir/recolher</h3>
+            <h3><i class="fas fa-table"></i> Análise Hierárquica - Consolidação por Roteirização, Segmento e Loja</h3>
             <div class="pivot-container">
                 <table id="tabelaPivotExpansivel">
                     <thead>
                         <tr>
-                            <th style="width: 400px;">Hierarquia (Data Rot > Segmento > Loja > BOX > Carga)</th>
-                            <th>Qtd Cargas</th>
+                            <th style="width: 400px;">Hierarquia (Data Roteirização → Segmento → Loja → BOX → Carga)</th>
+                            <th>Quantidade Cargas</th>
                             <th>Valor Total</th>
                             <th>Visitas Pendentes</th>
                             <th>Volume Total (m³)</th>
-                            <th>Vol/Visita</th>
+                            <th>Volume por Visita</th>
                         </tr>
                     </thead>
                     <tbody id="pivotBody"></tbody>
@@ -542,23 +572,23 @@
 
         <div class="table-container">
             <div class="table-header">
-                <h2><i class="fas fa-list"></i> Cargas (<span id="totalRegistros">0</span>)</h2>
+                <h2><i class="fas fa-list"></i> Listagem de Cargas (<span id="totalRegistros">0</span>)</h2>
             </div>
             <div class="table-wrapper">
                 <table>
                     <thead>
                         <tr>
                             <th>Empresa</th>
-                            <th>Carga</th>
-                            <th>Descrição</th>
-                            <th>Ton</th>
-                            <th>M³</th>
+                            <th>Número Carga</th>
+                            <th>Descrição Loja</th>
+                            <th>Toneladas</th>
+                            <th>Volume (m³)</th>
                             <th>Valor</th>
                             <th>Visitas</th>
-                            <th>Data Rot</th>
-                            <th>Separação</th>
+                            <th>Data Roteirização</th>
+                            <th>Status Separação</th>
                             <th>Loja</th>
-                            <th>BOX</th>
+                            <th>BOX Alocado</th>
                         </tr>
                     </thead>
                     <tbody id="tabelaBody">
@@ -574,22 +604,23 @@
         </div>
     </div>
 
-    <!-- Modal Colar -->
+    <!-- Modal Importar -->
     <div class="modal" id="modalColar">
         <div class="modal-content">
             <div class="modal-header">
-                <h3><i class="fas fa-paste"></i> Colar Dados do Excel</h3>
+                <h3><i class="fas fa-paste"></i> Importar Dados do Excel</h3>
                 <button class="close-modal" onclick="fecharModal()">×</button>
             </div>
 
             <div class="instructions">
-                <h4><i class="fas fa-info-circle"></i> Instruções para Colagem</h4>
+                <h4><i class="fas fa-info-circle"></i> Instruções de Importação</h4>
                 <ol>
-                    <li>No <strong>Excel</strong>, selecione APENAS as linhas de dados (SEM o cabeçalho)</li>
-                    <li>Copie com <strong>Ctrl+C</strong></li>
-                    <li>Cole abaixo com <strong>Ctrl+V</strong></li>
-                    <li>Verifique a prévia e clique em <strong>"Processar e Salvar"</strong></li>
-                    <li><strong>IMPORTANTE:</strong> Colunas protegidas (Visitas Pendente, Separação st, conf. St, Loja, etc) serão preservadas</li>
+                    <li>Abra o <strong>Excel</strong> e selecione APENAS as linhas de dados (SEM o cabeçalho)</li>
+                    <li>Copie os dados com <strong>Ctrl+C</strong></li>
+                    <li>Cole no campo abaixo usando <strong>Ctrl+V</strong></li>
+                    <li>Verifique a pré-visualização dos dados</li>
+                    <li>Clique em <strong>"Processar e Salvar"</strong> para importar</li>
+                    <li><strong>Importante:</strong> Colunas protegidas serão preservadas</li>
                 </ol>
             </div>
             
@@ -762,7 +793,7 @@
                 previewContainer.innerHTML = `
                     <div class="alert alert-warning">
                         <i class="fas fa-exclamation-triangle"></i>
-                        Erro ao gerar prévia. Verifique se os dados foram colados corretamente.
+                        Erro ao gerar pré-visualização. Verifique se os dados foram colados corretamente.
                     </div>
                 `;
             }
@@ -777,7 +808,7 @@
                 return;
             }
             
-            statusDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin"></i> Processando...</div>';
+            statusDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner loading"></i> Processando...</div>';
             
             try {
                 const linhas = texto.split('\n').filter(l => l.trim());
@@ -786,20 +817,81 @@
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'limpar' })
+                    body: JSON.stringify({ 
+                        action: 'importar',
+                        dadosImportacao: linhas
+                    })
                 });
                 
                 const result = await response.json();
                 
                 if (result.ok) {
+                    statusDiv.innerHTML = `<div class="alert alert-success"><i class="fas fa-check-circle"></i> ${result.msg}</div>`;
+                    setTimeout(() => {
+                        fecharModal();
+                        carregarDados();
+                    }, 2000);
+                } else {
+                    throw new Error(result.msg || 'Erro ao processar');
+                }
+            } catch (error) {
+                console.error('[MAPACARGA] Erro:', error);
+                statusDiv.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> Erro: ${error.message}</div>`;
+            }
+        }
+
+        async function limparColunas() {
+            if (!confirm('⚠️ ATENÇÃO: Esta ação irá limpar TODAS as colunas editáveis da planilha.\n\nColunas protegidas (Visitas Pendente, Status, Loja, etc) serão preservadas.\n\nDeseja continuar?')) {
+                return;
+            }
+
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner loading"></i> Limpando...';
+
+            try {
+                showStatus('Iniciando limpeza das colunas...', 'info');
+
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'limpar' })
+                });
+
+                const result = await response.json();
+
+                if (result.ok) {
                     showStatus(result.msg, 'success');
-                    carregarDados();
+                    
+                    // Limpa dados locais
+                    dadosOriginais = [];
+                    dadosFiltrados = [];
+                    estruturaHierarquica = {};
+                    
+                    // Renderiza tabelas vazias
+                    document.getElementById('tabelaBody').innerHTML = `
+                        <tr>
+                            <td colspan="11" style="text-align: center; padding: 40px; color: #28a745;">
+                                <i class="fas fa-check-circle" style="font-size: 48px; margin-bottom: 15px;"></i>
+                                <p style="font-size: 18px; font-weight: 600;">Tabela limpa com sucesso!</p>
+                                <p style="margin-top: 10px; color: #666;">Use "Importar Dados" para adicionar novas cargas</p>
+                            </td>
+                        </tr>
+                    `;
+                    
+                    document.getElementById('pivotBody').innerHTML = '';
+                    document.getElementById('resumoCards').innerHTML = '';
+                    document.getElementById('totalRegistros').textContent = '0';
                 } else {
                     throw new Error(result.msg || 'Erro ao limpar');
                 }
             } catch (error) {
                 console.error('[MAPACARGA] Erro:', error);
-                showStatus('Erro ao limpar: ' + error.message, 'danger');
+                showStatus('Erro ao limpar tabela: ' + error.message, 'danger');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
             }
         }
 
@@ -1173,17 +1265,17 @@
                     <div class="stat-card">
                         <i class="fas fa-truck"></i>
                         <div class="value">${total}</div>
-                        <div class="label">Total Cargas</div>
+                        <div class="label">Total de Cargas</div>
                     </div>
                     <div class="stat-card">
                         <i class="fas fa-store"></i>
                         <div class="value">${comper}</div>
-                        <div class="label">LJ COMPER</div>
+                        <div class="label">Lojas COMPER</div>
                     </div>
                     <div class="stat-card">
                         <i class="fas fa-store-alt"></i>
                         <div class="value">${fort}</div>
-                        <div class="label">LJ FORT</div>
+                        <div class="label">Lojas FORT</div>
                     </div>
                     <div class="stat-card">
                         <i class="fas fa-cube"></i>
