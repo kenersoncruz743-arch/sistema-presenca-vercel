@@ -391,6 +391,11 @@ tr.appendChild(td);
 tbody.appendChild(tr);
 });
 }
+function formatarDataSemHora(dataStr){
+if(!dataStr)return'';
+const partes=dataStr.split(' ');
+return partes[0]||dataStr;
+}
 async function processarDados(){
 if(dadosGrid.length===0){
 showStatus('Nenhum dado para processar','danger');
@@ -401,7 +406,7 @@ const btnProcessar=document.getElementById('btnProcessar');
 statusDiv.innerHTML='<div class="alert alert-info"><i class="fas fa-spinner loading"></i> Processando e salvando...</div>';
 btnProcessar.disabled=true;
 try{
-console.log('[MAPACARGA] Processando',dadosGrid.length,'linhas');
+console.log('[MAPACARGA] Enviando',dadosGrid.length,'linhas - TODAS as 26 colunas');
 const linhasTexto=dadosGrid.map(linha=>linha.join('\t'));
 const response=await fetch(API_URL,{
 method:'POST',
@@ -548,7 +553,7 @@ showStatus('Filtros removidos','info');
 function construirHierarquia(){
 estruturaHierarquica={};
 dadosFiltrados.forEach(item=>{
-const dataRot=item.dataRot||'Sem Data';
+const dataRot=formatarDataSemHora(item.dataRot)||'Sem Data';
 const segmento=item.segmento||'Sem Segmento';
 const loja=item.loja||'Sem Loja';
 const box=item.box||'Sem BOX';
@@ -743,7 +748,7 @@ tbody.innerHTML=dadosFiltrados.map(item=>`
 <td><strong>${item.m3||'0'}</strong></td>
 <td>${item.valor||'0'}</td>
 <td>${item.visitasPendente||'0'}</td>
-<td>${item.dataRot||'-'}</td>
+<td>${formatarDataSemHora(item.dataRot)||'-'}</td>
 <td>${item.statusSep||'-'}</td>
 <td><strong>${item.loja||'-'}</strong></td>
 <td>${item.box||'-'}</td>
