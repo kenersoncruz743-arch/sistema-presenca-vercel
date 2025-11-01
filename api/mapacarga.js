@@ -6,10 +6,7 @@ res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 if (req.method === 'OPTIONS') {
 return res.status(200).end();
 }
-console.log('[API MAPACARGA] Request:', {
-method: req.method,
-body: req.body
-});
+console.log('[API MAPACARGA] Request:', {method: req.method, body: req.body});
 try {
 const { action, filtros, boxNum, cargaId, dados, dadosImportacao } = req.body;
 if (!action) {
