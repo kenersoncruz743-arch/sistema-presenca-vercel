@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão de Mapa de Carga</title>
+    <title>Gestão de Mapa de Carga - Grid Visual</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -15,7 +15,7 @@
             padding: 20px;
         }
         
-        .container { max-width: 1800px; margin: 0 auto; }
+        .container { max-width: 100%; margin: 0 auto; }
         
         .header {
             background: white;
@@ -31,7 +31,6 @@
         }
         
         .header-left h1 { color: #333; font-size: 24px; display: flex; align-items: center; gap: 10px; }
-        .user-badge { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 8px 15px; border-radius: 20px; font-size: 14px; margin-top: 10px; }
         .header-right { display: flex; gap: 10px; flex-wrap: wrap; }
         
         .btn {
@@ -75,259 +74,6 @@
             to { transform: translateY(0); opacity: 1; }
         }
         
-        .filters-panel {
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        
-        .filters-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #e9ecef;
-        }
-        
-        .filters-header h3 {
-            color: #333;
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .filters-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-        
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        
-        .filter-group label {
-            font-size: 12px;
-            font-weight: 600;
-            color: #555;
-            text-transform: uppercase;
-        }
-        
-        .filter-group input, .filter-group select {
-            padding: 8px 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-        
-        .filter-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        
-        .resumo-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-        
-        .stat-card i {
-            font-size: 32px;
-            color: #667eea;
-            margin-bottom: 10px;
-        }
-        
-        .stat-card .value {
-            font-size: 28px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 5px;
-        }
-        
-        .stat-card .label {
-            font-size: 12px;
-            color: #666;
-            text-transform: uppercase;
-            font-weight: 600;
-        }
-        
-        .table-container {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            overflow: hidden;
-            margin-bottom: 20px;
-        }
-        
-        .table-header {
-            padding: 20px;
-            border-bottom: 2px solid #f0f0f0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .table-header h2 {
-            color: #333;
-            font-size: 18px;
-        }
-        
-        .table-wrapper {
-            overflow-x: auto;
-            max-height: 600px;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        thead {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-        
-        th {
-            padding: 12px 8px;
-            text-align: left;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            white-space: nowrap;
-        }
-        
-        tbody tr {
-            border-bottom: 1px solid #f0f0f0;
-            transition: background 0.2s;
-        }
-        
-        tbody tr:hover { background: #f8f9ff; }
-        
-        td {
-            padding: 10px 8px;
-            font-size: 12px;
-            color: #333;
-            white-space: nowrap;
-        }
-        
-        .pivot-table {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-        }
-        
-        .pivot-table h3 {
-            color: #667eea;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .pivot-container {
-            overflow-x: auto;
-            max-height: 800px;
-            overflow-y: auto;
-        }
-        
-        .pivot-table table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px;
-        }
-        
-        .pivot-table th {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 10px 8px;
-            text-align: left;
-            font-weight: 600;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            white-space: nowrap;
-            font-size: 11px;
-        }
-        
-        .pivot-table td {
-            padding: 8px;
-            border-bottom: 1px solid #e9ecef;
-            white-space: nowrap;
-        }
-        
-        .pivot-table tbody tr:hover {
-            background-color: #f8f9fa;
-        }
-        
-        .pivot-table td.numeric {
-            text-align: right;
-            font-weight: 600;
-        }
-        
-        .expandable {
-            cursor: pointer;
-            user-select: none;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .expandable:hover {
-            background: #e3f2fd;
-        }
-        
-        .expand-icon {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            text-align: center;
-            transition: transform 0.3s;
-        }
-        
-        .expand-icon.expanded {
-            transform: rotate(90deg);
-        }
-        
-        .nivel-0 { background: #e3f2fd; font-weight: bold; }
-        .nivel-1 { background: #f0f4ff; padding-left: 30px !important; }
-        .nivel-2 { background: #f8f9fa; padding-left: 50px !important; }
-        .nivel-3 { background: #ffffff; padding-left: 70px !important; }
-        .nivel-4 { background: #fafafa; padding-left: 90px !important; }
-        
-        .row-hidden { display: none; }
-        
-        .total-row {
-            background: #667eea !important;
-            color: white !important;
-            font-weight: bold;
-        }
-        
-        .total-row td {
-            border-top: 2px solid #5a6fd8;
-        }
-        
         .modal {
             display: none;
             position: fixed;
@@ -347,9 +93,9 @@
             background: white;
             padding: 30px;
             border-radius: 15px;
-            max-width: 95vw;
-            width: 1400px;
-            max-height: 90vh;
+            max-width: 98vw;
+            width: 1800px;
+            max-height: 95vh;
             overflow-y: auto;
         }
         
@@ -365,15 +111,168 @@
         .close-modal {
             background: none;
             border: none;
-            font-size: 24px;
+            font-size: 28px;
             cursor: pointer;
             color: #999;
+            line-height: 1;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+        }
+        
+        .instructions {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+        
+        .instructions h4 {
+            color: #1976d2;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .instructions ol {
+            margin-left: 20px;
+            color: #333;
+            font-size: 13px;
+            line-height: 1.8;
+        }
+        
+        .instructions ol li {
+            margin-bottom: 6px;
+        }
+        
+        .grid-info {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .grid-stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .grid-stat i {
+            font-size: 20px;
+            color: #667eea;
+        }
+        
+        .grid-stat .label {
+            font-size: 12px;
+            color: #6c757d;
+        }
+        
+        .grid-stat .value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .spreadsheet-container {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+            background: white;
+            margin-bottom: 20px;
+        }
+        
+        .spreadsheet-wrapper {
+            overflow: auto;
+            max-height: 600px;
+        }
+        
+        .spreadsheet {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 11px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .spreadsheet th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 8px 4px;
+            text-align: center;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-right: 1px solid rgba(255,255,255,0.2);
+            font-size: 10px;
+            min-width: 80px;
+        }
+        
+        .spreadsheet th.row-number {
+            background: #495057;
+            min-width: 50px;
+            font-size: 11px;
+        }
+        
+        .spreadsheet td {
+            border: 1px solid #e0e0e0;
+            padding: 6px 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 150px;
+            font-size: 11px;
+        }
+        
+        .spreadsheet td.row-number {
+            background: #f8f9fa;
+            text-align: center;
+            font-weight: bold;
+            color: #495057;
+            position: sticky;
+            left: 0;
+            z-index: 5;
+            border-right: 2px solid #dee2e6;
+        }
+        
+        .spreadsheet tbody tr:hover td:not(.row-number) {
+            background: #e3f2fd;
+        }
+        
+        .spreadsheet tbody tr:nth-child(even) td:not(.row-number) {
+            background: #fafafa;
+        }
+        
+        .spreadsheet tbody tr:nth-child(even):hover td:not(.row-number) {
+            background: #e3f2fd;
+        }
+        
+        .col-empresa { min-width: 60px !important; }
+        .col-sm { min-width: 40px !important; }
+        .col-deposito { min-width: 70px !important; }
+        .col-box { min-width: 60px !important; }
+        .col-carga { min-width: 90px !important; max-width: 90px !important; font-weight: 600; }
+        .col-descricao { min-width: 250px !important; max-width: 250px !important; }
+        .col-ton { min-width: 60px !important; text-align: right; }
+        .col-volume { min-width: 70px !important; max-width: 70px !important; text-align: right; }
+        .col-valor { min-width: 80px !important; text-align: right; }
+        .col-visitas { min-width: 60px !important; text-align: center; }
+        .col-data { min-width: 90px !important; }
+        .col-status { min-width: 80px !important; }
+        .col-loja { min-width: 70px !important; font-weight: 600; }
+        
+        .highlight-col {
+            background: #fff3cd !important;
         }
         
         .paste-area {
             width: 100%;
-            min-height: 250px;
-            max-height: 350px;
+            min-height: 200px;
+            max-height: 300px;
             padding: 15px;
             border: 2px dashed #e0e0e0;
             border-radius: 8px;
@@ -382,107 +281,13 @@
             resize: vertical;
             background: #f8f9fa;
             overflow-y: auto;
+            margin-bottom: 15px;
         }
         
         .paste-area:focus {
             outline: none;
             border-color: #667eea;
             background: white;
-        }
-        
-        .paste-preview {
-            margin-top: 20px;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            overflow-x: auto;
-            max-height: 450px;
-            overflow-y: auto;
-        }
-        
-        .paste-preview table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 10px;
-        }
-        
-        .paste-preview th {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 6px 4px;
-            text-align: left;
-            font-weight: 600;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            white-space: nowrap;
-            font-size: 9px;
-        }
-        
-        .paste-preview td {
-            padding: 5px 4px;
-            border-bottom: 1px solid #e9ecef;
-            white-space: nowrap;
-            max-width: 180px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            font-size: 10px;
-        }
-        
-        .preview-stats {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 15px;
-            padding: 12px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            flex-wrap: wrap;
-        }
-        
-        .preview-stat {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        .preview-stat i {
-            color: #667eea;
-            font-size: 16px;
-        }
-        
-        .preview-stat .label {
-            font-size: 11px;
-            color: #6c757d;
-        }
-        
-        .preview-stat .value {
-            font-size: 16px;
-            font-weight: bold;
-            color: #333;
-        }
-        
-        .instructions {
-            background: #e7f3ff;
-            border-left: 4px solid #2196F3;
-            padding: 12px;
-            margin-bottom: 15px;
-            border-radius: 8px;
-        }
-        
-        .instructions h4 {
-            color: #1976d2;
-            margin-bottom: 8px;
-            font-size: 13px;
-        }
-        
-        .instructions ol {
-            margin-left: 18px;
-            color: #333;
-            font-size: 12px;
-            line-height: 1.6;
-        }
-        
-        .instructions ol li {
-            margin-bottom: 4px;
         }
         
         .loading {
@@ -497,10 +302,7 @@
         
         @media (max-width: 768px) {
             .header { flex-direction: column; text-align: center; }
-            input[type="text"] { min-width: 100%; margin-bottom: 10px; }
-            .filters-grid { grid-template-columns: 1fr; }
-            table { font-size: 14px; }
-            th, td { padding: 8px; }
+            .modal-content { padding: 20px; }
         }
     </style>
 </head>
@@ -509,10 +311,9 @@
         <div class="header">
             <div class="header-left">
                 <h1><i class="fas fa-truck-loading"></i> Gestão de Mapa de Carga</h1>
-                <div class="user-badge"><i class="fas fa-user"></i> <span id="userName">Carregando...</span></div>
             </div>
             <div class="header-right">
-                <button class="btn btn-primary" onclick="abrirModalColar()"><i class="fas fa-paste"></i> Importar Dados</button>
+                <button class="btn btn-primary" onclick="abrirModalGrid()"><i class="fas fa-table"></i> Importar com Grid Visual</button>
                 <button class="btn btn-danger" onclick="limparColunas()"><i class="fas fa-eraser"></i> Limpar Tabela</button>
                 <button class="btn btn-success" onclick="carregarDados()"><i class="fas fa-sync-alt"></i> Atualizar</button>
                 <button class="btn btn-secondary" onclick="voltarMenu()"><i class="fas fa-arrow-left"></i> Voltar</button>
@@ -520,116 +321,107 @@
         </div>
 
         <div id="statusDiv"></div>
-
-        <div class="filters-panel">
-            <div class="filters-header">
-                <h3><i class="fas fa-filter"></i> Filtros de Consulta</h3>
-            </div>
-            <div class="filters-grid">
-                <div class="filter-group">
-                    <label>Segmento</label>
-                    <select id="filtroSegmento" multiple></select>
-                </div>
-                <div class="filter-group">
-                    <label>Tipo de Loja</label>
-                    <select id="filtroTipo" multiple></select>
-                </div>
-                <div class="filter-group">
-                    <label>Loja</label>
-                    <input type="text" id="filtroLoja" placeholder="Digite para buscar...">
-                </div>
-                <div class="filter-group">
-                    <label>Status Separação</label>
-                    <select id="filtroStatus" multiple></select>
-                </div>
-            </div>
-            <div class="filter-actions">
-                <button class="btn btn-primary" onclick="aplicarFiltros()"><i class="fas fa-search"></i> Aplicar Filtros</button>
-                <button class="btn btn-secondary" onclick="limparFiltros()"><i class="fas fa-eraser"></i> Limpar Filtros</button>
-            </div>
-        </div>
-
-        <div class="resumo-cards" id="resumoCards"></div>
-
-        <div class="pivot-table">
-            <h3><i class="fas fa-table"></i> Análise Hierárquica - Consolidação por Roteirização, Segmento e Loja</h3>
-            <div class="pivot-container">
-                <table id="tabelaPivotExpansivel">
-                    <thead>
-                        <tr>
-                            <th style="width: 400px;">Hierarquia (Data Roteirização → Segmento → Loja → BOX → Carga)</th>
-                            <th>Quantidade Cargas</th>
-                            <th>Valor Total</th>
-                            <th>Visitas Pendentes</th>
-                            <th>Volume Total (m³)</th>
-                            <th>Volume por Visita</th>
-                        </tr>
-                    </thead>
-                    <tbody id="pivotBody"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="table-container">
-            <div class="table-header">
-                <h2><i class="fas fa-list"></i> Listagem de Cargas (<span id="totalRegistros">0</span>)</h2>
-            </div>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Empresa</th>
-                            <th>Número Carga</th>
-                            <th>Descrição Loja</th>
-                            <th>Toneladas</th>
-                            <th>Volume (m³)</th>
-                            <th>Valor</th>
-                            <th>Visitas</th>
-                            <th>Data Roteirização</th>
-                            <th>Status Separação</th>
-                            <th>Loja</th>
-                            <th>BOX Alocado</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabelaBody">
-                        <tr>
-                            <td colspan="11" style="text-align: center; padding: 40px;">
-                                <i class="fas fa-inbox" style="font-size: 32px; color: #667eea;"></i>
-                                <p>Carregando dados...</p>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+        
+        <div style="background: white; padding: 20px; border-radius: 15px; text-align: center;">
+            <i class="fas fa-table" style="font-size: 64px; color: #667eea; margin-bottom: 15px;"></i>
+            <h2 style="color: #333; margin-bottom: 10px;">Use o Grid Visual para Importar Dados</h2>
+            <p style="color: #666; margin-bottom: 20px;">Visualize os dados em formato de planilha antes de importar</p>
+            <button class="btn btn-primary" onclick="abrirModalGrid()" style="font-size: 16px; padding: 15px 30px;">
+                <i class="fas fa-table"></i> Abrir Grid de Importação
+            </button>
         </div>
     </div>
 
-    <!-- Modal Importar -->
-    <div class="modal" id="modalColar">
+    <!-- Modal Grid -->
+    <div class="modal" id="modalGrid">
         <div class="modal-content">
             <div class="modal-header">
-                <h3><i class="fas fa-paste"></i> Importar Dados do Excel</h3>
+                <h3><i class="fas fa-table"></i> Importação com Grid Visual - Estilo Planilha Excel</h3>
                 <button class="close-modal" onclick="fecharModal()">×</button>
             </div>
 
             <div class="instructions">
-                <h4><i class="fas fa-info-circle"></i> Instruções de Importação</h4>
+                <h4><i class="fas fa-info-circle"></i> Como Usar o Grid Visual</h4>
                 <ol>
-                    <li>Abra o <strong>Excel</strong> e selecione APENAS as linhas de dados (SEM o cabeçalho)</li>
-                    <li>Copie os dados com <strong>Ctrl+C</strong></li>
-                    <li>Cole no campo abaixo usando <strong>Ctrl+V</strong></li>
-                    <li>Verifique a pré-visualização dos dados</li>
+                    <li>Abra o <strong>Excel</strong> e copie TODAS as linhas (COM ou SEM cabeçalho)</li>
+                    <li>Cole no campo de texto abaixo com <strong>Ctrl+V</strong></li>
+                    <li>Os dados aparecerão automaticamente no <strong>grid visual</strong> estilo Excel</li>
+                    <li>Verifique se as colunas estão corretas (Empresa, Carga, Descrição, etc.)</li>
+                    <li>Colunas importantes: <span style="background: #fff3cd; padding: 2px 6px; border-radius: 3px;">Empresa, Carga, Descrição, Ton, Volume, Valor, Visitas, Data Rot, Status Sep</span></li>
                     <li>Clique em <strong>"Processar e Salvar"</strong> para importar</li>
-                    <li><strong>Importante:</strong> Colunas protegidas serão preservadas</li>
+                    <li><strong>Importante:</strong> Grid suporta até 1000 linhas</li>
                 </ol>
             </div>
             
-            <textarea class="paste-area" id="pasteArea" placeholder="Cole aqui os DADOS do Excel (sem cabeçalho)..."></textarea>
+            <textarea class="paste-area" id="pasteArea" placeholder="Cole aqui os dados do Excel (Ctrl+V)...&#10;&#10;O grid visual aparecerá automaticamente abaixo..."></textarea>
             
-            <div id="previewContainer"></div>
+            <div id="gridInfo" class="grid-info" style="display: none;">
+                <div class="grid-stat">
+                    <i class="fas fa-table"></i>
+                    <div>
+                        <div class="label">Total de Linhas</div>
+                        <div class="value" id="totalLinhas">0</div>
+                    </div>
+                </div>
+                <div class="grid-stat">
+                    <i class="fas fa-columns"></i>
+                    <div>
+                        <div class="label">Total de Colunas</div>
+                        <div class="value" id="totalColunas">0</div>
+                    </div>
+                </div>
+                <div class="grid-stat">
+                    <i class="fas fa-check-circle"></i>
+                    <div>
+                        <div class="label">Status</div>
+                        <div class="value" id="statusGrid" style="color: #28a745;">Pronto</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="gridContainer" style="display: none;">
+                <div class="spreadsheet-container">
+                    <div class="spreadsheet-wrapper">
+                        <table class="spreadsheet" id="gridTable">
+                            <thead>
+                                <tr>
+                                    <th class="row-number">#</th>
+                                    <th class="col-empresa">A<br>Empresa</th>
+                                    <th class="col-sm">B<br>SM</th>
+                                    <th class="col-deposito">C<br>Depósito</th>
+                                    <th class="col-box">D<br>BOX</th>
+                                    <th class="col-carga highlight-col">E<br>Carga</th>
+                                    <th>F<br>Col 1</th>
+                                    <th class="col-descricao highlight-col">G<br>Descrição</th>
+                                    <th>H<br>SP</th>
+                                    <th class="col-ton highlight-col">I<br>Ton</th>
+                                    <th class="col-volume highlight-col">J<br>Volume (m³)</th>
+                                    <th class="col-valor highlight-col">K<br>Valor</th>
+                                    <th>L<br>RUP</th>
+                                    <th class="col-visitas highlight-col">M<br>Visitas</th>
+                                    <th>N<br>Col 2</th>
+                                    <th>O<br>Inclusão</th>
+                                    <th>P<br>Rot</th>
+                                    <th class="col-data highlight-col">Q<br>Data Rot</th>
+                                    <th>R<br>Geração</th>
+                                    <th>S<br>Aspas</th>
+                                    <th>T<br>Repos</th>
+                                    <th>U<br>Palete</th>
+                                    <th>V<br>Baixa</th>
+                                    <th class="col-status highlight-col">W<br>Status Sep</th>
+                                    <th>X<br>Fim Sep</th>
+                                    <th>Y<br>Conf</th>
+                                    <th>Z<br>SEOTR</th>
+                                </tr>
+                            </thead>
+                            <tbody id="gridBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
             
             <div style="margin-top: 20px; display: flex; gap: 10px;">
-                <button class="btn btn-success" onclick="processarDados()" style="flex: 1;">
+                <button class="btn btn-success" onclick="processarDados()" style="flex: 1;" id="btnProcessar" disabled>
                     <i class="fas fa-check"></i> Processar e Salvar
                 </button>
                 <button class="btn btn-secondary" onclick="limparArea()">
@@ -642,9 +434,7 @@
 
     <script>
         const API_URL = '/api/mapacarga';
-        let dadosOriginais = [];
-        let dadosFiltrados = [];
-        let estruturaHierarquica = {};
+        let dadosGrid = [];
 
         function showStatus(msg, type = 'info') {
             const div = document.getElementById('statusDiv');
@@ -653,19 +443,22 @@
             setTimeout(() => div.innerHTML = '', 5000);
         }
 
-        function abrirModalColar() {
-            document.getElementById('modalColar').classList.add('active');
+        function abrirModalGrid() {
+            document.getElementById('modalGrid').classList.add('active');
             document.getElementById('pasteArea').focus();
         }
 
         function fecharModal() {
-            document.getElementById('modalColar').classList.remove('active');
+            document.getElementById('modalGrid').classList.remove('active');
         }
 
         function limparArea() {
             document.getElementById('pasteArea').value = '';
             document.getElementById('uploadStatus').innerHTML = '';
-            document.getElementById('previewContainer').innerHTML = '';
+            document.getElementById('gridContainer').style.display = 'none';
+            document.getElementById('gridInfo').style.display = 'none';
+            document.getElementById('btnProcessar').disabled = true;
+            dadosGrid = [];
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -673,17 +466,19 @@
             
             if (pasteArea) {
                 pasteArea.addEventListener('input', function() {
-                    gerarPreview();
+                    gerarGrid();
                 });
             }
         });
 
-        function gerarPreview() {
+        function gerarGrid() {
             const texto = document.getElementById('pasteArea').value.trim();
-            const previewContainer = document.getElementById('previewContainer');
             
             if (!texto) {
-                previewContainer.innerHTML = '';
+                document.getElementById('gridContainer').style.display = 'none';
+                document.getElementById('gridInfo').style.display = 'none';
+                document.getElementById('btnProcessar').disabled = true;
+                dadosGrid = [];
                 return;
             }
 
@@ -691,135 +486,112 @@
                 const linhas = texto.split('\n').filter(l => l.trim());
                 
                 if (linhas.length === 0) {
-                    previewContainer.innerHTML = '';
                     return;
                 }
 
-                const dadosPreview = linhas.slice(0, 10);
+                // Limita a 1000 linhas
+                const linhasLimitadas = linhas.slice(0, 1000);
                 
-                let html = `
-                    <div class="preview-stats">
-                        <div class="preview-stat">
-                            <i class="fas fa-list"></i>
-                            <div>
-                                <div class="label">Total Linhas</div>
-                                <div class="value">${linhas.length}</div>
-                            </div>
-                        </div>
-                        <div class="preview-stat">
-                            <i class="fas fa-eye"></i>
-                            <div>
-                                <div class="label">Pré-visualização</div>
-                                <div class="value">${Math.min(10, linhas.length)}</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="paste-preview">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Empresa</th>
-                                    <th>Carga</th>
-                                    <th>Descrição</th>
-                                    <th>Ton</th>
-                                    <th>Volume</th>
-                                    <th>Valor</th>
-                                    <th>Visitas</th>
-                                    <th>Data Rot</th>
-                                    <th>Separação</th>
-                                    <th>Loja</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                `;
-
-                dadosPreview.forEach(linha => {
+                dadosGrid = linhasLimitadas.map(linha => {
                     const campos = linha.split('\t');
-                    
-                    if (campos.length < 20) return;
-
-                    const empresa = (campos[0] || '').trim();
-                    const carga = (campos[4] || '').trim();
-                    const descricao = (campos[6] || '').trim();
-                    const ton = (campos[8] || '').trim();
-                    const volume = (campos[9] || '').trim();
-                    const valor = (campos[10] || '').trim();
-                    const visitas = (campos[12] || '').trim();
-                    const dataRot = (campos[16] || '').trim();
-                    const separacao = (campos[22] || '').trim();
-
-                    let loja = '';
-                    const matchLoja = descricao.match(/LJ\s+(\d+)/i);
-                    if (matchLoja) {
-                        loja = `LJ ${matchLoja[1]}`;
-                    }
-
-                    html += `
-                        <tr>
-                            <td>${empresa}</td>
-                            <td><strong>${carga}</strong></td>
-                            <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${descricao}</td>
-                            <td>${ton}</td>
-                            <td><strong>${volume}</strong></td>
-                            <td>${valor}</td>
-                            <td>${visitas}</td>
-                            <td>${dataRot}</td>
-                            <td>${separacao}</td>
-                            <td><strong>${loja}</strong></td>
-                        </tr>
-                    `;
+                    // Garante 26 colunas
+                    while (campos.length < 26) campos.push('');
+                    return campos.slice(0, 26);
                 });
 
-                if (linhas.length > 10) {
-                    html += `
-                        <tr>
-                            <td colspan="10" style="text-align: center; color: #667eea; font-weight: 600; padding: 10px;">
-                                <i class="fas fa-ellipsis-h"></i> Mais ${linhas.length - 10} linhas serão processadas
-                            </td>
-                        </tr>
-                    `;
+                const totalColunas = Math.max(...dadosGrid.map(l => l.length));
+
+                document.getElementById('totalLinhas').textContent = dadosGrid.length;
+                document.getElementById('totalColunas').textContent = totalColunas;
+                document.getElementById('gridInfo').style.display = 'flex';
+                
+                if (linhas.length > 1000) {
+                    document.getElementById('statusGrid').textContent = 'Limitado';
+                    document.getElementById('statusGrid').style.color = '#ffc107';
+                    showStatus(`⚠️ Apenas as primeiras 1000 linhas serão exibidas (total: ${linhas.length})`, 'warning');
+                } else {
+                    document.getElementById('statusGrid').textContent = 'Pronto';
+                    document.getElementById('statusGrid').style.color = '#28a745';
                 }
 
-                html += `
-                            </tbody>
-                        </table>
-                    </div>
-                `;
-
-                previewContainer.innerHTML = html;
+                renderGrid();
+                
+                document.getElementById('gridContainer').style.display = 'block';
+                document.getElementById('btnProcessar').disabled = false;
 
             } catch (error) {
-                console.error('[PREVIEW] Erro:', error);
-                previewContainer.innerHTML = `
-                    <div class="alert alert-warning">
+                console.error('[GRID] Erro:', error);
+                document.getElementById('uploadStatus').innerHTML = `
+                    <div class="alert alert-danger">
                         <i class="fas fa-exclamation-triangle"></i>
-                        Erro ao gerar pré-visualização. Verifique se os dados foram colados corretamente.
+                        Erro ao processar dados. Verifique o formato.
                     </div>
                 `;
             }
         }
 
+        function renderGrid() {
+            const tbody = document.getElementById('gridBody');
+            tbody.innerHTML = '';
+
+            dadosGrid.forEach((linha, idx) => {
+                const tr = document.createElement('tr');
+                
+                // Célula de número da linha
+                const tdNum = document.createElement('td');
+                tdNum.className = 'row-number';
+                tdNum.textContent = idx + 1;
+                tr.appendChild(tdNum);
+
+                // 26 colunas de dados
+                for (let i = 0; i < 26; i++) {
+                    const td = document.createElement('td');
+                    const valor = linha[i] || '';
+                    td.textContent = valor;
+                    td.title = valor; // Tooltip com valor completo
+                    
+                    // Classes especiais
+                    if (i === 0) td.className = 'col-empresa';
+                    else if (i === 4) td.className = 'col-carga highlight-col';
+                    else if (i === 6) td.className = 'col-descricao highlight-col';
+                    else if (i === 8) td.className = 'col-ton highlight-col';
+                    else if (i === 9) td.className = 'col-volume highlight-col';
+                    else if (i === 10) td.className = 'col-valor highlight-col';
+                    else if (i === 12) td.className = 'col-visitas highlight-col';
+                    else if (i === 16) td.className = 'col-data highlight-col';
+                    else if (i === 22) td.className = 'col-status highlight-col';
+                    
+                    tr.appendChild(td);
+                }
+
+                tbody.appendChild(tr);
+            });
+        }
+
         async function processarDados() {
-            const texto = document.getElementById('pasteArea').value.trim();
-            const statusDiv = document.getElementById('uploadStatus');
-            
-            if (!texto) {
-                statusDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> Cole os dados primeiro!</div>';
+            if (dadosGrid.length === 0) {
+                showStatus('Nenhum dado para processar', 'danger');
                 return;
             }
+
+            const statusDiv = document.getElementById('uploadStatus');
+            const btnProcessar = document.getElementById('btnProcessar');
             
-            statusDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner loading"></i> Processando...</div>';
+            statusDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner loading"></i> Processando e salvando...</div>';
+            btnProcessar.disabled = true;
             
             try {
-                const linhas = texto.split('\n').filter(l => l.trim());
-                console.log('[MAPACARGA] Processando', linhas.length, 'linhas');
+                console.log('[MAPACARGA] Processando', dadosGrid.length, 'linhas');
+                
+                // Converte de volta para formato de linhas com tabs
+                const linhasTexto = dadosGrid.map(linha => linha.join('\t'));
                 
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         action: 'importar',
-                        dadosImportacao: linhas
+                        dadosImportacao: linhasTexto
                     })
                 });
                 
@@ -829,7 +601,7 @@
                     statusDiv.innerHTML = `<div class="alert alert-success"><i class="fas fa-check-circle"></i> ${result.msg}</div>`;
                     setTimeout(() => {
                         fecharModal();
-                        carregarDados();
+                        showStatus(result.msg, 'success');
                     }, 2000);
                 } else {
                     throw new Error(result.msg || 'Erro ao processar');
@@ -837,11 +609,12 @@
             } catch (error) {
                 console.error('[MAPACARGA] Erro:', error);
                 statusDiv.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> Erro: ${error.message}</div>`;
+                btnProcessar.disabled = false;
             }
         }
 
         async function limparColunas() {
-            if (!confirm('⚠️ ATENÇÃO: Esta ação irá limpar TODAS as colunas editáveis da planilha.\n\nColunas protegidas (Visitas Pendente, Status, Loja, etc) serão preservadas.\n\nDeseja continuar?')) {
+            if (!confirm('⚠️ ATENÇÃO: Esta ação irá limpar TODAS as colunas editáveis da planilha.\n\nColunas protegidas serão preservadas.\n\nDeseja continuar?')) {
                 return;
             }
 
@@ -851,7 +624,7 @@
             btn.innerHTML = '<i class="fas fa-spinner loading"></i> Limpando...';
 
             try {
-                showStatus('Iniciando limpeza das colunas...', 'info');
+                showStatus('Iniciando limpeza...', 'info');
 
                 const response = await fetch(API_URL, {
                     method: 'POST',
@@ -863,32 +636,12 @@
 
                 if (result.ok) {
                     showStatus(result.msg, 'success');
-                    
-                    // Limpa dados locais
-                    dadosOriginais = [];
-                    dadosFiltrados = [];
-                    estruturaHierarquica = {};
-                    
-                    // Renderiza tabelas vazias
-                    document.getElementById('tabelaBody').innerHTML = `
-                        <tr>
-                            <td colspan="11" style="text-align: center; padding: 40px; color: #28a745;">
-                                <i class="fas fa-check-circle" style="font-size: 48px; margin-bottom: 15px;"></i>
-                                <p style="font-size: 18px; font-weight: 600;">Tabela limpa com sucesso!</p>
-                                <p style="margin-top: 10px; color: #666;">Use "Importar Dados" para adicionar novas cargas</p>
-                            </td>
-                        </tr>
-                    `;
-                    
-                    document.getElementById('pivotBody').innerHTML = '';
-                    document.getElementById('resumoCards').innerHTML = '';
-                    document.getElementById('totalRegistros').textContent = '0';
                 } else {
                     throw new Error(result.msg || 'Erro ao limpar');
                 }
             } catch (error) {
                 console.error('[MAPACARGA] Erro:', error);
-                showStatus('Erro ao limpar tabela: ' + error.message, 'danger');
+                showStatus('Erro ao limpar: ' + error.message, 'danger');
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalText;
@@ -896,404 +649,7 @@
         }
 
         async function carregarDados() {
-            try {
-                showStatus('Carregando dados...', 'info');
-                
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'listar', filtros: {} })
-                });
-                
-                const result = await response.json();
-                
-                if (result.ok) {
-                    dadosOriginais = result.dados || [];
-                    dadosFiltrados = [...dadosOriginais];
-                    
-                    preencherFiltros();
-                    construirHierarquia();
-                    renderizarPivot();
-                    renderTabela();
-                    atualizarResumo();
-                    
-                    showStatus(`${dadosOriginais.length} cargas carregadas`, 'success');
-                } else {
-                    throw new Error(result.msg || 'Erro ao carregar');
-                }
-            } catch (error) {
-                console.error('[MAPACARGA] Erro:', error);
-                showStatus('Erro ao carregar: ' + error.message, 'danger');
-            }
-        }
-
-        function preencherFiltros() {
-            const segmentos = [...new Set(dadosOriginais.map(d => d.segmento).filter(Boolean))].sort();
-            const selectSegmento = document.getElementById('filtroSegmento');
-            if (selectSegmento) {
-                selectSegmento.innerHTML = segmentos.map(s => `<option value="${s}">${s}</option>`).join('');
-            }
-            
-            const tipos = [...new Set(dadosOriginais.map(d => d.tipoLoja).filter(Boolean))].sort();
-            const selectTipo = document.getElementById('filtroTipo');
-            if (selectTipo) {
-                selectTipo.innerHTML = tipos.map(t => `<option value="${t}">${t}</option>`).join('');
-            }
-            
-            const status = [...new Set(dadosOriginais.map(d => d.statusSep).filter(Boolean))].sort();
-            const selectStatus = document.getElementById('filtroStatus');
-            if (selectStatus) {
-                selectStatus.innerHTML = status.map(st => `<option value="${st}">${st}</option>`).join('');
-            }
-        }
-
-        function aplicarFiltros() {
-            const selectSegmento = document.getElementById('filtroSegmento');
-            const selectTipo = document.getElementById('filtroTipo');
-            const inputLoja = document.getElementById('filtroLoja');
-            const selectStatus = document.getElementById('filtroStatus');
-            
-            const segmentos = selectSegmento ? Array.from(selectSegmento.selectedOptions).map(o => o.value) : [];
-            const tipos = selectTipo ? Array.from(selectTipo.selectedOptions).map(o => o.value) : [];
-            const loja = inputLoja ? inputLoja.value.toLowerCase() : '';
-            const statusSel = selectStatus ? Array.from(selectStatus.selectedOptions).map(o => o.value) : [];
-            
-            dadosFiltrados = dadosOriginais.filter(item => {
-                const matchSegmento = segmentos.length === 0 || segmentos.includes(item.segmento);
-                const matchTipo = tipos.length === 0 || tipos.includes(item.tipoLoja);
-                const matchLoja = !loja || item.loja.toLowerCase().includes(loja);
-                const matchStatus = statusSel.length === 0 || statusSel.includes(item.statusSep);
-                
-                return matchSegmento && matchTipo && matchLoja && matchStatus;
-            });
-            
-            construirHierarquia();
-            renderizarPivot();
-            renderTabela();
-            atualizarResumo();
-            showStatus(`${dadosFiltrados.length} cargas filtradas`, 'info');
-        }
-
-        function limparFiltros() {
-            const selectSegmento = document.getElementById('filtroSegmento');
-            const selectTipo = document.getElementById('filtroTipo');
-            const inputLoja = document.getElementById('filtroLoja');
-            const selectStatus = document.getElementById('filtroStatus');
-            
-            if (selectSegmento) selectSegmento.selectedIndex = -1;
-            if (selectTipo) selectTipo.selectedIndex = -1;
-            if (inputLoja) inputLoja.value = '';
-            if (selectStatus) selectStatus.selectedIndex = -1;
-            
-            dadosFiltrados = [...dadosOriginais];
-            construirHierarquia();
-            renderizarPivot();
-            renderTabela();
-            atualizarResumo();
-            showStatus('Filtros removidos', 'info');
-        }
-
-        function construirHierarquia() {
-            estruturaHierarquica = {};
-            
-            dadosFiltrados.forEach(item => {
-                const dataRot = item.dataRot || 'Sem Data';
-                const segmento = item.segmento || 'Sem Segmento';
-                const loja = item.loja || 'Sem Loja';
-                const box = item.box || 'Sem BOX';
-                const carga = item.carga;
-                
-                if (!estruturaHierarquica[dataRot]) {
-                    estruturaHierarquica[dataRot] = {
-                        nome: dataRot,
-                        nivel: 0,
-                        expandido: false,
-                        dados: { qtd: 0, valor: 0, visitas: 0, volume: 0 },
-                        filhos: {}
-                    };
-                }
-                
-                if (!estruturaHierarquica[dataRot].filhos[segmento]) {
-                    estruturaHierarquica[dataRot].filhos[segmento] = {
-                        nome: segmento,
-                        nivel: 1,
-                        expandido: false,
-                        dados: { qtd: 0, valor: 0, visitas: 0, volume: 0 },
-                        filhos: {}
-                    };
-                }
-                
-                if (!estruturaHierarquica[dataRot].filhos[segmento].filhos[loja]) {
-                    estruturaHierarquica[dataRot].filhos[segmento].filhos[loja] = {
-                        nome: loja,
-                        nivel: 2,
-                        expandido: false,
-                        dados: { qtd: 0, valor: 0, visitas: 0, volume: 0 },
-                        filhos: {}
-                    };
-                }
-                
-                if (!estruturaHierarquica[dataRot].filhos[segmento].filhos[loja].filhos[box]) {
-                    estruturaHierarquica[dataRot].filhos[segmento].filhos[loja].filhos[box] = {
-                        nome: box,
-                        nivel: 3,
-                        expandido: false,
-                        dados: { qtd: 0, valor: 0, visitas: 0, volume: 0 },
-                        filhos: {}
-                    };
-                }
-                
-                estruturaHierarquica[dataRot].filhos[segmento].filhos[loja].filhos[box].filhos[carga] = {
-                    nome: carga,
-                    nivel: 4,
-                    expandido: false,
-                    dados: {
-                        qtd: 1,
-                        valor: parseValor(item.valor),
-                        visitas: parseInt(item.visitasPendente) || 0,
-                        volume: parseFloat(item.m3) || 0
-                    },
-                    detalhes: item
-                };
-                
-                const valorItem = parseValor(item.valor);
-                const visitasItem = parseInt(item.visitasPendente) || 0;
-                const volumeItem = parseFloat(item.m3) || 0;
-                
-                estruturaHierarquica[dataRot].dados.qtd++;
-                estruturaHierarquica[dataRot].dados.valor += valorItem;
-                estruturaHierarquica[dataRot].dados.visitas += visitasItem;
-                estruturaHierarquica[dataRot].dados.volume += volumeItem;
-                
-                estruturaHierarquica[dataRot].filhos[segmento].dados.qtd++;
-                estruturaHierarquica[dataRot].filhos[segmento].dados.valor += valorItem;
-                estruturaHierarquica[dataRot].filhos[segmento].dados.visitas += visitasItem;
-                estruturaHierarquica[dataRot].filhos[segmento].dados.volume += volumeItem;
-                
-                estruturaHierarquica[dataRot].filhos[segmento].filhos[loja].dados.qtd++;
-                estruturaHierarquica[dataRot].filhos[segmento].filhos[loja].dados.valor += valorItem;
-                estruturaHierarquica[dataRot].filhos[segmento].filhos[loja].dados.visitas += visitasItem;
-                estruturaHierarquica[dataRot].filhos[segmento].filhos[loja].dados.volume += volumeItem;
-                
-                estruturaHierarquica[dataRot].filhos[segmento].filhos[loja].filhos[box].dados.qtd++;
-                estruturaHierarquica[dataRot].filhos[segmento].filhos[loja].filhos[box].dados.valor += valorItem;
-                estruturaHierarquica[dataRot].filhos[segmento].filhos[loja].filhos[box].dados.visitas += visitasItem;
-                estruturaHierarquica[dataRot].filhos[segmento].filhos[loja].filhos[box].dados.volume += volumeItem;
-            });
-        }
-
-        function parseValor(valor) {
-            if (!valor) return 0;
-            const valorStr = String(valor).replace('R$ ', '').replace(/\./g, '').replace(',', '.').trim();
-            return parseFloat(valorStr) || 0;
-        }
-
-        function renderizarPivot() {
-            const tbody = document.getElementById('pivotBody');
-            if (!tbody) return;
-            
-            tbody.innerHTML = '';
-            
-            let linhaId = 0;
-            let totalGeral = { qtd: 0, valor: 0, visitas: 0, volume: 0 };
-            
-            const datas = Object.keys(estruturaHierarquica).sort();
-            
-            datas.forEach(dataKey => {
-                const dataNode = estruturaHierarquica[dataKey];
-                totalGeral.qtd += dataNode.dados.qtd;
-                totalGeral.valor += dataNode.dados.valor;
-                totalGeral.visitas += dataNode.dados.visitas;
-                totalGeral.volume += dataNode.dados.volume;
-                
-                const dataId = `linha-${linhaId++}`;
-                tbody.innerHTML += criarLinha(dataNode, dataId, null);
-                
-                const segmentos = Object.keys(dataNode.filhos).sort();
-                segmentos.forEach(segKey => {
-                    const segNode = dataNode.filhos[segKey];
-                    const segId = `linha-${linhaId++}`;
-                    tbody.innerHTML += criarLinha(segNode, segId, dataId);
-                    
-                    const lojas = Object.keys(segNode.filhos).sort();
-                    lojas.forEach(lojaKey => {
-                        const lojaNode = segNode.filhos[lojaKey];
-                        const lojaId = `linha-${linhaId++}`;
-                        tbody.innerHTML += criarLinha(lojaNode, lojaId, segId);
-                        
-                        const boxes = Object.keys(lojaNode.filhos).sort();
-                        boxes.forEach(boxKey => {
-                            const boxNode = lojaNode.filhos[boxKey];
-                            const boxId = `linha-${linhaId++}`;
-                            tbody.innerHTML += criarLinha(boxNode, boxId, lojaId);
-                            
-                            const cargas = Object.keys(boxNode.filhos).sort();
-                            cargas.forEach(cargaKey => {
-                                const cargaNode = boxNode.filhos[cargaKey];
-                                const cargaId = `linha-${linhaId++}`;
-                                tbody.innerHTML += criarLinha(cargaNode, cargaId, boxId);
-                            });
-                        });
-                    });
-                });
-            });
-            
-            const volPorVisita = totalGeral.visitas > 0 ? (totalGeral.volume / totalGeral.visitas).toFixed(2) : '0.00';
-            tbody.innerHTML += `
-                <tr class="total-row">
-                    <td><strong>TOTAL GERAL</strong></td>
-                    <td class="numeric">${totalGeral.qtd}</td>
-                    <td class="numeric">R$ ${totalGeral.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                    <td class="numeric">${totalGeral.visitas}</td>
-                    <td class="numeric">${totalGeral.volume.toFixed(2)} m³</td>
-                    <td class="numeric">${volPorVisita} m³</td>
-                </tr>
-            `;
-        }
-
-        function criarLinha(node, linhaId, parentId) {
-            const temFilhos = Object.keys(node.filhos || {}).length > 0;
-            const expandIcon = temFilhos ? '<i class="fas fa-chevron-right expand-icon"></i>' : '<i class="fas fa-circle" style="font-size: 6px; margin-left: 5px;"></i>';
-            const volPorVisita = node.dados.visitas > 0 ? (node.dados.volume / node.dados.visitas).toFixed(2) : '0.00';
-            
-            const prefixo = node.nivel === 0 ? '📅 ' : 
-                           node.nivel === 1 ? '🏢 ' : 
-                           node.nivel === 2 ? '🏪 ' : 
-                           node.nivel === 3 ? '📦 ' : 
-                           '📋 ';
-            
-            return `
-                <tr id="${linhaId}" class="nivel-${node.nivel} ${parentId ? 'row-hidden' : ''}" data-parent="${parentId || ''}" data-nivel="${node.nivel}">
-                    <td class="expandable" onclick="toggleExpand('${linhaId}', ${temFilhos})">
-                        ${expandIcon}
-                        <strong>${prefixo}${node.nome}</strong>
-                    </td>
-                    <td class="numeric">${node.dados.qtd}</td>
-                    <td class="numeric">R$ ${node.dados.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                    <td class="numeric">${node.dados.visitas}</td>
-                    <td class="numeric">${node.dados.volume.toFixed(2)} m³</td>
-                    <td class="numeric">${volPorVisita} m³</td>
-                </tr>
-            `;
-        }
-
-        function toggleExpand(linhaId, temFilhos) {
-            if (!temFilhos) return;
-            
-            const linha = document.getElementById(linhaId);
-            if (!linha) return;
-            
-            const icon = linha.querySelector('.expand-icon');
-            if (!icon) return;
-            
-            icon.classList.toggle('expanded');
-            
-            const todasLinhas = document.querySelectorAll(`tr[data-parent="${linhaId}"]`);
-            const mostrar = icon.classList.contains('expanded');
-            
-            todasLinhas.forEach(filha => {
-                if (mostrar) {
-                    filha.classList.remove('row-hidden');
-                } else {
-                    filha.classList.add('row-hidden');
-                    const iconFilho = filha.querySelector('.expand-icon');
-                    if (iconFilho) {
-                        iconFilho.classList.remove('expanded');
-                    }
-                    esconderDescendentes(filha.id);
-                }
-            });
-        }
-
-        function esconderDescendentes(linhaId) {
-            const descendentes = document.querySelectorAll(`tr[data-parent="${linhaId}"]`);
-            descendentes.forEach(desc => {
-                desc.classList.add('row-hidden');
-                const icon = desc.querySelector('.expand-icon');
-                if (icon) icon.classList.remove('expanded');
-                esconderDescendentes(desc.id);
-            });
-        }
-
-        function renderTabela() {
-            const tbody = document.getElementById('tabelaBody');
-            if (!tbody) return;
-            
-            if (dadosFiltrados.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="11" style="text-align: center; padding: 40px;"><i class="fas fa-inbox" style="font-size: 32px;"></i><p>Nenhuma carga encontrada</p></td></tr>';
-                return;
-            }
-            
-            tbody.innerHTML = dadosFiltrados.map(item => `
-                <tr>
-                    <td>${item.empresa || '-'}</td>
-                    <td><strong>${item.carga || '-'}</strong></td>
-                    <td style="max-width: 300px; white-space: normal;">${item.descricao || '-'}</td>
-                    <td>${item.ton || '0'}</td>
-                    <td><strong>${item.m3 || '0'}</strong></td>
-                    <td>${item.valor || '0'}</td>
-                    <td>${item.visitasPendente || '0'}</td>
-                    <td>${item.dataRot || '-'}</td>
-                    <td>${item.statusSep || '-'}</td>
-                    <td><strong>${item.loja || '-'}</strong></td>
-                    <td>${item.box || '-'}</td>
-                </tr>
-            `).join('');
-            
-            const totalRegistros = document.getElementById('totalRegistros');
-            if (totalRegistros) {
-                totalRegistros.textContent = dadosFiltrados.length;
-            }
-        }
-
-        function atualizarResumo() {
-            const total = dadosFiltrados.length;
-            const comper = dadosFiltrados.filter(d => d.segmento === 'LJ COMPER').length;
-            const fort = dadosFiltrados.filter(d => d.segmento === 'LJ FORT').length;
-            const volumeTotal = dadosFiltrados.reduce((s, d) => s + (parseFloat(d.m3) || 0), 0);
-            
-            const valorTotal = dadosFiltrados.reduce((s, d) => {
-                const valorStr = (d.valor || '0').replace('R$ ', '').replace(/\./g, '').replace(',', '.').trim();
-                return s + (parseFloat(valorStr) || 0);
-            }, 0);
-            
-            const visitasTotal = dadosFiltrados.reduce((s, d) => s + (parseInt(d.visitasPendente) || 0), 0);
-            
-            const resumoCards = document.getElementById('resumoCards');
-            if (resumoCards) {
-                resumoCards.innerHTML = `
-                    <div class="stat-card">
-                        <i class="fas fa-truck"></i>
-                        <div class="value">${total}</div>
-                        <div class="label">Total de Cargas</div>
-                    </div>
-                    <div class="stat-card">
-                        <i class="fas fa-store"></i>
-                        <div class="value">${comper}</div>
-                        <div class="label">Lojas COMPER</div>
-                    </div>
-                    <div class="stat-card">
-                        <i class="fas fa-store-alt"></i>
-                        <div class="value">${fort}</div>
-                        <div class="label">Lojas FORT</div>
-                    </div>
-                    <div class="stat-card">
-                        <i class="fas fa-cube"></i>
-                        <div class="value">${volumeTotal.toFixed(1)}</div>
-                        <div class="label">Volume Total (m³)</div>
-                    </div>
-                    <div class="stat-card">
-                        <i class="fas fa-dollar-sign"></i>
-                        <div class="value">R$ ${valorTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-                        <div class="label">Valor Total</div>
-                    </div>
-                    <div class="stat-card">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <div class="value">${visitasTotal}</div>
-                        <div class="label">Visitas Pendentes</div>
-                    </div>
-                `;
-            }
+            showStatus('Função carregarDados não implementada nesta versão', 'info');
         }
 
         function voltarMenu() {
@@ -1302,10 +658,12 @@
             }
         }
 
-        document.getElementById('modalColar').addEventListener('click', function(e) {
+        // Fechar modal ao clicar fora
+        document.getElementById('modalGrid').addEventListener('click', function(e) {
             if (e.target === this) fecharModal();
         });
 
+        // Atalho ESC
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') fecharModal();
         });
@@ -1316,7 +674,6 @@
                 const usuario = sessionStorage.getItem('usuario') || 'Usuário';
                 userName.textContent = usuario;
             }
-            carregarDados();
         };
     </script>
 </body>
