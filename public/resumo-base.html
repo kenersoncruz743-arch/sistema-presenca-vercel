@@ -616,19 +616,19 @@
                 document.getElementById('loadingDiv').style.display = 'block';
                 document.getElementById('contentDiv').style.display = 'none';
 
+                // ===== CORREÇÃO: Envia data no formato YYYY-MM-DD =====
                 const dataInput = document.getElementById('filtroData').value;
                 
                 let url = '/api/producao/resumo-base';
                 
                 if (dataInput) {
-                    const dataConvertida = converterDataParaAPI(dataInput);
-                    url += `?data=${dataConvertida}`;
-                    console.log('[RESUMO] Data original:', dataInput);
-                    console.log('[RESUMO] Data convertida:', dataConvertida);
-                    console.log('[RESUMO] URL:', url);
+                    url += `?data=${dataInput}`;
+                    console.log('[RESUMO] Data selecionada:', dataInput);
                 } else {
                     console.log('[RESUMO] Sem data selecionada, usando hoje');
                 }
+
+                console.log('[RESUMO] URL final:', url);
 
                 const response = await fetch(url);
                 const result = await response.json();
@@ -639,6 +639,7 @@
                     throw new Error(result.msg || 'Erro ao carregar resumo');
                 }
 
+                // Mostra informações de debug
                 if (result.debug) {
                     console.log('[RESUMO] Debug da API:', result.debug);
                     console.log(`[RESUMO] Total de linhas: ${result.debug.totalLinhas}`);
@@ -664,7 +665,7 @@
                     <i class="fas fa-exclamation-triangle" style="color: #dc3545;"></i>
                     <p style="margin-top: 20px; color: #dc3545;">Erro ao carregar resumo</p>
                     <p style="font-size: 14px; color: white; margin-top: 10px;">${error.message}</p>
-                    <button class="btn btn-success" onclick="carregarResumo()" style="margin-top: 20px;">
+                    <button class="btn btn-warning" onclick="carregarResumo()" style="margin-top: 20px;">
                         <i class="fas fa-sync-alt"></i> Tentar Novamente
                     </button>
                 `;
@@ -1141,7 +1142,7 @@
             const ano = hoje.getFullYear();
             const mes = String(hoje.getMonth() + 1).padStart(2, '0');
             const dia = String(hoje.getDate()).padStart(2, '0');
-            const dataHoje = `${ano}-${mes}-${dia}`;
+            const dataHoje = `${dia}-${mes}-${ano}`;
             
             document.getElementById('filtroData').value = dataHoje;
             console.log('[RESUMO] Data inicial definida:', dataHoje);
