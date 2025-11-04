@@ -568,8 +568,8 @@
                 }
 
                 console.log('[PRODUCAO] Carregando Meta...');
-                const resMeta = await fetch('/api/producao/meta');
-                const resultMeta = await resMeta.json();
+                const resProdutividade = await fetch('/api/producao/dados?tipo=produtividade');
+                const resMeta = await fetch('/api/producao/dados?tipo=meta');
                 
                 if (resultMeta.ok && resultMeta.dados) {
                     resultMeta.dados.forEach(m => {
