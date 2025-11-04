@@ -552,8 +552,8 @@
                 }
 
                 console.log('[PRODUCAO] Carregando Produtividade_Hora...');
-                const resProdutividade = await fetch('/api/producao/produtividade');
-                const resultProdutividade = await resProdutividade.json();
+                const resProdutividade = await fetch('/api/producao/dados?tipo=produtividade');
+                const resMeta = await fetch('/api/producao/dados?tipo=meta');
                 
                 if (resultProdutividade.ok && resultProdutividade.dados) {
                     resultProdutividade.dados.forEach(p => {
