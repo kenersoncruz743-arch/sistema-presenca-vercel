@@ -1142,7 +1142,7 @@
             const ano = hoje.getFullYear();
             const mes = String(hoje.getMonth() + 1).padStart(2, '0');
             const dia = String(hoje.getDate()).padStart(2, '0');
-            const dataHoje = `${ano}-${mes}-${dia}`;
+            const dataHoje = `${dia}-${mes}-${ano}`;
             
             document.getElementById('filtroData').value = dataHoje;
             console.log('[RESUMO] Data inicial definida:', dataHoje);
