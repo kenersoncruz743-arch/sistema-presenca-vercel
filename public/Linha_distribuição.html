@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Distribuição de Linhas de Separação</title>
+<title>Distribuição de Linhas de Separação - CORRIGIDO</title>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -23,90 +23,419 @@ body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#667eea
 .section h2{color:#667eea;margin-bottom:15px;display:flex;align-items:center;gap:10px}
 .paste-area{width:100%;min-height:200px;padding:15px;border:2px dashed #e0e0e0;border-radius:8px;font-family:'Courier New',monospace;font-size:11px;resize:vertical;background:#f8f9fa;margin-bottom:15px}
 .paste-area:focus{outline:none;border-color:#667eea;background:white}
-.table-wrapper{overflow-x:auto;max-height:600px;border-radius:10px;border:1px solid #e9ecef}
-table{width:100%;border-collapse:collapse;font-size:12px}
-thead{background:linear-gradient(135deg,#667eea,#764ba2);color:white;position:sticky;top:0;z-index:10}
-th{padding:10px 8px;text-align:left;font-weight:600;white-space:nowrap}
-td{padding:8px;border-bottom:1px solid #e9ecef;white-space:nowrap}
-tbody tr:hover{background:#f8f9fa}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:20px}
-.stat-card{background:white;padding:20px;border-radius:12px;box-shadow:0 5px 20px rgba(0,0,0,0.1);text-align:center}
-.stat-card h3{font-size:12px;color:#6c757d;margin-bottom:8px;text-transform:uppercase}
-.stat-card .value{font-size:32px;font-weight:bold;color:#667eea}
 .alert{padding:15px 20px;border-radius:10px;margin-bottom:20px;display:flex;align-items:center;gap:10px}
 .alert-success{background:#d4edda;color:#155724;border-left:4px solid #28a745}
 .alert-danger{background:#f8d7da;color:#721c24;border-left:4px solid #dc3545}
 .alert-warning{background:#fff3cd;color:#856404;border-left:4px solid #ffc107}
 .alert-info{background:#d1ecf1;color:#0c5460;border-left:4px solid #17a2b8}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:20px}
+.stat-card{background:white;padding:20px;border-radius:12px;box-shadow:0 5px 20px rgba(0,0,0,0.1);text-align:center}
+.stat-card h3{font-size:12px;color:#6c757d;margin-bottom:8px;text-transform:uppercase}
+.stat-card .value{font-size:32px;font-weight:bold;color:#667eea}
+.supervisor-group{background:#f8f9fa;padding:15px;border-radius:8px;margin-bottom:15px;border-left:4px solid #667eea}
+.supervisor-group h4{color:#667eea;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.linha-card{background:white;padding:12px;border-radius:6px;margin-bottom:8px;border:1px solid #e9ecef;display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr;gap:10px;align-items:center}
+.linha-card:hover{background:#f0f4ff;border-color:#667eea}
+.colab-section{margin-top:10px;padding:10px;background:#fff;border-radius:4px;border:1px solid #e9ecef}
+.colab-section h5{font-size:11px;color:#666;margin-bottom:5px;text-transform:uppercase}
+.colab-list{font-size:11px;color:#666;max-height:150px;overflow-y:auto}
+.colab-item{padding:4px 0;border-bottom:1px solid #f0f0f0}
+.colab-item:last-child{border-bottom:none}
 .badge{display:inline-block;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600}
 .badge-success{background:#d4edda;color:#155724}
 .badge-warning{background:#fff3cd;color:#856404}
-.badge-danger{background:#f8d7da;color:#721c24}
 .badge-primary{background:#e3f2fd;color:#1976d2}
-.supervisor-group{background:#f8f9fa;padding:15px;border-radius:8px;margin-bottom:15px;border-left:4px solid #667eea}
-.supervisor-group h4{color:#667eea;margin-bottom:10px;display:flex;align-items:center;gap:8px}
-.linha-card{background:white;padding:12px;border-radius:6px;margin-bottom:8px;border:1px solid #e9ecef;display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:10px;align-items:center}
-.linha-card:hover{background:#f0f4ff;border-color:#667eea}
 .loading{display:inline-block;animation:spin 1s linear infinite}
 @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
-.colab-list{font-size:11px;color:#666;margin-top:5px}
-.colab-item{padding:3px 0;border-bottom:1px solid #f0f0f0}
-.colab-item:last-child{border-bottom:none}
 </style>
 </head>
 <body>
 <div class="container">
 <div class="header">
-<h1><i class="fas fa-sitemap"></i> Distribuição de Linhas de Separação</h1>
+<h1><i class="fas fa-sitemap"></i> Distribuição de Linhas - Sistema Inteligente</h1>
 <div style="display:flex;gap:10px">
 <button class="btn btn-success" onclick="calcularDistribuicao()"><i class="fas fa-calculator"></i> Calcular</button>
 <button class="btn btn-warning" onclick="limparDados()"><i class="fas fa-eraser"></i> Limpar</button>
 <button class="btn btn-secondary" onclick="window.location.href='/ferramentas'"><i class="fas fa-arrow-left"></i> Voltar</button>
 </div>
 </div>
+
 <div id="statusDiv"></div>
+
 <div class="section">
-<h2><i class="fas fa-paste"></i> Importar Dados das Linhas de Separação</h2>
-<textarea class="paste-area" id="pasteLinhas" placeholder="Cole aqui os dados da aba 'Linhas de Separação' com as colunas:&#10;carga | dep | box | lote | tipo agrupamento | linha separacao | peso | volume | numero itens | numero volume | operação | tempo geração | VISITAS"></textarea>
+<h2><i class="fas fa-paste"></i> 1. Importar Linhas de Separação</h2>
+<p style="color:#666;margin-bottom:10px;font-size:13px">Cole os dados com as colunas: <strong>Linha | Lote | Itens | Volume | Peso | Visitas</strong></p>
+<textarea class="paste-area" id="pasteLinhas" placeholder="Exemplo:&#10;LIQUIDA 744 (CP)	L001	100	5.5	250	3&#10;LIMPEZA EXP (CP)	L002	80	4.2	180	2"></textarea>
 <button class="btn btn-primary" onclick="processarLinhas()"><i class="fas fa-upload"></i> Processar Linhas</button>
 </div>
+
 <div class="section" style="display:none" id="sectionResultados">
 <h2><i class="fas fa-chart-bar"></i> Resumo Geral</h2>
 <div class="stats" id="statsGeral"></div>
-<h2 style="margin-top:30px"><i class="fas fa-users"></i> Distribuição por Supervisor</h2>
+
+<h2 style="margin-top:30px"><i class="fas fa-users"></i> Distribuição Inteligente por Supervisor</h2>
+<p style="color:#666;margin-bottom:15px;font-size:13px">
+<i class="fas fa-lightbulb"></i> <strong>Critério:</strong> Balanceamento baseado em <strong>quantidade de lotes</strong> por linha + colaboradores presentes
+</p>
 <div id="distribuicaoSupervisores"></div>
-<h2 style="margin-top:30px"><i class="fas fa-list"></i> Detalhamento das Linhas</h2>
-<div class="table-wrapper">
-<table id="tabelaDetalhamento">
-<thead>
-<tr>
-<th>Linha</th>
-<th>Supervisor</th>
-<th>Total Itens</th>
-<th>Total Visitas</th>
-<th>Volume (m³)</th>
-<th>Peso (kg)</th>
-<th>Colaboradores Sugeridos</th>
-<th>Média Itens/Pessoa</th>
-<th>Status</th>
-</tr>
-</thead>
-<tbody></tbody>
-</table>
 </div>
 </div>
-</div>
+
 <script>
 const API_BASE=window.location.origin;
 let dadosLinhas=[];
 let dadosPresenca=[];
+let dadosQLP=[];
 let mapeamentoSupervisor={};
-function showStatus(msg,type='info'){const div=document.getElementById('statusDiv');const icons={info:'info-circle',success:'check-circle',danger:'exclamation-triangle',warning:'exclamation-circle'};div.innerHTML=`<div class="alert alert-${type}"><i class="fas fa-${icons[type]}"></i><span>${msg}</span></div>`;setTimeout(()=>div.innerHTML='',5000)}
-function processarLinhas(){const texto=document.getElementById('pasteLinhas').value.trim();if(!texto){showStatus('Cole os dados das linhas primeiro','warning');return}try{const linhas=texto.split('\n').filter(l=>l.trim());if(linhas.length===0)throw new Error('Nenhuma linha válida');console.log('Total de linhas:',linhas.length);dadosLinhas=[];linhas.forEach((linha,idx)=>{if(idx===0)return;const campos=linha.split('\t');if(campos.length<13){console.log(`Linha ${idx} ignorada: ${campos.length} campos`);return}const obj={carga:campos[0]||'',dep:campos[1]||'',box:campos[2]||'',col3:campos[3]||'',lote:campos[4]||'',tipoAgrupamento:campos[5]||'',linhaSeparacao:campos[6]||'',peso:parseFloat(campos[7])||0,volume:parseFloat(campos[8])||0,numeroItens:parseInt(campos[9])||0,numeroVolume:parseInt(campos[10])||0,operacao:campos[11]||'',tempoGeracao:campos[12]||'',visitas:parseInt(campos[13])||0};if(idx<3)console.log(`Linha ${idx}:`,obj);if(obj.linhaSeparacao&&obj.numeroItens>0){dadosLinhas.push(obj)}});console.log('Dados processados:',dadosLinhas.length);showStatus(`${dadosLinhas.length} linhas processadas com sucesso!`,'success');document.getElementById('sectionResultados').style.display='block'}catch(error){console.error('Erro completo:',error);showStatus('Erro ao processar dados: '+error.message,'danger')}}
-async function calcularDistribuicao(){if(dadosLinhas.length===0){showStatus('Processe as linhas primeiro','warning');return}try{showStatus('Carregando mapeamento de supervisores...','info');const resMapeamento=await fetch(`${API_BASE}/api/Linha_Distribuição`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'obterDistribuicao'})});const resultMapeamento=await resMapeamento.json();if(!resultMapeamento.ok)throw new Error('Erro ao carregar mapeamento');mapeamentoSupervisor=resultMapeamento.distribuicao||{};console.log('Mapeamento:',mapeamentoSupervisor);showStatus('Carregando lista de presença...','info');const hoje=new Date();const dataStr=`${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}-${String(hoje.getDate()).padStart(2,'0')}`;const resBase=await fetch(`${API_BASE}/api/producao/resumo-base?modo=dados&data=${dataStr}`);const resultBase=await resBase.json();if(!resultBase.ok)throw new Error('Erro ao carregar presença');dadosPresenca=resultBase.dados||[];console.log('Presença:',dadosPresenca.length);const agruparLinhas={};dadosLinhas.forEach(item=>{const key=item.linhaSeparacao||'Sem Linha';if(!agruparLinhas[key]){agruparLinhas[key]={linha:key,totalItens:0,totalVisitas:0,totalVolume:0,totalPeso:0,lotes:[]}}agruparLinhas[key].totalItens+=item.numeroItens||0;agruparLinhas[key].totalVisitas+=item.visitas||0;agruparLinhas[key].totalVolume+=item.volume||0;agruparLinhas[key].totalPeso+=item.peso||0;agruparLinhas[key].lotes.push(item)});const linhasArray=Object.values(agruparLinhas);console.log('Linhas agrupadas:',linhasArray);const supervisorLinhas={};for(const sup in mapeamentoSupervisor){const configs=mapeamentoSupervisor[sup];const linhasSet=new Set();configs.forEach(cfg=>{if(cfg.linha1)linhasSet.add(cfg.linha1);if(cfg.linha2)linhasSet.add(cfg.linha2)});supervisorLinhas[sup]=[...linhasSet]}console.log('Supervisor->Linhas:',supervisorLinhas);const distribuicao={};linhasArray.forEach(linhaObj=>{let supAtribuido='Não definido';for(const sup in supervisorLinhas){if(supervisorLinhas[sup].includes(linhaObj.linha)){supAtribuido=sup;break}}const colabPresentes=dadosPresenca.filter(c=>c.supervisor===supAtribuido&&c.status&&c.status.toLowerCase()==='presente');const numColab=colabPresentes.length;const itensTotal=linhaObj.totalItens||0;const visitasTotal=linhaObj.totalVisitas||0;const mediaItens=numColab>0?Math.ceil(itensTotal/numColab):itensTotal;const mediaVisitas=numColab>0?(visitasTotal/numColab).toFixed(2):visitasTotal;if(!distribuicao[supAtribuido]){distribuicao[supAtribuido]={supervisor:supAtribuido,totalLinhas:0,totalItens:0,totalVisitas:0,totalColaboradores:numColab,linhas:[],colaboradores:colabPresentes}}distribuicao[supAtribuido].totalLinhas++;distribuicao[supAtribuido].totalItens+=itensTotal;distribuicao[supAtribuido].totalVisitas+=visitasTotal;distribuicao[supAtribuido].linhas.push({linha:linhaObj.linha,totalItens:itensTotal,totalVisitas:visitasTotal,volume:linhaObj.totalVolume||0,peso:linhaObj.totalPeso||0,colaboradores:colabPresentes,colasSugeridos:numColab,mediaItens:mediaItens,mediaVisitas:mediaVisitas})});console.log('Distribuição final:',distribuicao);renderResultados(distribuicao,linhasArray);showStatus('Distribuição calculada com sucesso!','success')}catch(error){console.error('Erro completo:',error);showStatus('Erro ao calcular: '+error.message,'danger')}}
-function renderResultados(dist,linhas){const totalLinhas=linhas.length;const totalItens=linhas.reduce((s,l)=>s+l.totalItens,0);const totalVisitas=linhas.reduce((s,l)=>s+l.totalVisitas,0);const totalColabs=Object.values(dist).reduce((s,d)=>s+d.totalColaboradores,0);document.getElementById('statsGeral').innerHTML=`<div class="stat-card"><h3>Total de Linhas</h3><div class="value">${totalLinhas}</div></div><div class="stat-card"><h3>Total de Itens</h3><div class="value">${totalItens}</div></div><div class="stat-card"><h3>Total de Visitas</h3><div class="value">${totalVisitas}</div></div><div class="stat-card"><h3>Colaboradores Presentes</h3><div class="value">${totalColabs}</div></div><div class="stat-card"><h3>Supervisores Ativos</h3><div class="value">${Object.keys(dist).length}</div></div>`;let htmlSup='';Object.values(dist).forEach(sup=>{htmlSup+=`<div class="supervisor-group"><h4><i class="fas fa-user-tie"></i> ${sup.supervisor} <span class="badge badge-primary">${sup.totalLinhas} linhas | ${sup.totalColaboradores} colaboradores</span></h4>`;if(sup.colaboradores&&sup.colaboradores.length>0){htmlSup+=`<div class="colab-list"><strong>Colaboradores:</strong><br>`;sup.colaboradores.forEach(c=>{htmlSup+=`<div class="colab-item">${c.matricula} - ${c.nome} (${c.funcao})</div>`});htmlSup+=`</div>`}sup.linhas.forEach(linha=>{htmlSup+=`<div class="linha-card"><div><strong>${linha.linha}</strong></div><div><span class="badge badge-warning">${linha.totalItens} itens</span></div><div><span class="badge badge-info">${linha.totalVisitas} visitas</span></div><div><span class="badge badge-success">${linha.colasSugeridos} colab.</span></div><div>~${linha.mediaItens} itens/pessoa</div></div>`});htmlSup+=`</div>`});document.getElementById('distribuicaoSupervisores').innerHTML=htmlSup;let htmlTabela='';linhas.forEach(linha=>{let sup='Não definido';let linhaInfo=null;for(const s in dist){const found=dist[s].linhas.find(l=>l.linha===linha.linha);if(found){sup=s;linhaInfo=found;break}}const colabSug=linhaInfo?linhaInfo.colasSugeridos:0;const mediaItens=linhaInfo?linhaInfo.mediaItens:0;htmlTabela+=`<tr><td><strong>${linha.linha}</strong></td><td>${sup}</td><td>${linha.totalItens}</td><td>${linha.totalVisitas}</td><td>${linha.totalVolume.toFixed(3)}</td><td>${linha.totalPeso.toFixed(2)}</td><td><span class="badge badge-success">${colabSug} pessoas</span></td><td>${mediaItens} itens/pessoa</td><td><span class="badge badge-primary">OK</span></td></tr>`});document.querySelector('#tabelaDetalhamento tbody').innerHTML=htmlTabela}
-function limparDados(){if(confirm('Deseja limpar todos os dados?')){document.getElementById('pasteLinhas').value='';dadosLinhas=[];dadosPresenca=[];document.getElementById('sectionResultados').style.display='none';showStatus('Dados limpos','info')}}
-window.onload=function(){const usuario=sessionStorage.getItem('usuario');if(!usuario){alert('Sessão expirada');window.location.href='/'}};
+
+function showStatus(msg,type='info'){
+  const div=document.getElementById('statusDiv');
+  const icons={info:'info-circle',success:'check-circle',danger:'exclamation-triangle',warning:'exclamation-circle'};
+  div.innerHTML=`<div class="alert alert-${type}"><i class="fas fa-${icons[type]}"></i><span>${msg}</span></div>`;
+  setTimeout(()=>div.innerHTML='',5000);
+}
+
+function processarLinhas(){
+  const texto=document.getElementById('pasteLinhas').value.trim();
+  if(!texto){
+    showStatus('Cole os dados das linhas primeiro','warning');
+    return;
+  }
+  
+  try{
+    const linhas=texto.split('\n').filter(l=>l.trim());
+    if(linhas.length===0) throw new Error('Nenhuma linha válida');
+    
+    console.log('[DISTRIBUIÇÃO] Total de linhas:',linhas.length);
+    dadosLinhas=[];
+    
+    linhas.forEach((linha,idx)=>{
+      const campos=linha.split('\t');
+      if(campos.length<6){
+        console.log(`Linha ${idx} ignorada: apenas ${campos.length} campos`);
+        return;
+      }
+      
+      const obj={
+        linhaSeparacao:campos[0]||'',
+        lote:campos[1]||'',
+        numeroItens:parseInt(campos[2])||0,
+        volume:parseFloat(campos[3])||0,
+        peso:parseFloat(campos[4])||0,
+        visitas:parseInt(campos[5])||0
+      };
+      
+      if(idx<3) console.log(`Linha ${idx}:`,obj);
+      
+      if(obj.linhaSeparacao && obj.lote){
+        dadosLinhas.push(obj);
+      }
+    });
+    
+    console.log('[DISTRIBUIÇÃO] Dados processados:',dadosLinhas.length);
+    showStatus(`✓ ${dadosLinhas.length} linhas processadas!`,'success');
+    document.getElementById('sectionResultados').style.display='block';
+    
+  }catch(error){
+    console.error('[DISTRIBUIÇÃO] Erro:',error);
+    showStatus('Erro ao processar: '+error.message,'danger');
+  }
+}
+
+async function calcularDistribuicao(){
+  if(dadosLinhas.length===0){
+    showStatus('Processe as linhas primeiro','warning');
+    return;
+  }
+  
+  try{
+    showStatus('Carregando dados do sistema...','info');
+    
+    // 1. Carregar mapeamento de supervisores
+    console.log('[DISTRIBUIÇÃO] Carregando mapeamento...');
+    const resMapeamento=await fetch(`${API_BASE}/api/Linha_Distribuição`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'obterDistribuicao'})
+    });
+    const resultMapeamento=await resMapeamento.json();
+    if(!resultMapeamento.ok) throw new Error('Erro ao carregar mapeamento');
+    mapeamentoSupervisor=resultMapeamento.distribuicao||{};
+    console.log('[DISTRIBUIÇÃO] Supervisores:',Object.keys(mapeamentoSupervisor).length);
+    
+    // 2. Carregar presença (Base)
+    console.log('[DISTRIBUIÇÃO] Carregando presença...');
+    const hoje=new Date();
+    const dataStr=`${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}-${String(hoje.getDate()).padStart(2,'0')}`;
+    const resBase=await fetch(`${API_BASE}/api/producao/resumo-base?modo=dados&data=${dataStr}`);
+    const resultBase=await resBase.json();
+    if(!resultBase.ok) throw new Error('Erro ao carregar presença');
+    dadosPresenca=resultBase.dados||[];
+    console.log('[DISTRIBUIÇÃO] Presença:',dadosPresenca.length);
+    
+    // 3. Carregar QLP (dados completos)
+    console.log('[DISTRIBUIÇÃO] Carregando QLP...');
+    const resQLP=await fetch(`${API_BASE}/api/qlp/quadro`);
+    const resultQLP=await resQLP.json();
+    if(!resultQLP.ok) throw new Error('Erro ao carregar QLP');
+    dadosQLP=resultQLP.colaboradores||[];
+    console.log('[DISTRIBUIÇÃO] QLP:',dadosQLP.length);
+    
+    // 4. Processar distribuição
+    processar();
+    
+  }catch(error){
+    console.error('[DISTRIBUIÇÃO] Erro:',error);
+    showStatus('Erro ao calcular: '+error.message,'danger');
+  }
+}
+
+function processar(){
+  console.log('[DISTRIBUIÇÃO] Iniciando processamento inteligente...');
+  
+  // ETAPA 1: Agrupar linhas e contar LOTES (não itens!)
+  const agruparLinhas={};
+  dadosLinhas.forEach(item=>{
+    const key=item.linhaSeparacao||'Sem Linha';
+    if(!agruparLinhas[key]){
+      agruparLinhas[key]={
+        linha:key,
+        totalLotes:0,
+        totalItens:0,
+        totalVisitas:0,
+        totalVolume:0,
+        totalPeso:0,
+        lotes:[]
+      };
+    }
+    
+    agruparLinhas[key].totalLotes++; // ← CORREÇÃO: Conta 1 lote por linha
+    agruparLinhas[key].totalItens+=item.numeroItens||0;
+    agruparLinhas[key].totalVisitas+=item.visitas||0;
+    agruparLinhas[key].totalVolume+=item.volume||0;
+    agruparLinhas[key].totalPeso+=item.peso||0;
+    agruparLinhas[key].lotes.push(item);
+  });
+  
+  const linhasArray=Object.values(agruparLinhas);
+  console.log('[DISTRIBUIÇÃO] Linhas agrupadas:',linhasArray);
+  
+  // ETAPA 2: Criar mapa Supervisor -> Linhas
+  const supervisorLinhas={};
+  for(const sup in mapeamentoSupervisor){
+    const configs=mapeamentoSupervisor[sup];
+    const linhasSet=new Set();
+    configs.forEach(cfg=>{
+      if(cfg.linha1) linhasSet.add(cfg.linha1);
+      if(cfg.linha2) linhasSet.add(cfg.linha2);
+    });
+    supervisorLinhas[sup]=[...linhasSet];
+  }
+  console.log('[DISTRIBUIÇÃO] Supervisor->Linhas:',supervisorLinhas);
+  
+  // ETAPA 3: Distribuir linhas por supervisor
+  const distribuicao={};
+  
+  linhasArray.forEach(linhaObj=>{
+    let supAtribuido='Não definido';
+    
+    // Encontra supervisor responsável
+    for(const sup in supervisorLinhas){
+      if(supervisorLinhas[sup].includes(linhaObj.linha)){
+        supAtribuido=sup;
+        break;
+      }
+    }
+    
+    // Busca colaboradores presentes deste supervisor
+    const colabPresentes=dadosPresenca.filter(c=>
+      c.supervisor===supAtribuido && 
+      c.status && 
+      c.status.toLowerCase()==='presente'
+    );
+    
+    // Enriquece com dados do QLP
+    const colabCompletos=colabPresentes.map(colab=>{
+      const dadosQLP_=dadosQLP.find(q=>q.chapa===colab.matricula)||{};
+      return {
+        matricula:colab.matricula,
+        nome:colab.nome||dadosQLP_.nome||'Nome não encontrado',
+        funcao:colab.funcao||dadosQLP_.funcao||'Função não definida',
+        turno:colab.turno||dadosQLP_.turno||'Turno não definido',
+        secao:dadosQLP_.secao||'Sem seção'
+      };
+    });
+    
+    const numColab=colabCompletos.length;
+    
+    // ← CORREÇÃO: Cálculo baseado em LOTES
+    const lotesTotal=linhaObj.totalLotes;
+    const lotesPorPessoa=numColab>0?Math.ceil(lotesTotal/numColab):lotesTotal;
+    
+    // Inicializa supervisor na distribuição
+    if(!distribuicao[supAtribuido]){
+      distribuicao[supAtribuido]={
+        supervisor:supAtribuido,
+        totalLinhas:0,
+        totalLotes:0,
+        totalItens:0,
+        totalVisitas:0,
+        totalColaboradores:numColab,
+        linhas:[],
+        colaboradores:colabCompletos
+      };
+    }
+    
+    distribuicao[supAtribuido].totalLinhas++;
+    distribuicao[supAtribuido].totalLotes+=lotesTotal;
+    distribuicao[supAtribuido].totalItens+=linhaObj.totalItens;
+    distribuicao[supAtribuido].totalVisitas+=linhaObj.totalVisitas;
+    
+    distribuicao[supAtribuido].linhas.push({
+      linha:linhaObj.linha,
+      totalLotes:lotesTotal,
+      totalItens:linhaObj.totalItens,
+      totalVisitas:linhaObj.totalVisitas,
+      volume:linhaObj.totalVolume,
+      peso:linhaObj.totalPeso,
+      colaboradores:colabCompletos,
+      colasSugeridos:numColab,
+      lotesPorPessoa:lotesPorPessoa,
+      itensPorPessoa:numColab>0?Math.ceil(linhaObj.totalItens/numColab):linhaObj.totalItens
+    });
+  });
+  
+  console.log('[DISTRIBUIÇÃO] Resultado final:',distribuicao);
+  renderResultados(distribuicao,linhasArray);
+  showStatus('✓ Distribuição calculada com sucesso!','success');
+}
+
+function renderResultados(dist,linhas){
+  const totalLinhas=linhas.length;
+  const totalLotes=linhas.reduce((s,l)=>s+l.totalLotes,0);
+  const totalItens=linhas.reduce((s,l)=>s+l.totalItens,0);
+  const totalVisitas=linhas.reduce((s,l)=>s+l.totalVisitas,0);
+  const totalColabs=Object.values(dist).reduce((s,d)=>s+d.totalColaboradores,0);
+  
+  document.getElementById('statsGeral').innerHTML=`
+    <div class="stat-card">
+      <h3>Total de Linhas</h3>
+      <div class="value">${totalLinhas}</div>
+    </div>
+    <div class="stat-card">
+      <h3>Total de Lotes</h3>
+      <div class="value" style="color:#28a745">${totalLotes}</div>
+    </div>
+    <div class="stat-card">
+      <h3>Total de Itens</h3>
+      <div class="value">${totalItens}</div>
+    </div>
+    <div class="stat-card">
+      <h3>Total de Visitas</h3>
+      <div class="value">${totalVisitas}</div>
+    </div>
+    <div class="stat-card">
+      <h3>Colaboradores</h3>
+      <div class="value" style="color:#17a2b8">${totalColabs}</div>
+    </div>
+    <div class="stat-card">
+      <h3>Supervisores</h3>
+      <div class="value" style="color:#6a1b9a">${Object.keys(dist).length}</div>
+    </div>
+  `;
+  
+  let htmlSup='';
+  Object.values(dist).forEach(sup=>{
+    htmlSup+=`
+      <div class="supervisor-group">
+        <h4>
+          <i class="fas fa-user-tie"></i> ${sup.supervisor}
+          <span class="badge badge-primary">${sup.totalLinhas} linhas</span>
+          <span class="badge badge-success">${sup.totalLotes} lotes</span>
+          <span class="badge badge-warning">${sup.totalColaboradores} colaboradores</span>
+        </h4>
+    `;
+    
+    // Exibir colaboradores
+    if(sup.colaboradores && sup.colaboradores.length>0){
+      htmlSup+=`
+        <div class="colab-section">
+          <h5><i class="fas fa-users"></i> Equipe Presente (${sup.colaboradores.length})</h5>
+          <div class="colab-list">
+      `;
+      
+      sup.colaboradores.forEach(c=>{
+        htmlSup+=`
+          <div class="colab-item">
+            <strong>${c.nome}</strong> (${c.matricula}) - 
+            ${c.funcao} | ${c.turno} | ${c.secao}
+          </div>
+        `;
+      });
+      
+      htmlSup+=`</div></div>`;
+    }else{
+      htmlSup+=`
+        <div class="alert alert-warning" style="margin:10px 0">
+          <i class="fas fa-exclamation-triangle"></i>
+          Nenhum colaborador presente encontrado
+        </div>
+      `;
+    }
+    
+    // Exibir linhas
+    sup.linhas.forEach(linha=>{
+      htmlSup+=`
+        <div class="linha-card">
+          <div>
+            <strong>${linha.linha}</strong>
+            <div style="font-size:10px;color:#666;margin-top:3px">
+              ${linha.totalItens} itens | ${linha.totalVisitas} visitas
+            </div>
+          </div>
+          <div>
+            <span class="badge badge-success">${linha.totalLotes} lotes</span>
+          </div>
+          <div>
+            <span class="badge badge-primary">${linha.colasSugeridos} pessoas</span>
+          </div>
+          <div style="font-size:11px;color:#666">
+            <strong>${linha.lotesPorPessoa}</strong> lotes/pessoa
+          </div>
+          <div style="font-size:11px;color:#666">
+            ~${linha.itensPorPessoa} itens/pessoa
+          </div>
+          <div>
+            <span class="badge badge-warning">${linha.volume.toFixed(1)} m³</span>
+          </div>
+        </div>
+      `;
+    });
+    
+    htmlSup+=`</div>`;
+  });
+  
+  document.getElementById('distribuicaoSupervisores').innerHTML=htmlSup;
+}
+
+function limparDados(){
+  if(confirm('Deseja limpar todos os dados?')){
+    document.getElementById('pasteLinhas').value='';
+    dadosLinhas=[];
+    dadosPresenca=[];
+    dadosQLP=[];
+    document.getElementById('sectionResultados').style.display='none';
+    showStatus('Dados limpos','info');
+  }
+}
+
+window.onload=function(){
+  const usuario=sessionStorage.getItem('usuario');
+  if(!usuario){
+    alert('Sessão expirada');
+    window.location.href='/';
+  }
+};
 </script>
 </body>
 </html>
