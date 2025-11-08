@@ -166,7 +166,8 @@ async function calcularDistribuicao(){
     // 2. Carregar presença (Base)
     console.log('[DISTRIBUIÇÃO] Carregando presença...');
     const hoje=new Date();
-    const dataStr=`${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}-${String(hoje.getDate()).padStart(2,'0')}`;
+    const dataStr=`${String(hoje.getDate()).padStart(2,'0')}-${String(hoje.getMonth()+1).padStart(2,'0')}-${hoje.getFullYear()}`;
+    
     const resBase=await fetch(`${API_BASE}/api/producao/resumo-base?modo=dados&data=${dataStr}`);
     const resultBase=await resBase.json();
     if(!resultBase.ok) throw new Error('Erro ao carregar presença');
