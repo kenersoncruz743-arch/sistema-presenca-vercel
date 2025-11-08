@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Distribuição de Linhas de Separação</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;padding:20px}
+.container{max-width:1800px;margin:0 auto}
+.header{background:white;padding:20px 30px;border-radius:15px;box-shadow:0 5px 20px rgba(0,0,0,0.1);margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px}
+.header h1{color:#333;font-size:24px;display:flex;align-items:center;gap:10px}
+.btn{padding:10px 20px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.3s;display:inline-flex;align-items:center;gap:8px}
+.btn-primary{background:#667eea;color:white}
+.btn-success{background:#28a745;color:white}
+.btn-danger{background:#dc3545;color:white}
+.btn-warning{background:#ffc107;color:#212529}
+.btn-secondary{background:#6c757d;color:white}
+.btn:hover{transform:translateY(-2px);box-shadow:0 4px 8px rgba(0,0,0,0.2)}
+.btn:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+.section{background:white;padding:25px;border-radius:15px;margin-bottom:20px;box-shadow:0 5px 20px rgba(0,0,0,0.1)}
+.section h2{color:#667eea;margin-bottom:15px;display:flex;align-items:center;gap:10px}
+.paste-area{width:100%;min-height:200px;padding:15px;border:2px dashed #e0e0e0;border-radius:8px;font-family:'Courier New',monospace;font-size:11px;resize:vertical;background:#f8f9fa;margin-bottom:15px}
+.paste-area:focus{outline:none;border-color:#667eea;background:white}
+.table-wrapper{overflow-x:auto;max-height:600px;border-radius:10px;border:1px solid #e9ecef}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead{background:linear-gradient(135deg,#667eea,#764ba2);color:white;position:sticky;top:0;z-index:10}
+th{padding:10px 8px;text-align:left;font-weight:600;white-space:nowrap}
+td{padding:8px;border-bottom:1px solid #e9ecef;white-space:nowrap}
+tbody tr:hover{background:#f8f9fa}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:20px}
+.stat-card{background:white;padding:20px;border-radius:12px;box-shadow:0 5px 20px rgba(0,0,0,0.1);text-align:center}
+.stat-card h3{font-size:12px;color:#6c757d;margin-bottom:8px;text-transform:uppercase}
+.stat-card .value{font-size:32px;font-weight:bold;color:#667eea}
+.alert{padding:15px 20px;border-radius:10px;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.alert-success{background:#d4edda;color:#155724;border-left:4px solid #28a745}
+.alert-danger{background:#f8d7da;color:#721c24;border-left:4px solid #dc3545}
+.alert-warning{background:#fff3cd;color:#856404;border-left:4px solid #ffc107}
+.alert-info{background:#d1ecf1;color:#0c5460;border-left:4px solid #17a2b8}
+.badge{display:inline-block;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600}
+.badge-success{background:#d4edda;color:#155724}
+.badge-warning{background:#fff3cd;color:#856404}
+.badge-danger{background:#f8d7da;color:#721c24}
+.badge-primary{background:#e3f2fd;color:#1976d2}
+.supervisor-group{background:#f8f9fa;padding:15px;border-radius:8px;margin-bottom:15px;border-left:4px solid #667eea}
+.supervisor-group h4{color:#667eea;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.linha-card{background:white;padding:12px;border-radius:6px;margin-bottom:8px;border:1px solid #e9ecef;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:10px;align-items:center}
+.linha-card:hover{background:#f0f4ff;border-color:#667eea}
+.loading{display:inline-block;animation:spin 1s linear infinite}
+@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="header">
+<h1><i class="fas fa-sitemap"></i> Distribuição de Linhas de Separação</h1>
+<div style="display:flex;gap:10px">
+<button class="btn btn-success" onclick="calcularDistribuicao()"><i class="fas fa-calculator"></i> Calcular</button>
+<button class="btn btn-warning" onclick="limparDados()"><i class="fas fa-eraser"></i> Limpar</button>
+<button class="btn btn-secondary" onclick="window.location.href='/ferramentas'"><i class="fas fa-arrow-left"></i> Voltar</button>
+</div>
+</div>
+<div id="statusDiv"></div>
+<div class="section">
+<h2><i class="fas fa-paste"></i> Importar Dados das Linhas de Separação</h2>
+<textarea class="paste-area" id="pasteLinhas" placeholder="Cole aqui os dados da aba 'Linhas de Separação' com as colunas:&#10;carga | dep | box | lote | tipo agrupamento | linha separação | peso | volume | numero itens | numero volume | operação | tempo geração"></textarea>
+<button class="btn btn-primary" onclick="processarLinhas()"><i class="fas fa-upload"></i> Processar Linhas</button>
+</div>
+<div class="section" style="display:none" id="sectionResultados">
+<h2><i class="fas fa-chart-bar"></i> Resumo Geral</h2>
+<div class="stats" id="statsGeral"></div>
+<h2 style="margin-top:30px"><i class="fas fa-users"></i> Distribuição por Supervisor</h2>
+<div id="distribuicaoSupervisores"></div>
+<h2 style="margin-top:30px"><i class="fas fa-list"></i> Detalhamento das Linhas</h2>
+<div class="table-wrapper">
+<table id="tabelaDetalhamento">
+<thead>
+<tr>
+<th>Linha</th>
+<th>Supervisor</th>
+<th>Total Itens</th>
+<th>Total Lotes</th>
+<th>Volume (m³)</th>
+<th>Peso (kg)</th>
+<th>Colaboradores Sugeridos</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
+</div>
+</div>
+<script>
+const API_BASE=window.location.origin;
+let dadosLinhas=[];
+let dadosPresenca=[];
+let distribuicaoSupervisores={};
+const mapeamentoSupervisor={
+'carla.brito':[
+{linha1:'P GRANDEZA (BF)',linha2:''},
+{linha1:'P GRANDEZA (CP)',linha2:''},
+{linha1:'P GRANDEZA (CR)',linha2:''},
+{linha1:'PACOTE (CP)',linha2:''},
+{linha1:'PERFUMARIA EMBALADO (BF)',linha2:''},
+{linha1:'PERFUMARIA EMBALADO (CP)',linha2:''},
+{linha1:'PERFUMARIA EMBALADO (CR)',linha2:'MERCEARIA EMBALADO (BF)'},
+{linha1:'PERFUMARIA EMBALADO (CR)',linha2:'MERCEARIA EMBALADO (CP)'},
+{linha1:'G_FLOW. PISO 1 (BF)',linha2:'PH EMBALADO (BF)'},
+{linha1:'G_FLOW. PISO 1 (CP)',linha2:'PH EMBALADO (CP)'},
+{linha1:'G_FLOW. PISO 1 (CR)',linha2:'PH EMBALADO (CR)'},
+{linha1:'E_FLOW. PISO 1 (BF)',linha2:'PH GRANDEZA (BF)'},
+{linha1:'E_FLOW. PISO 1 (CP)',linha2:'PH GRANDEZA (CP)'},
+{linha1:'E_FLOW. PISO 1 (CR)',linha2:'PH GRANDEZA (CR)'},
+{linha1:'E_FLOW. PISO 2 (CR)',linha2:''}
+],
+'Eduardo.araujo':[
+{linha1:'LIMPEZA EXP (BF)',linha2:'ALIMENTAR FARDO (BF)'},
+{linha1:'LIMPEZA EXP (CP)',linha2:'ALIMENTAR FARDOS (CP)'},
+{linha1:'LIMPEZA EXP (CR)',linha2:'ALIMENTAR FARDOS (CR)'},
+{linha1:'LIQUIDA 744 (BF)',linha2:'COMPLEMENTAR EMB (BF)'},
+{linha1:'LIQUIDA 744 (CP)',linha2:'COMPLEMENTAR G (BF)'},
+{linha1:'LIQUIDA 744 (CR)',linha2:'COMPLEMENTAR G (CP)'},
+{linha1:'LIQUIDA GRANDEZA (BF)',linha2:'COMPLEMENTAR G (CR)'},
+{linha1:'LIQUIDA GRANDEZA (CP)',linha2:'LATICÍNIO GRANDEZA (BF)'},
+{linha1:'LIQUIDA GRANDEZA (CR)',linha2:'LATICÍNIO GRANDEZA (CP)'},
+{linha1:'LIQUIDA GRANDEZA (CR)',linha2:'LATICÍNIO GRANDEZA (CR)'},
+{linha1:'LIQUIDA MIUDEZA (BF)',linha2:'M. BASICA GRANDEZA (BF)'},
+{linha1:'LIQUIDA MIUDEZA (CP)',linha2:'M. BASICA GRANDEZA (BF)'},
+{linha1:'LIQUIDA MIUDEZA (CR)',linha2:'M. BASICA GRANDEZA (CP)'},
+{linha1:'LIQUIDA MIUDEZA (CR)',linha2:'M. BASICA GRANDEZA (CR)'},
+{linha1:'LIQUIDA MIUDEZA (CR)',linha2:'MERCEARIA EMBALADO (BF)'},
+{linha1:'LP EMBALADO EXP (BF)',linha2:'MERCEARIA EMBALADO (CP)'},
+{linha1:'LP EMBALADO EXP (CP)',linha2:'PH EMBALADO (BF)'},
+{linha1:'LP GRANDEZA ANTIGA (BF)',linha2:'PH EMBALADO (CP)'},
+{linha1:'LP GRANDEZA ANTIGA [CP]',linha2:'PH EMBALADO (CR)'},
+{linha1:'LP GRANDEZA ANTIGA [CR]',linha2:'PH GRANDEZA (BF)'},
+{linha1:'LP MIUDEZA EXP (CR)',linha2:'PH GRANDEZA (CP)'},
+{linha1:'PET/ EMBALADO (BF)',linha2:'PH GRANDEZA (CR)'},
+{linha1:'PET/ EMBALADO (CP)',linha2:''},
+{linha1:'PET/ EMBALADO (CR)',linha2:''},
+{linha1:'PET/ GRANDEZA (BF)',linha2:''},
+{linha1:'PET/ GRANDEZA (CP)',linha2:''},
+{linha1:'PET/ GRANDEZA (CR)',linha2:''},
+{linha1:'CONFINADO EMBALADO (BF)',linha2:''},
+{linha1:'CONFINADO EMBALADO (CP)',linha2:''},
+{linha1:'CONFINADO EMBALADO (CR)',linha2:''},
+{linha1:'CF GRANDEZA (BF)',linha2:''},
+{linha1:'CF GRANDEZA (CP)',linha2:''},
+{linha1:'CF GRANDEZA (CR)',linha2:''}
+],
+'thiago.henrique':[
+{linha1:'ALIMENTAR FARDO (BF)',linha2:'LIMPEZA EXP (BF)'},
+{linha1:'ALIMENTAR FARDOS (CP)',linha2:'LIMPEZA EXP (CP)'},
+{linha1:'ALIMENTAR FARDOS (CR)',linha2:'LIMPEZA EXP (CR)'},
+{linha1:'COMPLEMENTAR EMB (BF)',linha2:'LIQUIDA 744 (BF)'},
+{linha1:'COMPLEMENTAR G (BF)',linha2:'LIQUIDA 744 (CP)'},
+{linha1:'COMPLEMENTAR G (CP)',linha2:'LIQUIDA 744 (CR)'},
+{linha1:'COMPLEMENTAR G (CR)',linha2:'LIQUIDA GRANDEZA (BF)'},
+{linha1:'LATICÍNIO GRANDEZA (BF)',linha2:'LIQUIDA GRANDEZA (CP)'},
+{linha1:'LATICÍNIO GRANDEZA (CP)',linha2:'LIQUIDA GRANDEZA (CR)'},
+{linha1:'LATICÍNIO GRANDEZA (CR)',linha2:'LIQUIDA GRANDEZA (CR)'},
+{linha1:'M. BASICA GRANDEZA (BF)',linha2:'LIQUIDA MIUDEZA (BF)'},
+{linha1:'M. BASICA GRANDEZA (BF)',linha2:'LIQUIDA MIUDEZA (CP)'},
+{linha1:'M. BASICA GRANDEZA (CP)',linha2:'LIQUIDA MIUDEZA (CR)'},
+{linha1:'M. BASICA GRANDEZA (CR)',linha2:'LIQUIDA MIUDEZA (CR)'},
+{linha1:'MERCEARIA EMBALADO (BF)',linha2:'LIQUIDA MIUDEZA (CR)'},
+{linha1:'MERCEARIA EMBALADO (CP)',linha2:'LP EMBALADO EXP (BF)'},
+{linha1:'PH EMBALADO (BF)',linha2:'LP EMBALADO EXP (CP)'},
+{linha1:'PH EMBALADO (CP)',linha2:'LP GRANDEZA ANTIGA (BF)'},
+{linha1:'PH EMBALADO (CR)',linha2:'LP GRANDEZA ANTIGA [CP]'},
+{linha1:'PH GRANDEZA (BF)',linha2:'LP GRANDEZA ANTIGA [CR]'},
+{linha1:'PH GRANDEZA (CP)',linha2:'LP MIUDEZA EXP (CR)'},
+{linha1:'PH GRANDEZA (CR)',linha2:''}
+]
+};
+function showStatus(msg,type='info'){
+const div=document.getElementById('statusDiv');
+const icons={info:'info-circle',success:'check-circle',danger:'exclamation-triangle',warning:'exclamation-circle'};
+div.innerHTML=`<div class="alert alert-${type}"><i class="fas fa-${icons[type]}"></i><span>${msg}</span></div>`;
+setTimeout(()=>div.innerHTML='',5000);
+}
+function processarLinhas(){
+const texto=document.getElementById('pasteLinhas').value.trim();
+if(!texto){
+showStatus('Cole os dados das linhas primeiro','warning');
+return;
+}
+try{
+const linhas=texto.split('\n').filter(l=>l.trim());
+if(linhas.length===0)throw new Error('Nenhuma linha válida');
+dadosLinhas=[];
+linhas.forEach((linha,idx)=>{
+if(idx===0)return;
+const campos=linha.split('\t');
+if(campos.length<13)return;
+const obj={
+carga:campos[0]||'',
+dep:campos[1]||'',
+box:campos[2]||'',
+col3:campos[3]||'',
+lote:campos[4]||'',
+tipoAgrupamento:campos[5]||'',
+linhaSeparacao:campos[6]||'',
+peso:parseFloat(campos[7])||0,
+volume:parseFloat(campos[8])||0,
+numeroItens:parseInt(campos[9])||0,
+numeroVolume:parseInt(campos[10])||0,
+operacao:campos[11]||'',
+tempoGeracao:campos[12]||''
+};
+if(obj.linhaSeparacao&&obj.numeroItens>0){
+dadosLinhas.push(obj);
+}
+});
+showStatus(`${dadosLinhas.length} linhas processadas com sucesso!`,'success');
+document.getElementById('sectionResultados').style.display='block';
+}catch(error){
+console.error('Erro:',error);
+showStatus('Erro ao processar dados: '+error.message,'danger');
+}
+}
+async function calcularDistribuicao(){
+if(dadosLinhas.length===0){
+showStatus('Processe as linhas primeiro','warning');
+return;
+}
+try{
+showStatus('Carregando lista de presença...','info');
+const hoje=new Date();
+const dataStr=`${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}-${String(hoje.getDate()).padStart(2,'0')}`;
+const resBase=await fetch(`${API_BASE}/api/producao/resumo-base?modo=dados&data=${dataStr}`);
+const resultBase=await resBase.json();
+if(!resultBase.ok)throw new Error('Erro ao carregar presença');
+dadosPresenca=resultBase.dados||[];
+console.log('Presença carregada:',dadosPresenca.length,'colaboradores');
+const agruparLinhas={};
+dadosLinhas.forEach(linha=>{
+const key=linha.linhaSeparacao;
+if(!agruparLinhas[key]){
+agruparLinhas[key]={
+linha:key,
+totalItens:0,
+totalLotes:0,
+totalVolume:0,
+totalPeso:0,
+lotes:[]
+};
+}
+agruparLinhas[key].totalItens+=linha.numeroItens;
+agruparLinhas[key].totalLotes++;
+agruparLinhas[key].totalVolume+=linha.volume;
+agruparLinhas[key].totalPeso+=linha.peso;
+agruparLinhas[key].lotes.push(linha);
+});
+const linhasArray=Object.values(agruparLinhas);
+const supervisorLinhas={};
+for(const sup in mapeamentoSupervisor){
+const linhas=mapeamentoSupervisor[sup];
+const linhasUnique=new Set();
+linhas.forEach(l=>{
+if(l.linha1)linhasUnique.add(l.linha1);
+if(l.linha2)linhasUnique.add(l.linha2);
+});
+supervisorLinhas[sup]=[...linhasUnique];
+}
+const distribuicao={};
+linhasArray.forEach(linha=>{
+let supervisorAtribuido='Não definido';
+for(const sup in supervisorLinhas){
+if(supervisorLinhas[sup].includes(linha.linha)){
+supervisorAtribuido=sup;
+break;
+}
+}
+const colabPresentes=dadosPresenca.filter(c=>
+c.supervisor===supervisorAtribuido&&c.status.toLowerCase()==='presente'
+);
+const numColab=colabPresentes.length;
+const itensTotal=linha.totalItens;
+const mediaItensPorColab=numColab>0?Math.ceil(itensTotal/numColab):itensTotal;
+if(!distribuicao[supervisorAtribuido]){
+distribuicao[supervisorAtribuido]={
+supervisor:supervisorAtribuido,
+totalLinhas:0,
+totalItens:0,
+totalColaboradores:numColab,
+linhas:[]
+};
+}
+distribuicao[supervisorAtribuido].totalLinhas++;
+distribuicao[supervisorAtribuido].totalItens+=itensTotal;
+distribuicao[supervisorAtribuido].linhas.push({
+linha:linha.linha,
+totalItens:itensTotal,
+totalLotes:linha.totalLotes,
+volume:linha.totalVolume,
+peso:linha.totalPeso,
+colaboradores:colabPresentes,
+colasSugeridos:numColab,
+mediaItens:mediaItensPorColab
+});
+});
+renderResultados(distribuicao,linhasArray);
+showStatus('Distribuição calculada com sucesso!','success');
+}catch(error){
+console.error('Erro:',error);
+showStatus('Erro ao calcular: '+error.message,'danger');
+}
+}
+function renderResultados(dist,linhas){
+const totalLinhas=linhas.length;
+const totalItens=linhas.reduce((s,l)=>s+l.totalItens,0);
+const totalColabs=Object.values(dist).reduce((s,d)=>s+d.totalColaboradores,0);
+document.getElementById('statsGeral').innerHTML=`
+<div class="stat-card">
+<h3>Total de Linhas</h3>
+<div class="value">${totalLinhas}</div>
+</div>
+<div class="stat-card">
+<h3>Total de Itens</h3>
+<div class="value">${totalItens}</div>
+</div>
+<div class="stat-card">
+<h3>Colaboradores Presentes</h3>
+<div class="value">${totalColabs}</div>
+</div>
+<div class="stat-card">
+<h3>Supervisores Ativos</h3>
+<div class="value">${Object.keys(dist).length}</div>
+</div>
+`;
+let htmlSup='';
+Object.values(dist).forEach(sup=>{
+htmlSup+=`
+<div class="supervisor-group">
+<h4><i class="fas fa-user-tie"></i> ${sup.supervisor} <span class="badge badge-primary">${sup.totalLinhas} linhas | ${sup.totalColaboradores} colaboradores</span></h4>
+`;
+sup.linhas.forEach(linha=>{
+htmlSup+=`
+<div class="linha-card">
+<div><strong>${linha.linha}</strong></div>
+<div><span class="badge badge-warning">${linha.totalItens} itens</span></div>
+<div><span class="badge badge-success">${linha.colasSugeridos} colab.</span></div>
+<div>~${linha.mediaItens} itens/pessoa</div>
+</div>
+`;
+});
+htmlSup+=`</div>`;
+});
+document.getElementById('distribuicaoSupervisores').innerHTML=htmlSup;
+let htmlTabela='';
+linhas.forEach(linha=>{
+let sup='Não definido';
+for(const s in dist){
+const found=dist[s].linhas.find(l=>l.linha===linha.linha);
+if(found){
+sup=s;
+break;
+}
+}
+const colabSug=dist[sup]?dist[sup].linhas.find(l=>l.linha===linha.linha).colasSugeridos:0;
+htmlTabela+=`
+<tr>
+<td><strong>${linha.linha}</strong></td>
+<td>${sup}</td>
+<td>${linha.totalItens}</td>
+<td>${linha.totalLotes}</td>
+<td>${linha.totalVolume.toFixed(3)}</td>
+<td>${linha.totalPeso.toFixed(2)}</td>
+<td><span class="badge badge-success">${colabSug} pessoas</span></td>
+<td><span class="badge badge-primary">OK</span></td>
+</tr>
+`;
+});
+document.querySelector('#tabelaDetalhamento tbody').innerHTML=htmlTabela;
+}
+function limparDados(){
+if(confirm('Deseja limpar todos os dados?')){
+document.getElementById('pasteLinhas').value='';
+dadosLinhas=[];
+dadosPresenca=[];
+document.getElementById('sectionResultados').style.display='none';
+showStatus('Dados limpos','info');
+}
+}
+window.onload=function(){
+const usuario=sessionStorage.getItem('usuario');
+if(!usuario){
+alert('Sessão expirada');
+window.location.href='/';
+}
+};
+</script>
+</body>
+</html>
