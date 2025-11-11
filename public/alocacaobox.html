@@ -766,8 +766,8 @@
             if (cargasElegiveis.length === 0) return [];
             
             cargasElegiveis.sort((a, b) => {
-                const dateA = new Date(a.dataRot || ''31-12-9999');
-                const dateB = new Date(b.dataRot || ''31-12-9999');
+                const dateA = new Date(a.dataRot || '31-12-9999');
+                const dateB = new Date(b.dataRot || '31-12-9999');
                 if (dateA < dateB) return -1;
                 if (dateA > dateB) return 1;
                 return b.m3 - a.m3;
