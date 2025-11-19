@@ -71,6 +71,10 @@ const nextConfig = {
         source: '/mapacarga',
         destination: '/mapacarga.html',
       },
+            {
+        source: '/avaria',
+        destination: '/avaria.html',
+      },
       {
         source: '/alocacaobox',
         destination: '/alocacaobox.html',
