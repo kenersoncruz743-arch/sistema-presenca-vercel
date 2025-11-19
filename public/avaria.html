@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auditoria de Avaria</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#f9f9f9;padding:20px}
+.container{max-width:90%;margin:0 auto;background:#fff;border-radius:12px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+h2{text-align:center;margin-bottom:20px;font-size:52px;color:#333}
+label{font-weight:bold;display:block;margin-top:12px;font-size:40px}
+input,select{width:100%;padding:28px;margin-top:6px;margin-bottom:12px;box-sizing:border-box;font-size:28px;border:1px solid #ccc;border-radius:4px}
+.button-group{display:flex;gap:8px;margin-top:20px}
+button{background:#007BFF;color:white;padding:26px 0;border:none;border-radius:6px;cursor:pointer;font-weight:bold;font-size:26px;flex:1;transition:background 0.3s}
+button:hover:not(:disabled){background:#0056b3}
+button:disabled{background:#a0a0a0;cursor:not-allowed}
+#mensagemCodigo,#mensagem{color:red;font-weight:bold;margin-top:10px;font-size:20px;text-align:center}
+.user-info{background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:15px;border-radius:8px;margin-bottom:20px;text-align:center;font-size:24px}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="user-info">👤 Usuário: <span id="userName">Carregando...</span></div>
+<h2>Auditoria de Avaria</h2>
+
+<label for="codigoProduto">Código do Produto:</label>
+<input type="number" id="codigoProduto">
+<div id="mensagemCodigo"></div>
+
+<label for="descricaoProduto">Descrição:</label>
+<input type="text" id="descricaoProduto" disabled>
+
+<label for="embalagemProduto">Embalagem:</label>
+<input type="text" id="embalagemProduto" disabled>
+
+<label for="quantidade">Quantidade Avariada:</label>
+<input type="number" id="quantidade" min="1" max="9999" step="1" placeholder="1 a 9999">
+
+<div class="button-group">
+<button id="btnSalvar" onclick="salvar()" disabled>Salvar</button>
+<button onclick="limparCampos()">Limpar</button>
+<button onclick="window.location.href='/menu'">Voltar</button>
+</div>
+
+<div id="mensagem"></div>
+</div>
+
+<script>
+const API_BASE = window.location.origin;
+let mapaProdutos = new Map();
+let usuarioLogado = '';
+
+// Busca produto ao digitar código
+document.getElementById("codigoProduto").addEventListener("input", () => {
+  const codigo = document.getElementById("codigoProduto").value.trim();
+  const produto = mapaProdutos.get(codigo);
+  
+  if (produto) {
+    document.getElementById("descricaoProduto").value = produto.descricao;
+    document.getElementById("embalagemProduto").value = produto.embalagem;
+    document.getElementById("mensagemCodigo").innerText = "";
+  } else {
+    document.getElementById("descricaoProduto").value = "";
+    document.getElementById("embalagemProduto").value = "";
+    document.getElementById("mensagemCodigo").innerText = "Produto não encontrado.";
+  }
+  
+  verificarCampos();
+});
+
+document.getElementById("quantidade").addEventListener("input", verificarCampos);
+
+function verificarCampos() {
+  const codigoProduto = document.getElementById("codigoProduto").value.trim();
+  const quantidade = document.getElementById("quantidade").value.trim();
+  const quantidadeInt = parseInt(quantidade, 10);
+  
+  const camposOk = codigoProduto && 
+                   !isNaN(quantidadeInt) && 
+                   quantidadeInt >= 1 && 
+                   quantidadeInt <= 9999 &&
+                   mapaProdutos.has(codigoProduto);
+  
+  document.getElementById("btnSalvar").disabled = !camposOk;
+}
+
+async function salvar() {
+  const codigoProduto = document.getElementById("codigoProduto").value.trim();
+  const descricaoProduto = document.getElementById("descricaoProduto").value.trim();
+  const embalagemProduto = document.getElementById("embalagemProduto").value.trim();
+  const quantidade = parseInt(document.getElementById("quantidade").value.trim(), 10);
+  
+  const btnSalvar = document.getElementById("btnSalvar");
+  btnSalvar.disabled = true;
+  btnSalvar.innerText = "Salvando...";
+  
+  try {
+    const response = await fetch(`${API_BASE}/api/avaria`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'salvarRegistro',
+        usuarioLogado: usuarioLogado,
+        codigoProduto: codigoProduto,
+        descricaoProduto: descricaoProduto,
+        embalagemProduto: embalagemProduto,
+        quantidade: quantidade
+      })
+    });
+    
+    const result = await response.json();
+    
+    document.getElementById("mensagem").innerText = result.msg;
+    document.getElementById("mensagem").style.color = result.ok ? 'green' : 'red';
+    
+    if (result.ok) limparCampos();
+    
+  } catch (error) {
+    console.error('Erro ao salvar:', error);
+    document.getElementById("mensagem").innerText = 'Erro ao salvar registro';
+    document.getElementById("mensagem").style.color = 'red';
+  } finally {
+    btnSalvar.disabled = false;
+    btnSalvar.innerText = "Salvar";
+    verificarCampos();
+  }
+}
+
+function limparCampos() {
+  document.getElementById("codigoProduto").value = "";
+  document.getElementById("descricaoProduto").value = "";
+  document.getElementById("embalagemProduto").value = "";
+  document.getElementById("quantidade").value = "";
+  document.getElementById("mensagemCodigo").innerText = "";
+  document.getElementById("mensagem").innerText = "";
+}
+
+window.onload = async () => {
+  // Obtém usuário da sessão
+  usuarioLogado = sessionStorage.getItem('usuario');
+  
+  if (!usuarioLogado) {
+    alert('Sessão expirada');
+    window.location.href = '/';
+    return;
+  }
+  
+  document.getElementById("userName").innerText = usuarioLogado;
+  
+  try {
+    // Carrega produtos
+    const resProdutos = await fetch(`${API_BASE}/api/avaria?action=obterDadosProdutos`);
+    const resultProdutos = await resProdutos.json();
+    
+    if (resultProdutos.ok) {
+      mapaProdutos.clear();
+      resultProdutos.dados.forEach(p => mapaProdutos.set(p.codigo, p));
+      console.log(`Produtos carregados: ${mapaProdutos.size}`);
+    }
+  } catch (error) {
+    console.error('Erro ao carregar dados:', error);
+    alert('Erro ao carregar dados. Verifique a conexão.');
+  }
+  
+  verificarCampos();
+};
+</script>
+</body>
+</html>
