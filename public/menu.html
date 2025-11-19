@@ -269,6 +269,7 @@
             const icones = {
                 'PCP': 'fas fa-chart-line',
                 'WMS': 'fas fa-warehouse',
+                'Avaria': 'fas fa-warehouse',
                 'Separação': 'fas fa-boxes',
                 'Gestão': 'fas fa-users-cog',
                 'QLP': 'fas fa-chart-bar',
@@ -351,6 +352,8 @@
                     window.location.href = '/alocacaobox';
                 } else if (areaLower.includes('coletor') || areaLower.includes('rfid')) {
                     window.location.href = '/controle-coletores';
+                } else if (areaLower.includes('avaria') || areaLower.includes('rfid')) {
+                    window.location.href = '/avaria';                    
                 } else if (areaLower.includes('painel equipamentos') || areaLower.includes('rfid')) {
                     window.location.href = '/resumo-equipamentos';
                 } 
