@@ -24,8 +24,8 @@ button:disabled{background:#a0a0a0;cursor:not-allowed}
 <div class="user-info">👤 Usuário: <span id="userName">Carregando...</span></div>
 <h2>Auditoria de Avaria</h2>
 
-<label for="codigoProduto">Código do Produto:</label>
-<input type="number" id="codigoProduto">
+<label for="codigoProduto">Código do Produto (EAN/DUN/COD):</label>
+<input type="text" id="codigoProduto" placeholder="Digite ou escaneie o código" autofocus>
 <div id="mensagemCodigo"></div>
 
 <label for="descricaoProduto">Descrição:</label>
@@ -33,6 +33,18 @@ button:disabled{background:#a0a0a0;cursor:not-allowed}
 
 <label for="embalagemProduto">Embalagem:</label>
 <input type="text" id="embalagemProduto" disabled>
+
+<label for="motivo">Motivo da Avaria:</label>
+<select id="motivo">
+<option value="">Selecione o motivo</option>
+<option value="Avaria na movimentação">Avaria na movimentação</option>
+<option value="Avaria por roedores">Avaria por roedores</option>
+<option value="Qualidade">Qualidade</option>
+<option value="Vencimento">Vencimento</option>
+<option value="Reaproveitamento">Reaproveitamento</option>
+<option value="Avaria por macaco">Avaria por macaco</option>
+<option value="Desvio">Desvio</option>
+</select>
 
 <label for="quantidade">Quantidade Avariada:</label>
 <input type="number" id="quantidade" min="1" max="9999" step="1" placeholder="1 a 9999">
@@ -51,32 +63,81 @@ const API_BASE = window.location.origin;
 let mapaProdutos = new Map();
 let usuarioLogado = '';
 
-// Busca produto ao digitar código
+// Busca produto ao digitar código - BUSCA INSTANTÂNEA
 document.getElementById("codigoProduto").addEventListener("input", () => {
+  buscarProduto();
+});
+
+// Busca ao pressionar Enter
+document.getElementById("codigoProduto").addEventListener("keypress", (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    buscarProduto();
+    const descricao = document.getElementById("descricaoProduto").value;
+    if (descricao) {
+      document.getElementById("motivo").focus();
+    }
+  }
+});
+
+document.getElementById("quantidade").addEventListener("input", verificarCampos);
+document.getElementById("motivo").addEventListener("change", verificarCampos);
+
+// Enter no motivo vai para quantidade
+document.getElementById("motivo").addEventListener("keypress", (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    document.getElementById("quantidade").focus();
+  }
+});
+
+// Enter na quantidade dispara salvar
+document.getElementById("quantidade").addEventListener("keypress", (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    if (!document.getElementById("btnSalvar").disabled) {
+      salvar();
+    }
+  }
+});
+
+function buscarProduto() {
   const codigo = document.getElementById("codigoProduto").value.trim();
+  
+  if (!codigo) {
+    limparCamposProduto();
+    return;
+  }
+  
   const produto = mapaProdutos.get(codigo);
   
   if (produto) {
     document.getElementById("descricaoProduto").value = produto.descricao;
     document.getElementById("embalagemProduto").value = produto.embalagem;
     document.getElementById("mensagemCodigo").innerText = "";
+    document.getElementById("mensagemCodigo").style.color = "#28a745";
   } else {
-    document.getElementById("descricaoProduto").value = "";
-    document.getElementById("embalagemProduto").value = "";
-    document.getElementById("mensagemCodigo").innerText = "Produto não encontrado.";
+    limparCamposProduto();
+    document.getElementById("mensagemCodigo").innerText = "❌ Produto não encontrado";
+    document.getElementById("mensagemCodigo").style.color = "#dc3545";
   }
   
   verificarCampos();
-});
+}
 
-document.getElementById("quantidade").addEventListener("input", verificarCampos);
+function limparCamposProduto() {
+  document.getElementById("descricaoProduto").value = "";
+  document.getElementById("embalagemProduto").value = "";
+}
 
 function verificarCampos() {
   const codigoProduto = document.getElementById("codigoProduto").value.trim();
+  const motivo = document.getElementById("motivo").value.trim();
   const quantidade = document.getElementById("quantidade").value.trim();
   const quantidadeInt = parseInt(quantidade, 10);
   
   const camposOk = codigoProduto && 
+                   motivo &&
                    !isNaN(quantidadeInt) && 
                    quantidadeInt >= 1 && 
                    quantidadeInt <= 9999 &&
@@ -89,6 +150,7 @@ async function salvar() {
   const codigoProduto = document.getElementById("codigoProduto").value.trim();
   const descricaoProduto = document.getElementById("descricaoProduto").value.trim();
   const embalagemProduto = document.getElementById("embalagemProduto").value.trim();
+  const motivo = document.getElementById("motivo").value.trim();
   const quantidade = parseInt(document.getElementById("quantidade").value.trim(), 10);
   
   const btnSalvar = document.getElementById("btnSalvar");
@@ -105,6 +167,7 @@ async function salvar() {
         codigoProduto: codigoProduto,
         descricaoProduto: descricaoProduto,
         embalagemProduto: embalagemProduto,
+        motivo: motivo,
         quantidade: quantidade
       })
     });
@@ -114,7 +177,12 @@ async function salvar() {
     document.getElementById("mensagem").innerText = result.msg;
     document.getElementById("mensagem").style.color = result.ok ? 'green' : 'red';
     
-    if (result.ok) limparCampos();
+    if (result.ok) {
+      limparCampos();
+      setTimeout(() => {
+        document.getElementById("codigoProduto").focus();
+      }, 100);
+    }
     
   } catch (error) {
     console.error('Erro ao salvar:', error);
@@ -131,13 +199,15 @@ function limparCampos() {
   document.getElementById("codigoProduto").value = "";
   document.getElementById("descricaoProduto").value = "";
   document.getElementById("embalagemProduto").value = "";
+  document.getElementById("motivo").value = "";
   document.getElementById("quantidade").value = "";
   document.getElementById("mensagemCodigo").innerText = "";
   document.getElementById("mensagem").innerText = "";
+  
+  document.getElementById("codigoProduto").focus();
 }
 
 window.onload = async () => {
-  // Obtém usuário da sessão
   usuarioLogado = sessionStorage.getItem('usuario');
   
   if (!usuarioLogado) {
@@ -149,14 +219,27 @@ window.onload = async () => {
   document.getElementById("userName").innerText = usuarioLogado;
   
   try {
-    // Carrega produtos
     const resProdutos = await fetch(`${API_BASE}/api/avaria?action=obterDadosProdutos`);
     const resultProdutos = await resProdutos.json();
     
     if (resultProdutos.ok) {
       mapaProdutos.clear();
-      resultProdutos.dados.forEach(p => mapaProdutos.set(p.codigo, p));
-      console.log(`Produtos carregados: ${mapaProdutos.size}`);
+      
+      resultProdutos.dados.forEach(p => {
+        if (p.codigo) {
+          mapaProdutos.set(p.codigo.trim(), p);
+        }
+        
+        if (p.ean) {
+          mapaProdutos.set(p.ean.trim(), p);
+        }
+        
+        if (p.dun) {
+          mapaProdutos.set(p.dun.trim(), p);
+        }
+      });
+      
+      console.log(`Produtos carregados: ${mapaProdutos.size} códigos indexados`);
     }
   } catch (error) {
     console.error('Erro ao carregar dados:', error);
@@ -164,6 +247,7 @@ window.onload = async () => {
   }
   
   verificarCampos();
+  document.getElementById("codigoProduto").focus();
 };
 </script>
 </body>
