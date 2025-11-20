@@ -118,9 +118,7 @@ function normalizarCodigo(codigo) {
   
   // Remove espaços, zeros à esquerda e converte para maiúsculo
   let normalizado = String(codigo).trim().toUpperCase();
-  
-  // Remove zeros à esquerda, mas mantém pelo menos um dígito
-  normalizado = normalizado.replace(/^0+/, '') || '0';
+
   
   showDebug(`Normalizado: "${codigo}" → "${normalizado}"`);
   return normalizado;
