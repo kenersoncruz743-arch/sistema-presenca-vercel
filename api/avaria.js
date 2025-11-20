@@ -30,11 +30,15 @@ module.exports = async function handler(req, res) {
     
     switch (action) {
       case 'obterDadosProdutos': {
-        const dados = await sheetsAvaria.obterDadosProdutos();
+        const resultado = await sheetsAvaria.obterDadosProdutos();
+        
+        // Retorna lista de produtos E mapa de busca serializado
         return res.status(200).json({ 
           ok: true, 
-          dados, 
-          total: dados.length 
+          dados: resultado.produtos,
+          total: resultado.produtos.length,
+          // Converte Map para objeto simples para enviar ao cliente
+          mapaBusca: Object.fromEntries(resultado.mapaBusca)
         });
       }
       
