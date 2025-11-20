@@ -39,12 +39,12 @@ module.exports = async function handler(req, res) {
       }
       
       case 'salvarRegistro': {
-        const { usuarioLogado, codigoProduto, descricaoProduto, embalagemProduto, quantidade } = req.body;
+        const { usuarioLogado, codigoProduto, descricaoProduto, embalagemProduto, motivo, quantidade } = req.body;
         
-        if (!usuarioLogado || !codigoProduto || !quantidade) {
+        if (!usuarioLogado || !codigoProduto || !motivo || !quantidade) {
           return res.status(400).json({ 
             ok: false, 
-            msg: 'Campos obrigatórios: usuarioLogado, codigoProduto, quantidade' 
+            msg: 'Campos obrigatórios: usuarioLogado, codigoProduto, motivo, quantidade' 
           });
         }
         
@@ -52,7 +52,8 @@ module.exports = async function handler(req, res) {
           usuarioLogado, 
           codigoProduto, 
           descricaoProduto, 
-          embalagemProduto, 
+          embalagemProduto,
+          motivo, 
           quantidade
         );
         
