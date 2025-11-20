@@ -17,6 +17,7 @@ button:hover:not(:disabled){background:#0056b3}
 button:disabled{background:#a0a0a0;cursor:not-allowed}
 #mensagemCodigo,#mensagem{color:red;font-weight:bold;margin-top:10px;font-size:20px;text-align:center}
 .user-info{background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:15px;border-radius:8px;margin-bottom:20px;text-align:center;font-size:24px}
+.debug-info{background:#f0f0f0;padding:10px;margin-top:10px;font-size:14px;border-radius:4px;display:none}
 </style>
 </head>
 <body>
@@ -27,6 +28,7 @@ button:disabled{background:#a0a0a0;cursor:not-allowed}
 <label for="codigoProduto">Código do Produto (EAN/DUN/COD):</label>
 <input type="text" id="codigoProduto" placeholder="Digite ou escaneie o código" autofocus>
 <div id="mensagemCodigo"></div>
+<div id="debugInfo" class="debug-info"></div>
 
 <label for="descricaoProduto">Descrição:</label>
 <input type="text" id="descricaoProduto" disabled>
@@ -62,6 +64,16 @@ button:disabled{background:#a0a0a0;cursor:not-allowed}
 const API_BASE = window.location.origin;
 let mapaProdutos = new Map();
 let usuarioLogado = '';
+let debugMode = false; // Ativar para ver logs detalhados
+
+function showDebug(msg) {
+  if (debugMode) {
+    const debugDiv = document.getElementById('debugInfo');
+    debugDiv.style.display = 'block';
+    debugDiv.innerHTML += `<div>${new Date().toLocaleTimeString()}: ${msg}</div>`;
+  }
+  console.log('[AVARIA]', msg);
+}
 
 // Busca produto ao digitar código - BUSCA INSTANTÂNEA
 document.getElementById("codigoProduto").addEventListener("input", () => {
@@ -101,25 +113,65 @@ document.getElementById("quantidade").addEventListener("keypress", (e) => {
   }
 });
 
-function buscarProduto() {
-  const codigo = document.getElementById("codigoProduto").value.trim();
+function normalizarCodigo(codigo) {
+  if (!codigo) return '';
   
-  if (!codigo) {
+  // Remove espaços, zeros à esquerda e converte para maiúsculo
+  let normalizado = String(codigo).trim().toUpperCase();
+  
+  // Remove zeros à esquerda, mas mantém pelo menos um dígito
+  normalizado = normalizado.replace(/^0+/, '') || '0';
+  
+  showDebug(`Normalizado: "${codigo}" → "${normalizado}"`);
+  return normalizado;
+}
+
+function buscarProduto() {
+  const codigoOriginal = document.getElementById("codigoProduto").value.trim();
+  
+  if (!codigoOriginal) {
     limparCamposProduto();
     return;
   }
   
-  const produto = mapaProdutos.get(codigo);
+  // Normaliza o código digitado
+  const codigoNormalizado = normalizarCodigo(codigoOriginal);
+  
+  showDebug(`Buscando: "${codigoOriginal}" (normalizado: "${codigoNormalizado}")`);
+  showDebug(`Total de produtos no mapa: ${mapaProdutos.size}`);
+  
+  // Tenta buscar o produto
+  let produto = mapaProdutos.get(codigoNormalizado);
+  
+  // Se não encontrou, tenta buscar sem normalização
+  if (!produto) {
+    produto = mapaProdutos.get(codigoOriginal);
+    if (produto) {
+      showDebug(`Encontrado com código original: "${codigoOriginal}"`);
+    }
+  } else {
+    showDebug(`Encontrado com código normalizado: "${codigoNormalizado}"`);
+  }
   
   if (produto) {
     document.getElementById("descricaoProduto").value = produto.descricao;
     document.getElementById("embalagemProduto").value = produto.embalagem;
-    document.getElementById("mensagemCodigo").innerText = "";
+    document.getElementById("mensagemCodigo").innerText = "✅ Produto encontrado!";
     document.getElementById("mensagemCodigo").style.color = "#28a745";
+    
+    showDebug(`Produto encontrado: ${produto.descricao}`);
   } else {
     limparCamposProduto();
-    document.getElementById("mensagemCodigo").innerText = "❌ Produto não encontrado";
+    document.getElementById("mensagemCodigo").innerText = `❌ Produto não encontrado (código: ${codigoOriginal})`;
     document.getElementById("mensagemCodigo").style.color = "#dc3545";
+    
+    showDebug(`Produto NÃO encontrado. Código buscado: "${codigoOriginal}" e "${codigoNormalizado}"`);
+    
+    // Mostra alguns exemplos do que existe no mapa (para debug)
+    if (debugMode && mapaProdutos.size > 0) {
+      const exemplos = Array.from(mapaProdutos.keys()).slice(0, 5);
+      showDebug(`Exemplos de códigos no mapa: ${exemplos.join(', ')}`);
+    }
   }
   
   verificarCampos();
@@ -136,12 +188,16 @@ function verificarCampos() {
   const quantidade = document.getElementById("quantidade").value.trim();
   const quantidadeInt = parseInt(quantidade, 10);
   
+  // Verifica se o produto existe no mapa
+  const codigoNormalizado = normalizarCodigo(codigoProduto);
+  const produtoExiste = mapaProdutos.has(codigoNormalizado) || mapaProdutos.has(codigoProduto);
+  
   const camposOk = codigoProduto && 
                    motivo &&
                    !isNaN(quantidadeInt) && 
                    quantidadeInt >= 1 && 
                    quantidadeInt <= 9999 &&
-                   mapaProdutos.has(codigoProduto);
+                   produtoExiste;
   
   document.getElementById("btnSalvar").disabled = !camposOk;
 }
@@ -218,6 +274,8 @@ window.onload = async () => {
   
   document.getElementById("userName").innerText = usuarioLogado;
   
+  showDebug('Iniciando carregamento de produtos...');
+  
   try {
     const resProdutos = await fetch(`${API_BASE}/api/avaria?action=obterDadosProdutos`);
     const resultProdutos = await resProdutos.json();
@@ -225,30 +283,80 @@ window.onload = async () => {
     if (resultProdutos.ok) {
       mapaProdutos.clear();
       
+      let totalCodigos = 0;
+      let totalEAN = 0;
+      let totalDUN = 0;
+      
       resultProdutos.dados.forEach(p => {
+        // Para cada produto, adiciona todas as possíveis formas de código
+        
+        // COD - código principal
         if (p.codigo) {
+          const codigoNorm = normalizarCodigo(p.codigo);
+          mapaProdutos.set(codigoNorm, p);
+          // Também adiciona o original
           mapaProdutos.set(p.codigo.trim(), p);
+          totalCodigos++;
         }
         
+        // EAN - código de barras
         if (p.ean) {
+          const eanNorm = normalizarCodigo(p.ean);
+          mapaProdutos.set(eanNorm, p);
           mapaProdutos.set(p.ean.trim(), p);
+          totalEAN++;
         }
         
+        // DUN - código de caixa
         if (p.dun) {
+          const dunNorm = normalizarCodigo(p.dun);
+          mapaProdutos.set(dunNorm, p);
           mapaProdutos.set(p.dun.trim(), p);
+          totalDUN++;
         }
       });
       
-      console.log(`Produtos carregados: ${mapaProdutos.size} códigos indexados`);
+      showDebug(`✅ Produtos indexados:`);
+      showDebug(`- ${totalCodigos} códigos (COD)`);
+      showDebug(`- ${totalEAN} códigos EAN`);
+      showDebug(`- ${totalDUN} códigos DUN`);
+      showDebug(`- Total de entradas no mapa: ${mapaProdutos.size}`);
+      
+      console.log(`[AVARIA] ✅ ${mapaProdutos.size} códigos indexados (${resultProdutos.dados.length} produtos)`);
+      
+      // Mostra alguns exemplos (apenas se debug ativo)
+      if (debugMode && mapaProdutos.size > 0) {
+        const exemplos = Array.from(mapaProdutos.entries()).slice(0, 3);
+        showDebug('Exemplos de códigos indexados:');
+        exemplos.forEach(([codigo, produto]) => {
+          showDebug(`  "${codigo}" → ${produto.descricao}`);
+        });
+      }
+    } else {
+      throw new Error('Erro ao carregar produtos');
     }
   } catch (error) {
     console.error('Erro ao carregar dados:', error);
     alert('Erro ao carregar dados. Verifique a conexão.');
+    showDebug(`❌ Erro: ${error.message}`);
   }
   
   verificarCampos();
   document.getElementById("codigoProduto").focus();
 };
+
+// Atalho: pressione Ctrl+D para ativar modo debug
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && e.key === 'd') {
+    e.preventDefault();
+    debugMode = !debugMode;
+    document.getElementById('debugInfo').style.display = debugMode ? 'block' : 'none';
+    showDebug(`Modo debug ${debugMode ? 'ATIVADO' : 'DESATIVADO'}`);
+    if (!debugMode) {
+      document.getElementById('debugInfo').innerHTML = '';
+    }
+  }
+});
 </script>
 </body>
 </html>
