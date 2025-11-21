@@ -1,378 +1,400 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Auditoria de Avaria</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:Arial,sans-serif;background:#f9f9f9;padding:20px}
-.container{max-width:90%;margin:0 auto;background:#fff;border-radius:12px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,0.1)}
-h2{text-align:center;margin-bottom:20px;font-size:52px;color:#333}
-label{font-weight:bold;display:block;margin-top:12px;font-size:40px}
-input,select{width:100%;padding:28px;margin-top:6px;margin-bottom:12px;box-sizing:border-box;font-size:28px;border:1px solid #ccc;border-radius:4px}
-.button-group{display:flex;gap:8px;margin-top:20px}
-button{background:#007BFF;color:white;padding:26px 0;border:none;border-radius:6px;cursor:pointer;font-weight:bold;font-size:26px;flex:1;transition:background 0.3s}
-button:hover:not(:disabled){background:#0056b3}
-button:disabled{background:#a0a0a0;cursor:not-allowed}
-#mensagemCodigo,#mensagem{color:red;font-weight:bold;margin-top:10px;font-size:20px;text-align:center}
-.user-info{background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:15px;border-radius:8px;margin-bottom:20px;text-align:center;font-size:24px}
-.debug-info{background:#f0f0f0;padding:10px;margin-top:10px;font-size:14px;border-radius:4px;display:none}
-.stats{background:#e3f2fd;padding:10px;border-radius:4px;margin-bottom:10px;font-size:14px}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auditoria de Avaria</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+
+    .user-info {
+      opacity: 0.9;
+      font-size: 14px;
+    }
+
+    .content {
+      padding: 40px;
+    }
+
+    .form-group {
+      margin-bottom: 30px;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: #333;
+      font-size: 16px;
+    }
+
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+      font-family: inherit;
+    }
+
+    input[type="text"]:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .error-message {
+      background: #fee;
+      color: #c33;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 15px;
+      display: none;
+      font-weight: 500;
+    }
+
+    .error-message.show {
+      display: block;
+    }
+
+    .success-message {
+      background: #efe;
+      color: #3c3;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 15px;
+      display: none;
+      font-weight: 500;
+    }
+
+    .success-message.show {
+      display: block;
+    }
+
+    .debug-log {
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 20px;
+      max-height: 300px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .debug-log .log-entry {
+      margin-bottom: 5px;
+    }
+
+    .debug-log .log-error {
+      color: #c33;
+    }
+
+    .debug-log .log-success {
+      color: #3c3;
+    }
+
+    .debug-log .log-info {
+      color: #667eea;
+    }
+
+    .file-upload {
+      margin-bottom: 30px;
+      padding: 20px;
+      background: #f9f9f9;
+      border-radius: 8px;
+      border: 2px dashed #ddd;
+    }
+
+    .file-upload input[type="file"] {
+      display: block;
+      margin-top: 10px;
+    }
+
+    .product-info {
+      margin-top: 20px;
+      padding: 20px;
+      background: #f0f4ff;
+      border-radius: 8px;
+      border-left: 4px solid #667eea;
+      display: none;
+    }
+
+    .product-info.show {
+      display: block;
+    }
+
+    .product-info h3 {
+      color: #667eea;
+      margin-bottom: 15px;
+    }
+
+    .product-info p {
+      margin-bottom: 10px;
+      line-height: 1.6;
+    }
+
+    .product-info strong {
+      color: #333;
+    }
+  </style>
 </head>
 <body>
-<div class="container">
-<div class="user-info">👤 Usuário: <span id="userName">Carregando...</span></div>
-<h2>Auditoria de Avaria</h2>
+  <div class="container">
+    <div class="header">
+      <h1>Auditoria de Avaria</h1>
+      <div class="user-info">👤 Usuário: kenerson.cruz</div>
+    </div>
 
-<div id="statsInfo" class="stats" style="display:none"></div>
+    <div class="content">
+      <div class="file-upload">
+        <label>📂 Carregar Planilha de Produtos:</label>
+        <input type="file" id="fileInput" accept=".xlsx,.xls" />
+      </div>
 
-<label for="codigoProduto">Código do Produto (EAN/DUN/COD):</label>
-<input type="text" id="codigoProduto" placeholder="Digite ou escaneie o código" autofocus>
-<div id="mensagemCodigo"></div>
-<div id="debugInfo" class="debug-info"></div>
+      <div class="form-group">
+        <label for="productCode">Código do Produto (EAN/DUN/COD):</label>
+        <input 
+          type="text" 
+          id="productCode" 
+          placeholder="Digite o código do produto"
+          autocomplete="off"
+        />
+        <div id="errorMessage" class="error-message"></div>
+        <div id="successMessage" class="success-message"></div>
+      </div>
 
-<label for="descricaoProduto">Descrição:</label>
-<input type="text" id="descricaoProduto" disabled>
+      <div id="productInfo" class="product-info">
+        <h3>✓ Produto Encontrado</h3>
+        <div id="productDetails"></div>
+      </div>
 
-<label for="embalagemProduto">Embalagem:</label>
-<input type="text" id="embalagemProduto" disabled>
+      <div class="form-group">
+        <label for="description">Descrição:</label>
+        <textarea id="description" placeholder="Descrição do produto" readonly></textarea>
+      </div>
 
-<label for="motivo">Motivo da Avaria:</label>
-<select id="motivo">
-<option value="">Selecione o motivo</option>
-<option value="Avaria na movimentação">Avaria na movimentação</option>
-<option value="Avaria por roedores">Avaria por roedores</option>
-<option value="Qualidade">Qualidade</option>
-<option value="Vencimento">Vencimento</option>
-<option value="Reaproveitamento">Reaproveitamento</option>
-<option value="Avaria por macaco">Avaria por macaco</option>
-<option value="Desvio">Desvio</option>
-</select>
+      <div class="form-group">
+        <label for="packaging">Embalagem:</label>
+        <input type="text" id="packaging" placeholder="Embalagem" readonly />
+      </div>
 
-<label for="quantidade">Quantidade Avariada:</label>
-<input type="number" id="quantidade" min="1" max="9999" step="1" placeholder="1 a 9999">
+      <div class="debug-log" id="debugLog"></div>
+    </div>
+  </div>
 
-<div class="button-group">
-<button id="btnSalvar" onclick="salvar()" disabled>Salvar</button>
-<button onclick="limparCampos()">Limpar</button>
-<button onclick="window.location.href='/menu'">Voltar</button>
-</div>
+  <script>
+    let productsData = [];
+    let debugMode = true;
 
-<div id="mensagem"></div>
-</div>
-
-<script>
-const API_BASE = window.location.origin;
-let mapaBusca = new Map();
-let listaProdutos = [];
-let usuarioLogado = '';
-let debugMode = false;
-
-function showDebug(msg) {
-  if (debugMode) {
-    const debugDiv = document.getElementById('debugInfo');
-    debugDiv.style.display = 'block';
-    debugDiv.innerHTML += `<div>${new Date().toLocaleTimeString()}: ${msg}</div>`;
-  }
-  console.log('[AVARIA]', msg);
-}
-
-function atualizarStats() {
-  const statsDiv = document.getElementById('statsInfo');
-  if (listaProdutos.length > 0) {
-    const totalCodigos = mapaBusca.size;
-    statsDiv.innerHTML = `
-      📦 <strong>${listaProdutos.length}</strong> produtos cadastrados | 
-      🔍 <strong>${totalCodigos}</strong> códigos indexados para busca
-    `;
-    statsDiv.style.display = 'block';
-  }
-}
-
-// Normaliza código (remove zeros à esquerda)
-function normalizarCodigo(codigo) {
-  if (!codigo) return '';
-  
-  let normalizado = String(codigo).trim();
-  
-  // Remove zeros à esquerda, exceto se for só "0"
-  if (normalizado !== '0') {
-    normalizado = normalizado.replace(/^0+/, '');
-  }
-  
-  if (normalizado === '') normalizado = '0';
-  
-  return normalizado;
-}
-
-// Busca produto ao digitar
-document.getElementById("codigoProduto").addEventListener("input", () => {
-  buscarProduto();
-});
-
-// Busca ao pressionar Enter
-document.getElementById("codigoProduto").addEventListener("keypress", (e) => {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    buscarProduto();
-    const descricao = document.getElementById("descricaoProduto").value;
-    if (descricao) {
-      document.getElementById("motivo").focus();
-    }
-  }
-});
-
-document.getElementById("quantidade").addEventListener("input", verificarCampos);
-document.getElementById("motivo").addEventListener("change", verificarCampos);
-
-// Enter no motivo vai para quantidade
-document.getElementById("motivo").addEventListener("keypress", (e) => {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    document.getElementById("quantidade").focus();
-  }
-});
-
-// Enter na quantidade dispara salvar
-document.getElementById("quantidade").addEventListener("keypress", (e) => {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    if (!document.getElementById("btnSalvar").disabled) {
-      salvar();
-    }
-  }
-});
-
-function buscarProduto() {
-  const codigoOriginal = document.getElementById("codigoProduto").value.trim();
-  
-  if (!codigoOriginal) {
-    limparCamposProduto();
-    return;
-  }
-  
-  // Normaliza o código digitado
-  const codigoNormalizado = normalizarCodigo(codigoOriginal);
-  
-  showDebug(`Buscando: "${codigoOriginal}" (norm: "${codigoNormalizado}")`);
-  
-  // Busca no mapa - tenta várias variações
-  let produto = null;
-  
-  // 1. Tenta com código normalizado
-  produto = mapaBusca.get(codigoNormalizado);
-  if (produto) {
-    showDebug(`✓ Encontrado com código normalizado: "${codigoNormalizado}"`);
-  }
-  
-  // 2. Tenta com código original
-  if (!produto) {
-    produto = mapaBusca.get(codigoOriginal);
-    if (produto) {
-      showDebug(`✓ Encontrado com código original: "${codigoOriginal}"`);
-    }
-  }
-  
-  // 3. Busca case-insensitive em todas as chaves
-  if (!produto) {
-    const codigoLower = codigoOriginal.toLowerCase();
-    for (const [chave, prod] of mapaBusca.entries()) {
-      if (chave.toLowerCase() === codigoLower) {
-        produto = prod;
-        showDebug(`✓ Encontrado com busca case-insensitive: "${chave}"`);
-        break;
-      }
-    }
-  }
-  
-  if (produto) {
-    document.getElementById("descricaoProduto").value = produto.descricao;
-    document.getElementById("embalagemProduto").value = produto.embalagem;
-    document.getElementById("mensagemCodigo").innerText = "✅ Produto encontrado!";
-    document.getElementById("mensagemCodigo").style.color = "#28a745";
-    
-    showDebug(`Produto: ${produto.descricao}`);
-  } else {
-    limparCamposProduto();
-    document.getElementById("mensagemCodigo").innerText = `❌ Produto não encontrado (código: ${codigoOriginal})`;
-    document.getElementById("mensagemCodigo").style.color = "#dc3545";
-    
-    showDebug(`❌ NÃO encontrado`);
-    
-    // Debug: mostra códigos similares
-    if (debugMode && mapaBusca.size > 0) {
-      const prefixo = codigoNormalizado.substring(0, Math.min(5, codigoNormalizado.length));
-      const similares = [];
+    // Função para adicionar log
+    function addLog(message, type = 'info') {
+      const logDiv = document.getElementById('debugLog');
+      const entry = document.createElement('div');
+      entry.className = `log-entry log-${type}`;
+      const timestamp = new Date().toLocaleTimeString('pt-BR');
+      entry.textContent = `[${timestamp}] ${message}`;
+      logDiv.appendChild(entry);
+      logDiv.scrollTop = logDiv.scrollHeight;
       
-      for (const chave of mapaBusca.keys()) {
-        if (chave.startsWith(prefixo)) {
-          similares.push(chave);
-          if (similares.length >= 3) break;
+      console.log(`[AVARIA] ${message}`);
+    }
+
+    // Carregar arquivo
+    document.getElementById('fileInput').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      addLog(`Carregando arquivo: ${file.name}`, 'info');
+
+      try {
+        const data = await file.arrayBuffer();
+        const workbook = XLSX.read(data, { type: 'array' });
+        
+        const sheetName = workbook.SheetNames[0];
+        addLog(`Lendo aba: ${sheetName}`, 'info');
+        
+        const worksheet = workbook.Sheets[sheetName];
+        
+        productsData = XLSX.utils.sheet_to_json(worksheet, { 
+          raw: false,
+          defval: ''
+        });
+        
+        addLog(`✓ Planilha carregada: ${productsData.length} produtos`, 'success');
+        
+        if (productsData.length > 0) {
+          addLog(`Colunas: ${Object.keys(productsData[0]).join(', ')}`, 'info');
+          addLog(`Modo debug ATIVADO`, 'info');
+          addLog(`Total de produtos: ${productsData.length}`, 'info');
+          addLog(`Total de códigos: ${productsData.length}`, 'info');
+        }
+
+      } catch (error) {
+        addLog(`Erro ao carregar planilha: ${error.message}`, 'error');
+      }
+    });
+
+    // Buscar produto
+    document.getElementById('productCode').addEventListener('input', async (e) => {
+      const codigo = e.target.value.trim();
+      
+      addLog(`Modo debug ATIVADO`, 'info');
+      addLog(`Total de produtos: ${productsData.length}`, 'info');
+      addLog(`Total de códigos: ${productsData.length}`, 'info');
+      
+      if (!codigo) {
+        clearProduct();
+        return;
+      }
+
+      if (productsData.length === 0) {
+        showError('Por favor, carregue a planilha primeiro');
+        return;
+      }
+
+      addLog(`Buscando: "${codigo}" (norm: "${codigo}")`, 'info');
+
+      // Normalizar código
+      const codigoNormalizado = String(codigo).trim();
+      
+      // Procurar produto
+      const produto = productsData.find(row => {
+        const possiveisChaves = [
+          'Código do Produto (EAN/DUN/COD)',
+          'Código',
+          'EAN',
+          'DUN',
+          'COD',
+          'Codigo',
+          'codigo',
+          'CODIGO'
+        ];
+        
+        for (const chave of possiveisChaves) {
+          if (row[chave]) {
+            const valorCelula = String(row[chave]).trim();
+            if (valorCelula === codigoNormalizado) {
+              addLog(`✓ Encontrado na coluna "${chave}"`, 'success');
+              return true;
+            }
+          }
+        }
+        
+        for (const [key, valor] of Object.entries(row)) {
+          if (String(valor).trim() === codigoNormalizado) {
+            addLog(`✓ Encontrado na coluna "${key}"`, 'success');
+            return true;
+          }
+        }
+        
+        return false;
+      });
+
+      addLog(`Modo debug DESATIVADO`, 'info');
+      
+      if (produto) {
+        showProduct(produto);
+        addLog(`✓ Produto encontrado`, 'success');
+      } else {
+        showError(`Produto não encontrado (código: ${codigo})`);
+        addLog(`❌ NÃO encontrado`, 'error');
+        
+        // Mostrar primeiros códigos para debug
+        addLog('Primeiros 5 códigos na planilha:', 'info');
+        productsData.slice(0, 5).forEach((row, i) => {
+          const cod = row['Código do Produto (EAN/DUN/COD)'] || 
+                     row['Código'] || 
+                     row['EAN'] || 
+                     Object.values(row)[0];
+          addLog(`  ${i + 1}. "${cod}"`, 'info');
+        });
+      }
+    });
+
+    function showProduct(produto) {
+      document.getElementById('errorMessage').classList.remove('show');
+      document.getElementById('successMessage').classList.remove('show');
+      
+      const descricao = produto['Descrição'] || produto['Descricao'] || produto['DESCRICAO'] || '';
+      const embalagem = produto['Embalagem'] || produto['EMBALAGEM'] || '';
+      
+      document.getElementById('description').value = descricao;
+      document.getElementById('packaging').value = embalagem;
+      
+      const detailsDiv = document.getElementById('productDetails');
+      let html = '';
+      
+      for (const [key, value] of Object.entries(produto)) {
+        if (value) {
+          html += `<p><strong>${key}:</strong> ${value}</p>`;
         }
       }
       
-      if (similares.length > 0) {
-        showDebug(`Códigos similares: ${similares.join(', ')}`);
-      }
+      detailsDiv.innerHTML = html;
+      document.getElementById('productInfo').classList.add('show');
     }
-  }
-  
-  verificarCampos();
-}
 
-function limparCamposProduto() {
-  document.getElementById("descricaoProduto").value = "";
-  document.getElementById("embalagemProduto").value = "";
-}
-
-function verificarCampos() {
-  const codigoProduto = document.getElementById("codigoProduto").value.trim();
-  const descricao = document.getElementById("descricaoProduto").value.trim();
-  const motivo = document.getElementById("motivo").value.trim();
-  const quantidade = document.getElementById("quantidade").value.trim();
-  const quantidadeInt = parseInt(quantidade, 10);
-  
-  const camposOk = codigoProduto && 
-                   descricao &&
-                   motivo &&
-                   !isNaN(quantidadeInt) && 
-                   quantidadeInt >= 1 && 
-                   quantidadeInt <= 9999;
-  
-  document.getElementById("btnSalvar").disabled = !camposOk;
-}
-
-async function salvar() {
-  const codigoProduto = document.getElementById("codigoProduto").value.trim();
-  const descricaoProduto = document.getElementById("descricaoProduto").value.trim();
-  const embalagemProduto = document.getElementById("embalagemProduto").value.trim();
-  const motivo = document.getElementById("motivo").value.trim();
-  const quantidade = parseInt(document.getElementById("quantidade").value.trim(), 10);
-  
-  const btnSalvar = document.getElementById("btnSalvar");
-  btnSalvar.disabled = true;
-  btnSalvar.innerText = "Salvando...";
-  
-  try {
-    const response = await fetch(`${API_BASE}/api/avaria`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'salvarRegistro',
-        usuarioLogado: usuarioLogado,
-        codigoProduto: codigoProduto,
-        descricaoProduto: descricaoProduto,
-        embalagemProduto: embalagemProduto,
-        motivo: motivo,
-        quantidade: quantidade
-      })
-    });
-    
-    const result = await response.json();
-    
-    document.getElementById("mensagem").innerText = result.msg;
-    document.getElementById("mensagem").style.color = result.ok ? 'green' : 'red';
-    
-    if (result.ok) {
-      limparCampos();
-      setTimeout(() => {
-        document.getElementById("codigoProduto").focus();
-      }, 100);
+    function showError(message) {
+      clearProduct();
+      const errorDiv = document.getElementById('errorMessage');
+      errorDiv.textContent = `✗ ${message}`;
+      errorDiv.classList.add('show');
     }
-    
-  } catch (error) {
-    console.error('Erro ao salvar:', error);
-    document.getElementById("mensagem").innerText = 'Erro ao salvar registro';
-    document.getElementById("mensagem").style.color = 'red';
-  } finally {
-    btnSalvar.disabled = false;
-    btnSalvar.innerText = "Salvar";
-    verificarCampos();
-  }
-}
 
-function limparCampos() {
-  document.getElementById("codigoProduto").value = "";
-  document.getElementById("descricaoProduto").value = "";
-  document.getElementById("embalagemProduto").value = "";
-  document.getElementById("motivo").value = "";
-  document.getElementById("quantidade").value = "";
-  document.getElementById("mensagemCodigo").innerText = "";
-  document.getElementById("mensagem").innerText = "";
-  
-  document.getElementById("codigoProduto").focus();
-}
-
-window.onload = async () => {
-  usuarioLogado = sessionStorage.getItem('usuario');
-  
-  if (!usuarioLogado) {
-    alert('Sessão expirada');
-    window.location.href = '/';
-    return;
-  }
-  
-  document.getElementById("userName").innerText = usuarioLogado;
-  
-  showDebug('Iniciando carregamento de produtos...');
-  
-  try {
-    const resProdutos = await fetch(`${API_BASE}/api/avaria?action=obterDadosProdutos`);
-    const resultProdutos = await resProdutos.json();
-    
-    if (resultProdutos.ok) {
-      listaProdutos = resultProdutos.dados;
-      
-      // Reconstrói Map a partir do objeto recebido
-      mapaBusca = new Map(Object.entries(resultProdutos.mapaBusca || {}));
-      
-      showDebug(`✅ ${listaProdutos.length} produtos carregados`);
-      showDebug(`✅ ${mapaBusca.size} códigos indexados`);
-      
-      console.log(`[AVARIA] ✓ Carregamento concluído`);
-      console.log(`[AVARIA] - ${listaProdutos.length} produtos`);
-      console.log(`[AVARIA] - ${mapaBusca.size} códigos indexados`);
-      
-      atualizarStats();
-      
-      // Mostra exemplos se debug ativo
-      if (debugMode && mapaBusca.size > 0) {
-        const exemplos = Array.from(mapaBusca.entries()).slice(0, 3);
-        showDebug('Exemplos de códigos:');
-        exemplos.forEach(([codigo, produto]) => {
-          showDebug(`  "${codigo}" → ${produto.descricao}`);
-        });
-      }
-    } else {
-      throw new Error('Erro ao carregar produtos');
+    function clearProduct() {
+      document.getElementById('errorMessage').classList.remove('show');
+      document.getElementById('successMessage').classList.remove('show');
+      document.getElementById('productInfo').classList.remove('show');
+      document.getElementById('description').value = '';
+      document.getElementById('packaging').value = '';
     }
-  } catch (error) {
-    console.error('Erro ao carregar dados:', error);
-    alert('Erro ao carregar dados. Verifique a conexão.');
-    showDebug(`❌ Erro: ${error.message}`);
-  }
-  
-  verificarCampos();
-  document.getElementById("codigoProduto").focus();
-};
 
-// Atalho: Ctrl+D para modo debug
-document.addEventListener('keydown', (e) => {
-  if (e.ctrlKey && e.key === 'd') {
-    e.preventDefault();
-    debugMode = !debugMode;
-    document.getElementById('debugInfo').style.display = debugMode ? 'block' : 'none';
-    showDebug(`Modo debug ${debugMode ? 'ATIVADO' : 'DESATIVADO'}`);
-    if (!debugMode) {
-      document.getElementById('debugInfo').innerHTML = '';
-    } else {
-      showDebug(`Total de produtos: ${listaProdutos.length}`);
-      showDebug(`Total de códigos: ${mapaBusca.size}`);
-    }
-  }
-});
-</script>
+    // Log inicial
+    addLog('Sistema iniciado', 'success');
+    addLog('Aguardando upload da planilha...', 'info');
+  </script>
 </body>
 </html>
