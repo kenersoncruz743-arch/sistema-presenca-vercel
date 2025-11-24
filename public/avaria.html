@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Auditoria de Avaria</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     * {
       margin: 0;
@@ -93,23 +92,6 @@
       display: block;
     }
 
-    .file-upload {
-      margin-bottom: 25px;
-      padding: 15px;
-      background: #f9f9f9;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-    }
-
-    .file-upload label {
-      margin-bottom: 8px;
-    }
-
-    .file-upload input[type="file"] {
-      display: block;
-      margin-top: 8px;
-    }
-
     .debug-section {
       margin-top: 30px;
       padding-top: 20px;
@@ -143,6 +125,11 @@
     .debug-log .info {
       color: #74c0fc;
     }
+
+    .loading {
+      color: #666;
+      font-style: italic;
+    }
   </style>
 </head>
 <body>
@@ -153,11 +140,6 @@
     </div>
 
     <div class="content">
-      <div class="file-upload">
-        <label>Carregar Planilha:</label>
-        <input type="file" id="fileInput" accept=".xlsx,.xls" />
-      </div>
-
       <div class="form-group">
         <label for="productCode">Código do Produto (EAN/DUN/COD):</label>
         <input 
@@ -186,7 +168,9 @@
   </div>
 
   <script>
-    let workbookData = null;
+    const API_URL = '/api/avaria';
+    let mapaBuscaLocal = new Map();
+    let produtosCarregados = false;
 
     function log(message, type = 'info') {
       const logDiv = document.getElementById('debugLog');
@@ -198,45 +182,70 @@
       console.log(`[AVARIA] ${message}`);
     }
 
-    // Carregar planilha
-    document.getElementById('fileInput').addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      log(`Carregando arquivo: ${file.name}`, 'info');
-
-      try {
-        const data = await file.arrayBuffer();
-        workbookData = XLSX.read(data, { type: 'array' });
-        
-        log(`Modo debug ATIVADO`, 'info');
-        log(`Abas encontradas: ${workbookData.SheetNames.join(', ')}`, 'info');
-        
-        // Contar produtos em cada aba
-        workbookData.SheetNames.forEach(sheetName => {
-          const ws = workbookData.Sheets[sheetName];
-          const data = XLSX.utils.sheet_to_json(ws, { raw: false, defval: '' });
-          log(`Aba "${sheetName}": ${data.length} registros`, 'info');
-        });
-        
-        log(`✓ Planilha carregada com sucesso`, 'success');
-        
-      } catch (error) {
-        log(`Erro ao carregar planilha: ${error.message}`, 'error');
+    // Normaliza código (remove zeros à esquerda)
+    function normalizarCodigo(codigo) {
+      if (!codigo) return '';
+      let normalizado = String(codigo).trim();
+      if (normalizado !== '0') {
+        normalizado = normalizado.replace(/^0+/, '');
       }
-    });
+      if (normalizado === '') normalizado = '0';
+      return normalizado;
+    }
 
-    // Buscar produto
+    // Carregar dados da API ao iniciar
+    async function carregarDados() {
+      try {
+        log('Carregando dados da API...', 'info');
+        log('Modo debug ATIVADO', 'info');
+
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ action: 'obterDadosProdutos' })
+        });
+
+        const resultado = await response.json();
+
+        if (resultado.ok) {
+          log(`Total de produtos: ${resultado.total}`, 'info');
+          log(`Total de códigos: ${Object.keys(resultado.mapaBusca).length}`, 'info');
+
+          // Converte o objeto de volta para Map
+          mapaBuscaLocal = new Map(Object.entries(resultado.mapaBusca));
+
+          produtosCarregados = true;
+          log('✓ Dados carregados com sucesso', 'success');
+
+          // Mostra exemplos de códigos indexados
+          const exemplos = Array.from(mapaBuscaLocal.entries()).slice(0, 5);
+          log('Exemplos de códigos indexados:', 'info');
+          exemplos.forEach(([chave, prod]) => {
+            log(`  "${chave}" → ${prod.descricao}`, 'info');
+          });
+
+          log('Modo debug DESATIVADO', 'info');
+        } else {
+          log(`Erro: ${resultado.msg}`, 'error');
+        }
+      } catch (error) {
+        log(`Erro ao carregar dados: ${error.message}`, 'error');
+      }
+    }
+
+    // Buscar produto quando o usuário digita
     document.getElementById('productCode').addEventListener('input', (e) => {
       const codigo = e.target.value.trim();
-      
+
       if (!codigo) {
         clearProduct();
         return;
       }
 
-      if (!workbookData) {
-        showError('Por favor, carregue a planilha primeiro');
+      if (!produtosCarregados) {
+        showError('Aguarde o carregamento dos dados...');
         return;
       }
 
@@ -244,119 +253,52 @@
     });
 
     function buscarProduto(codigo) {
-      log(`Modo debug ATIVADO`, 'info');
-      log(`Buscando: "${codigo}" (norm: "${codigo}")`, 'info');
+      log('Modo debug ATIVADO', 'info');
+      log(`Buscando: "${codigo}" (norm: "${normalizarCodigo(codigo)}")`, 'info');
+      log(`Total de produtos: ${mapaBuscaLocal.size}`, 'info');
+      log(`Total de códigos: ${mapaBuscaLocal.size}`, 'info');
 
-      const codigoNormalizado = String(codigo).trim();
-      
-      // Procurar na aba "Endereço"
-      let produtoEncontrado = null;
-      let abaEncontrada = null;
+      // Busca com código original
+      let produto = mapaBuscaLocal.get(codigo);
 
-      // Primeiro tenta na aba Endereço
-      if (workbookData.SheetNames.includes('Endereço')) {
-        log(`Procurando na aba "Endereço"...`, 'info');
-        produtoEncontrado = buscarNaAba('Endereço', codigoNormalizado);
-        if (produtoEncontrado) {
-          abaEncontrada = 'Endereço';
+      // Se não encontrou, tenta com código normalizado
+      if (!produto) {
+        const codigoNorm = normalizarCodigo(codigo);
+        produto = mapaBuscaLocal.get(codigoNorm);
+        if (produto) {
+          log(`Encontrado com código normalizado: "${codigoNorm}"`, 'success');
         }
+      } else {
+        log(`Encontrado com código original: "${codigo}"`, 'success');
       }
 
-      // Se não encontrou, procura em todas as outras abas
-      if (!produtoEncontrado) {
-        for (const sheetName of workbookData.SheetNames) {
-          if (sheetName === 'Endereço') continue;
-          
-          log(`Procurando na aba "${sheetName}"...`, 'info');
-          produtoEncontrado = buscarNaAba(sheetName, codigoNormalizado);
-          if (produtoEncontrado) {
-            abaEncontrada = sheetName;
-            break;
-          }
-        }
-      }
+      log('Modo debug DESATIVADO', 'info');
 
-      log(`Modo debug DESATIVADO`, 'info');
-
-      if (produtoEncontrado) {
-        log(`✓ Produto encontrado na aba "${abaEncontrada}"`, 'success');
-        mostrarProduto(produtoEncontrado);
+      if (produto) {
+        log(`✓ Produto encontrado`, 'success');
+        mostrarProduto(produto);
       } else {
         log(`❌ NÃO encontrado`, 'error');
         showError(`Produto não encontrado (código: ${codigo})`);
-        
-        // Mostrar amostra de códigos
-        if (workbookData.SheetNames.includes('Endereço')) {
-          const ws = workbookData.Sheets['Endereço'];
-          const dados = XLSX.utils.sheet_to_json(ws, { raw: false, defval: '' });
-          log(`Primeiros códigos na aba Endereço:`, 'info');
-          dados.slice(0, 5).forEach((row, i) => {
-            const cod = row['Dun'] || row['Ean'] || row['DUN'] || row['EAN'] || Object.values(row)[0];
-            log(`  ${i + 1}. "${cod}"`, 'info');
-          });
-        }
+
+        // Mostra exemplos para debug
+        const exemplos = Array.from(mapaBuscaLocal.entries()).slice(0, 5);
+        log('Primeiros códigos na base:', 'info');
+        exemplos.forEach(([chave, prod]) => {
+          log(`  "${chave}" (Dun: "${prod.dun}", Ean: "${prod.ean}")`, 'info');
+        });
       }
-    }
-
-    function buscarNaAba(sheetName, codigo) {
-      const worksheet = workbookData.Sheets[sheetName];
-      const dados = XLSX.utils.sheet_to_json(worksheet, { 
-        raw: false,
-        defval: ''
-      });
-
-      log(`Total de produtos: ${dados.length}`, 'info');
-      log(`Total de códigos: ${dados.length}`, 'info');
-
-      // Procurar nas colunas Dun e Ean
-      const produto = dados.find(row => {
-        // Procura em Dun e Ean especificamente
-        const dun = String(row['Dun'] || row['DUN'] || '').trim();
-        const ean = String(row['Ean'] || row['EAN'] || '').trim();
-        
-        if (dun === codigo) {
-          log(`Encontrado na coluna "Dun"`, 'success');
-          return true;
-        }
-        
-        if (ean === codigo) {
-          log(`Encontrado na coluna "Ean"`, 'success');
-          return true;
-        }
-
-        // Busca em outras colunas como fallback
-        for (const [key, value] of Object.entries(row)) {
-          if (String(value).trim() === codigo) {
-            log(`Encontrado na coluna "${key}"`, 'success');
-            return true;
-          }
-        }
-        
-        return false;
-      });
-
-      return produto;
     }
 
     function mostrarProduto(produto) {
       document.getElementById('errorMessage').classList.remove('show');
-      
-      // Buscar descrição e embalagem
-      const descricao = produto['Descrição'] || 
-                       produto['Descricao'] || 
-                       produto['DESCRIÇÃO'] ||
-                       produto['DESCRICAO'] || 
-                       '';
-      
-      const embalagem = produto['Embalagem'] || 
-                       produto['EMBALAGEM'] || 
-                       '';
-      
-      document.getElementById('description').value = descricao;
-      document.getElementById('packaging').value = embalagem;
-      
-      log(`Descrição: ${descricao}`, 'info');
-      log(`Embalagem: ${embalagem}`, 'info');
+
+      document.getElementById('description').value = produto.descricao || '';
+      document.getElementById('packaging').value = produto.embalagem || '';
+
+      log(`Descrição: ${produto.descricao}`, 'info');
+      log(`Embalagem: ${produto.embalagem}`, 'info');
+      log(`Endereço: ${produto.endereco}`, 'info');
     }
 
     function showError(message) {
@@ -372,8 +314,9 @@
       document.getElementById('packaging').value = '';
     }
 
+    // Inicializar
     log('Sistema iniciado', 'success');
-    log('Aguardando upload da planilha...', 'info');
+    carregarDados();
   </script>
 </body>
 </html>
