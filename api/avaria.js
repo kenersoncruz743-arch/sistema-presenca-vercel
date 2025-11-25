@@ -1,6 +1,7 @@
 const sheetsAvaria = require('../lib/sheets_3');
 
 module.exports = async function handler(req, res) {
+  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -30,15 +31,41 @@ module.exports = async function handler(req, res) {
     
     switch (action) {
       case 'obterDadosProdutos': {
+        console.log('[API AVARIA] Obtendo dados dos produtos...');
         const resultado = await sheetsAvaria.obterDadosProdutos();
         
-        // Retorna lista de produtos E mapa de busca serializado
+        // ===== VALIDAÇÃO E CONVERSÃO SEGURA =====
+        if (!resultado || !resultado.produtos) {
+          return res.status(500).json({
+            ok: false,
+            msg: 'Erro ao carregar produtos: resultado inválido'
+          });
+        }
+
+        // Garante que produtos é um array
+        const produtos = Array.isArray(resultado.produtos) ? resultado.produtos : [];
+        
+        // Garante que mapaBusca é um objeto
+        let mapaBuscaObj = {};
+        
+        if (resultado.mapaBusca) {
+          if (resultado.mapaBusca instanceof Map) {
+            // Se for Map, converte para objeto
+            mapaBuscaObj = Object.fromEntries(resultado.mapaBusca);
+          } else if (typeof resultado.mapaBusca === 'object') {
+            // Se já for objeto, usa diretamente
+            mapaBuscaObj = resultado.mapaBusca;
+          }
+        }
+        
+        console.log('[API AVARIA] ✓ Produtos:', produtos.length);
+        console.log('[API AVARIA] ✓ Códigos indexados:', Object.keys(mapaBuscaObj).length);
+        
         return res.status(200).json({ 
           ok: true, 
-          dados: resultado.produtos,
-          total: resultado.produtos.length,
-          // Converte Map para objeto simples para enviar ao cliente
-          mapaBusca: Object.fromEntries(resultado.mapaBusca)
+          dados: produtos,
+          total: produtos.length,
+          mapaBusca: mapaBuscaObj // Envia como objeto simples
         });
       }
       
@@ -55,8 +82,8 @@ module.exports = async function handler(req, res) {
         const resultado = await sheetsAvaria.salvarRegistro(
           usuarioLogado, 
           codigoProduto, 
-          descricaoProduto, 
-          embalagemProduto,
+          descricaoProduto || 'Não informado', 
+          embalagemProduto || 'Não informado',
           motivo, 
           quantidade
         );
