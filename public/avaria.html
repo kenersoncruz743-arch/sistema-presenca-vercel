@@ -91,6 +91,20 @@
     .error-message.show {
       display: block;
     }
+    
+    .success-message {
+      background: #d4edda;
+      color: #155724;
+      padding: 12px;
+      border-radius: 4px;
+      margin-top: 10px;
+      display: none;
+      border-left: 4px solid #28a745;
+    }
+    
+    .success-message.show {
+      display: block;
+    }
 
     .debug-section {
       margin-top: 30px;
@@ -145,9 +159,11 @@
         <input 
           type="text" 
           id="productCode" 
-          placeholder="75076719"
+          placeholder="Escaneie ou digite o código..."
+          autofocus
         />
         <div id="errorMessage" class="error-message"></div>
+        <div id="successMessage" class="success-message"></div>
       </div>
 
       <div class="form-group">
@@ -169,7 +185,7 @@
 
   <script>
     const API_URL = '/api/avaria';
-    let mapaBuscaLocal = new Map();
+    let mapaBuscaLocal = {};
     let produtosCarregados = false;
 
     function log(message, type = 'info') {
@@ -182,22 +198,35 @@
       console.log(`[AVARIA] ${message}`);
     }
 
-    // Normaliza código (remove zeros à esquerda)
-    function normalizarCodigo(codigo) {
-      if (!codigo) return '';
-      let normalizado = String(codigo).trim();
-      if (normalizado !== '0') {
-        normalizado = normalizado.replace(/^0+/, '');
+    // Gera variações do código para busca
+    function gerarVariacoes(codigo) {
+      if (!codigo) return [];
+      
+      const codigoStr = String(codigo).trim();
+      const variacoes = new Set();
+      
+      // Original
+      variacoes.add(codigoStr);
+      
+      // Sem zeros à esquerda
+      const semZeros = codigoStr.replace(/^0+/, '') || '0';
+      variacoes.add(semZeros);
+      
+      // Com zeros à esquerda (padrões comuns)
+      if (!isNaN(codigoStr)) {
+        variacoes.add(codigoStr.padStart(8, '0'));
+        variacoes.add(codigoStr.padStart(12, '0'));
+        variacoes.add(codigoStr.padStart(13, '0'));
+        variacoes.add(codigoStr.padStart(14, '0'));
       }
-      if (normalizado === '') normalizado = '0';
-      return normalizado;
+      
+      return Array.from(variacoes);
     }
 
     // Carregar dados da API ao iniciar
     async function carregarDados() {
       try {
         log('Carregando dados da API...', 'info');
-        log('Modo debug ATIVADO', 'info');
 
         const response = await fetch(API_URL, {
           method: 'POST',
@@ -211,22 +240,18 @@
 
         if (resultado.ok) {
           log(`Total de produtos: ${resultado.total}`, 'info');
-          log(`Total de códigos: ${Object.keys(resultado.mapaBusca).length}`, 'info');
+          log(`Total de códigos indexados: ${Object.keys(resultado.mapaBusca).length}`, 'info');
 
-          // Converte o objeto de volta para Map
-          mapaBuscaLocal = new Map(Object.entries(resultado.mapaBusca));
-
+          // Recebe o mapa já como objeto
+          mapaBuscaLocal = resultado.mapaBusca || {};
+          
           produtosCarregados = true;
           log('✓ Dados carregados com sucesso', 'success');
 
-          // Mostra exemplos de códigos indexados
-          const exemplos = Array.from(mapaBuscaLocal.entries()).slice(0, 5);
-          log('Exemplos de códigos indexados:', 'info');
-          exemplos.forEach(([chave, prod]) => {
-            log(`  "${chave}" → ${prod.descricao}`, 'info');
-          });
+          // Mostra alguns códigos indexados
+          const exemplos = Object.keys(mapaBuscaLocal).slice(0, 10);
+          log(`Primeiros códigos: ${exemplos.join(', ')}`, 'info');
 
-          log('Modo debug DESATIVADO', 'info');
         } else {
           log(`Erro: ${resultado.msg}`, 'error');
         }
@@ -251,54 +276,72 @@
 
       buscarProduto(codigo);
     });
-
-    function buscarProduto(codigo) {
-      log('Modo debug ATIVADO', 'info');
-      log(`Buscando: "${codigo}" (norm: "${normalizarCodigo(codigo)}")`, 'info');
-      log(`Total de produtos: ${mapaBuscaLocal.size}`, 'info');
-      log(`Total de códigos: ${mapaBuscaLocal.size}`, 'info');
-
-      // Busca com código original
-      let produto = mapaBuscaLocal.get(codigo);
-
-      // Se não encontrou, tenta com código normalizado
-      if (!produto) {
-        const codigoNorm = normalizarCodigo(codigo);
-        produto = mapaBuscaLocal.get(codigoNorm);
-        if (produto) {
-          log(`Encontrado com código normalizado: "${codigoNorm}"`, 'success');
+    
+    // Limpa ao pressionar Enter (simula scanner)
+    document.getElementById('productCode').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        const codigo = e.target.value.trim();
+        if (codigo) {
+          buscarProduto(codigo);
+          // Opcional: limpar campo após busca
+          // setTimeout(() => e.target.value = '', 1000);
         }
-      } else {
-        log(`Encontrado com código original: "${codigo}"`, 'success');
+      }
+    });
+
+    function buscarProduto(codigoOriginal) {
+      log(`🔍 Buscando: "${codigoOriginal}"`, 'info');
+      log(`Total de produtos na base: ${Object.keys(mapaBuscaLocal).length}`, 'info');
+
+      // Gera todas as variações possíveis
+      const variacoes = gerarVariacoes(codigoOriginal);
+      log(`Variações geradas: ${variacoes.join(', ')}`, 'info');
+
+      let produtoEncontrado = null;
+      let variacaoEncontrada = null;
+
+      // Tenta cada variação
+      for (const variacao of variacoes) {
+        if (mapaBuscaLocal[variacao]) {
+          produtoEncontrado = mapaBuscaLocal[variacao];
+          variacaoEncontrada = variacao;
+          break;
+        }
       }
 
-      log('Modo debug DESATIVADO', 'info');
-
-      if (produto) {
-        log(`✓ Produto encontrado`, 'success');
-        mostrarProduto(produto);
+      if (produtoEncontrado) {
+        log(`✓ ENCONTRADO com variação: "${variacaoEncontrada}"`, 'success');
+        log(`Descrição: ${produtoEncontrado.descricao}`, 'success');
+        log(`Embalagem: ${produtoEncontrado.embalagem}`, 'success');
+        mostrarProduto(produtoEncontrado);
       } else {
-        log(`❌ NÃO encontrado`, 'error');
-        showError(`Produto não encontrado (código: ${codigo})`);
-
-        // Mostra exemplos para debug
-        const exemplos = Array.from(mapaBuscaLocal.entries()).slice(0, 5);
-        log('Primeiros códigos na base:', 'info');
-        exemplos.forEach(([chave, prod]) => {
-          log(`  "${chave}" (Dun: "${prod.dun}", Ean: "${prod.ean}")`, 'info');
-        });
+        log(`❌ NÃO ENCONTRADO em nenhuma variação`, 'error');
+        
+        // Debug: mostra códigos similares
+        const similares = Object.keys(mapaBuscaLocal)
+          .filter(k => k.includes(codigoOriginal.substring(0, 5)))
+          .slice(0, 5);
+        
+        if (similares.length > 0) {
+          log(`Códigos similares na base: ${similares.join(', ')}`, 'info');
+        }
+        
+        showError(`Produto não encontrado (código: ${codigoOriginal})`);
       }
     }
 
     function mostrarProduto(produto) {
       document.getElementById('errorMessage').classList.remove('show');
+      document.getElementById('successMessage').textContent = '✓ Produto encontrado!';
+      document.getElementById('successMessage').classList.add('show');
 
       document.getElementById('description').value = produto.descricao || '';
       document.getElementById('packaging').value = produto.embalagem || '';
-
-      log(`Descrição: ${produto.descricao}`, 'info');
-      log(`Embalagem: ${produto.embalagem}`, 'info');
-      log(`Endereço: ${produto.endereco}`, 'info');
+      
+      // Remove mensagem de sucesso após 3 segundos
+      setTimeout(() => {
+        document.getElementById('successMessage').classList.remove('show');
+      }, 3000);
     }
 
     function showError(message) {
@@ -306,10 +349,13 @@
       const errorDiv = document.getElementById('errorMessage');
       errorDiv.textContent = `✗ ${message}`;
       errorDiv.classList.add('show');
+      
+      document.getElementById('successMessage').classList.remove('show');
     }
 
     function clearProduct() {
       document.getElementById('errorMessage').classList.remove('show');
+      document.getElementById('successMessage').classList.remove('show');
       document.getElementById('description').value = '';
       document.getElementById('packaging').value = '';
     }
